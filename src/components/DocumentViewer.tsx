@@ -35,6 +35,16 @@ export function DocumentViewer() {
   const setCurrentPage = useDocumentStore((s) => s.setCurrentPage)
   const setError = useDocumentStore((s) => s.setError)
 
+  // Revoke the previous Blob URL after DocumentViewer unmounts or docUrl changes,
+  // ensuring revocation happens after react-pdf has released its internal reference.
+  // This replaces the eager URL.revokeObjectURL() calls in TopBar and ErrorBanner (WR-01).
+  useEffect(() => {
+    const url = docUrl
+    return () => {
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [docUrl])
+
   // Width of the inner constrained container — passed to each LazyPage
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined)
 

@@ -3,13 +3,9 @@ import { useDocumentStore } from '../store/documentStore'
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
   const reset = useDocumentStore((s) => s.reset)
-  const docUrl = useDocumentStore((s) => s.docUrl)
 
   function handleOpenAnother() {
-    // Revoke the Blob URL to free memory, then reset store
-    if (docUrl) {
-      URL.revokeObjectURL(docUrl)
-    }
+    // Blob URL is revoked by DocumentViewer's useEffect cleanup after unmount (WR-01).
     reset()
   }
 

@@ -20,13 +20,9 @@ import { useDocumentStore } from '../store/documentStore'
 export function ErrorBanner() {
   const errorMessage = useDocumentStore((s) => s.errorMessage)
   const reset = useDocumentStore((s) => s.reset)
-  const docUrl = useDocumentStore((s) => s.docUrl)
 
   function handleRetry() {
-    // Revoke any existing Blob URL before resetting to prevent memory leaks
-    if (docUrl) {
-      URL.revokeObjectURL(docUrl)
-    }
+    // Blob URL revocation is handled by DocumentViewer's useEffect cleanup (WR-01).
     reset()
   }
 
