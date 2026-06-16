@@ -11,18 +11,14 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vite
 import { render, act, cleanup } from '@testing-library/react'
 import React from 'react'
 
-// ── Injectable numPages for the Document mock ─────────────────────────────────
-let _mockNumPages = 1
-function getMockNumPages(): number {
-  return _mockNumPages
-}
-
-// ── Mock react-pdf (hoisted above imports by vi.mock) ─────────────────────────
-// <Document> stores its onLoadSuccess callback and exposes a trigger function.
-// Tests call triggerLoadSuccess() inside act() to synchronously fire the callback,
-// avoiding the "setState during render" React warning.
+// ── Pending callback for the Document mock ────────────────────────────────────
+// Module-level so vi.mock() factory closure can write to it during render,
+// and tests can call it inside act() to trigger numPages state updates.
 let _pendingOnLoadSuccess: ((pdf: { numPages: number }) => void) | null = null
 
+// ── Mock react-pdf (hoisted above imports by vi.mock) ─────────────────────────
+// <Document> stores its onLoadSuccess callback so tests can trigger it inside
+// act() to avoid the "setState during render" React warning.
 vi.mock('react-pdf', () => {
   const Document = ({
     onLoadSuccess,
@@ -149,7 +145,6 @@ async function resetStore(docUrl: string, numPages: number | null = null) {
 
 // ── Helper: render DocumentViewer and fire onLoadSuccess synchronously ────────
 async function renderViewerWithPages(docUrl: string, numPages: number) {
-  _mockNumPages = numPages
   await resetStore(docUrl, numPages)
 
   const { DocumentViewer } = await import('../components/DocumentViewer')
@@ -185,7 +180,6 @@ describe('DocumentViewer', () => {
   })
 
   it('renders nothing when docUrl is null', async () => {
-    _mockNumPages = 3
     await resetStore('blob:fake-null', 3)
 
     const { useDocumentStore } = await import('../store/documentStore')
