@@ -11,7 +11,7 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 - [ ] **DOC-01**: User can open a PDF by drag-and-drop or file picker
 - [ ] **DOC-02**: User can open an image (JPG/PNG) to sign
-- [ ] **DOC-03**: User can view and navigate all pages of a multi-page PDF
+- [x] **DOC-03**: User can view and navigate all pages of a multi-page PDF
 - [ ] **DOC-04**: User can zoom the document in and out, with placed fields scaling correctly with the page
 - [ ] **DOC-05**: When a user selects a Word document (.doc/.docx), the app clearly instructs them to export it to PDF first — no silent conversion that could change formatting
 
@@ -43,8 +43,8 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 ### Privacy & Trust
 
-- [ ] **PRV-01**: All document processing happens entirely in the browser; the document is never uploaded to any server
-- [ ] **PRV-02**: All assets (script fonts, the PDF.js worker, CMaps) are self-hosted — no third-party CDN or network requests occur while signing
+- [x] **PRV-01**: All document processing happens entirely in the browser; the document is never uploaded to any server
+- [x] **PRV-02**: All assets (script fonts, the PDF.js worker, CMaps) are self-hosted — no third-party CDN or network requests occur while signing
 - [ ] **PRV-03**: The app includes no third-party analytics, tracking, or error reporting that could transmit document contents
 
 ### Landing & Launch
@@ -89,9 +89,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 |-------------|-------|--------|
 | DOC-01 | Phase 1 | Pending |
 | DOC-02 | Phase 1 | Pending |
-| DOC-03 | Phase 1 | Pending |
-| PRV-01 | Phase 1 | Pending |
-| PRV-02 | Phase 1 | Pending |
+| DOC-03 | Phase 1 | Complete |
+| PRV-01 | Phase 1 | Complete |
+| PRV-02 | Phase 1 | Complete |
 | SIG-01 | Phase 2 | Pending |
 | FLD-01 | Phase 2 | Pending |
 | FLD-05 | Phase 2 | Pending |
@@ -118,6 +118,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PRV-03 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 29 total
 - Mapped to phases: 29 ✓
 - Unmapped: 0 ✓
