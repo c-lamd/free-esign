@@ -10,6 +10,9 @@ const require = createRequire(import.meta.url)
 const pdfjsDistPath = path.dirname(require.resolve('pdfjs-dist/package.json'))
 const cMapsDir = normalizePath(path.join(pdfjsDistPath, 'cmaps'))
 const standardFontsDir = normalizePath(path.join(pdfjsDistPath, 'standard_fonts'))
+// Auto-copy the worker so it stays in sync with the installed pdfjs-dist version.
+// Do NOT commit public/pdf.worker.min.mjs — the build populates it from node_modules.
+const workerFile = normalizePath(path.join(pdfjsDistPath, 'build', 'pdf.worker.min.mjs'))
 
 export default defineConfig({
   plugins: [
@@ -19,6 +22,7 @@ export default defineConfig({
       targets: [
         { src: cMapsDir, dest: '' },
         { src: standardFontsDir, dest: '' },
+        { src: workerFile, dest: '' },
       ],
     }),
   ],

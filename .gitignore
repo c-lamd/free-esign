@@ -28,3 +28,7 @@ dist-ssr/
 
 # Research cache
 .planning/research/.cache/
+
+# pdf.js worker — auto-copied from node_modules/pdfjs-dist by viteStaticCopy on build.
+# Never commit this file; it must stay in sync with the installed pdfjs-dist version.
+public/pdf.worker.min.mjs
