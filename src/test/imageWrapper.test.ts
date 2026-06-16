@@ -9,12 +9,12 @@ beforeAll(() => {
   if (typeof URL.createObjectURL === 'undefined') {
     Object.defineProperty(URL, 'createObjectURL', {
       writable: true,
-      value: vi.fn((_blob: Blob) => `blob:http://localhost/${crypto.randomUUID()}`),
+      value: vi.fn((_obj: Blob | MediaSource) => `blob:http://localhost/${crypto.randomUUID()}`),
     })
   } else {
     // Already defined (e.g. happy-dom) — ensure it returns a blob: URL
     vi.spyOn(URL, 'createObjectURL').mockImplementation(
-      (_blob: Blob) => `blob:http://localhost/${crypto.randomUUID()}`,
+      (_obj: Blob | MediaSource) => `blob:http://localhost/${crypto.randomUUID()}`,
     )
   }
 })

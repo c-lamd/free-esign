@@ -57,11 +57,9 @@ export function DocumentViewer() {
           file={docUrl}
           options={pdfOptions}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          onLoadError={(err) =>
+          onLoadError={() =>
             setError(
-              err instanceof Error
-                ? err.message
-                : 'This file could not be read. It may be corrupt or password-protected.',
+              "This file couldn't be read. It may be corrupt or password-protected. Try another file.",
             )
           }
         >
