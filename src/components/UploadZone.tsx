@@ -21,6 +21,7 @@ import { wrapImageAsPdf } from '../lib/imageWrapper'
 export function UploadZone() {
   const loadDocument = useDocumentStore((s) => s.loadDocument)
   const setError = useDocumentStore((s) => s.setError)
+  const setView = useDocumentStore((s) => s.setView)
 
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -50,6 +51,7 @@ export function UploadZone() {
       // File is valid — transition to loading state immediately
       // Images need to be wrapped; PDFs go straight through
       if (file.type === 'image/jpeg' || file.type === 'image/png') {
+        setView('loading') // show spinner before the async wrap (can take seconds for large images)
         try {
           const blobUrl = await wrapImageAsPdf(file)
           loadDocument(blobUrl)
@@ -64,7 +66,7 @@ export function UploadZone() {
         loadDocument(blobUrl)
       }
     },
-    [loadDocument, setError],
+    [loadDocument, setError, setView],
   )
 
   // ── Drag event handlers ──────────────────────────────────────────────────
