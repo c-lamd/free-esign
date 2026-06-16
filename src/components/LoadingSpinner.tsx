@@ -13,9 +13,8 @@ export function LoadingSpinner() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
-        style={{ animation: 'spin 1s linear infinite' }}
+        className="animate-spin"
       >
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         <circle
           cx="16"
           cy="16"
