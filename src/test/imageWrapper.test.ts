@@ -1,0 +1,102 @@
+import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { wrapImageAsPdf } from '../lib/imageWrapper'
+
+/**
+ * jsdom does not implement URL.createObjectURL. Stub it in this test file
+ * so that imageWrapper.ts can call it and we can assert on the returned string.
+ */
+beforeAll(() => {
+  if (typeof URL.createObjectURL === 'undefined') {
+    Object.defineProperty(URL, 'createObjectURL', {
+      writable: true,
+      value: vi.fn((_blob: Blob) => `blob:http://localhost/${crypto.randomUUID()}`),
+    })
+  } else {
+    // Already defined (e.g. happy-dom) — ensure it returns a blob: URL
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(
+      (_blob: Blob) => `blob:http://localhost/${crypto.randomUUID()}`,
+    )
+  }
+})
+
+/**
+ * Minimal valid 1×1 PNG bytes (67 bytes).
+ * Source: standard minimal PNG fixture — IHDR (1×1, 8-bit RGB) + IDAT + IEND.
+ */
+const MINIMAL_1x1_PNG = new Uint8Array([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
+  0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR length + type
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // width=1, height=1
+  0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, // bit depth=8, color type=2 (RGB), CRC
+  0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, // IDAT length + type
+  0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00, // IDAT data (compressed)
+  0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, // IDAT data + CRC
+  0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, // IEND length + type
+  0x44, 0xae, 0x42, 0x60, 0x82,                   // IEND CRC
+])
+
+/**
+ * Minimal valid 1×1 JPEG bytes.
+ * A valid JPEG with SOI + APP0 + SOF0 + DHT + SOS + EOI markers.
+ * Source: known-good minimal JPEG fixture used in pdf-lib test suites.
+ */
+const MINIMAL_1x1_JPEG = new Uint8Array([
+  0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, // SOI + APP0 marker
+  0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, // JFIF identifier
+  0x00, 0x01, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x43, // aspect + quant table
+  0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08, // quant values
+  0x07, 0x07, 0x07, 0x09, 0x09, 0x08, 0x0a, 0x0c, 0x14, 0x0d, 0x0c, 0x0b,
+  0x0b, 0x0c, 0x19, 0x12, 0x13, 0x0f, 0x14, 0x1d, 0x1a, 0x1f, 0x1e, 0x1d,
+  0x1a, 0x1c, 0x1c, 0x20, 0x24, 0x2e, 0x27, 0x20, 0x22, 0x2c, 0x23, 0x1c,
+  0x1c, 0x28, 0x37, 0x29, 0x2c, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1f, 0x27,
+  0x39, 0x3d, 0x38, 0x32, 0x3c, 0x2e, 0x33, 0x34, 0x32, // end quant
+  0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x01, 0x00, // SOF0 marker: height=1
+  0x01, 0x01, 0x01, 0x11, 0x00,                   // width=1, 1 component
+  0xff, 0xc4, 0x00, 0x1f, 0x00, 0x00, 0x01, 0x05, // DHT marker
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
+  0x0b,
+  0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, // SOS
+  0x3f, 0x00, 0xfb, 0xd3,                          // scan data
+  0xff, 0xd9,                                       // EOI
+])
+
+describe('wrapImageAsPdf — PNG input', () => {
+  it('resolves to a blob: URL for a valid PNG file', async () => {
+    const file = new File([MINIMAL_1x1_PNG], 'image.png', { type: 'image/png' })
+    const result = await wrapImageAsPdf(file)
+    expect(result).toMatch(/^blob:/)
+  })
+
+  it('returns a string (not a Buffer or Uint8Array)', async () => {
+    const file = new File([MINIMAL_1x1_PNG], 'image.png', { type: 'image/png' })
+    const result = await wrapImageAsPdf(file)
+    expect(typeof result).toBe('string')
+  })
+})
+
+describe('wrapImageAsPdf — JPEG input', () => {
+  it('resolves to a blob: URL for a valid JPEG file (.jpg)', async () => {
+    const file = new File([MINIMAL_1x1_JPEG], 'photo.jpg', {
+      type: 'image/jpeg',
+    })
+    const result = await wrapImageAsPdf(file)
+    expect(result).toMatch(/^blob:/)
+  })
+
+  it('resolves to a blob: URL for a valid JPEG file (.jpeg)', async () => {
+    const file = new File([MINIMAL_1x1_JPEG], 'photo.jpeg', {
+      type: 'image/jpeg',
+    })
+    const result = await wrapImageAsPdf(file)
+    expect(result).toMatch(/^blob:/)
+  })
+})
+
+describe('wrapImageAsPdf — error handling', () => {
+  it('rejects with an Error (not a raw pdf-lib error) when given corrupt image bytes', async () => {
+    const corrupt = new Uint8Array([0x00, 0x01, 0x02, 0x03]) // not a valid image
+    const file = new File([corrupt], 'bad.png', { type: 'image/png' })
+    await expect(wrapImageAsPdf(file)).rejects.toThrow()
+  })
+})
