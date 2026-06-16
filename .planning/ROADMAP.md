@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Foundation + PDF Viewer
-**Goal**: Users can open any PDF or image and view every page rendered in the browser, with the project wired for zero third-party network requests and a tested Coordinate Mapper ready for Phase 2.
+**Goal**: As a person who needs to sign a document, I want to open a PDF or image and see every page rendered in my browser, so that I can review it knowing the file never leaves my device.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: DOC-01, DOC-02, DOC-03, PRV-01, PRV-02
@@ -31,7 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can navigate forward and backward through all pages of a multi-page PDF
   4. After loading any document, the DevTools Network tab shows zero requests to third-party origins (fonts, CMaps, and the pdf.js worker all served from the app's own origin)
   5. The Coordinate Mapper round-trip test passes: a point converted to PDF-space and back lands within floating-point tolerance of the original CSS pixel position at any zoom and rotation
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton: scaffold (Vite/React/TS/Tailwind v4 + Vitest), self-hosted pdf.js assets, Zustand state machine, thinnest PDF→page-1 render slice (PRV-01, PRV-02)
+- [ ] 01-02-PLAN.md — Coordinate Mapper: pure cssPixel↔pdfSpace module + round-trip property test across scales/rotations (success criterion 5; Phase 2 hand-off)
+- [ ] 01-03-PLAN.md — Upload + image support: full-screen drag-drop/browse, type+size validation, image→PDF wrapping, friendly inline errors, "Open another" (DOC-01, DOC-02)
+- [ ] 01-04-PLAN.md — Continuous multi-page viewer: lazy fit-to-width pages on gray canvas + prev/next + "1 / N" navigation (DOC-03)
 **UI hint**: yes
 
 ### Phase 2: Core Signing Loop
@@ -96,7 +101,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + PDF Viewer | 0/TBD | Not started | - |
+| 1. Foundation + PDF Viewer | 0/4 | Planned | - |
 | 2. Core Signing Loop | 0/TBD | Not started | - |
 | 3. Full Field Types + Workspace Controls | 0/TBD | Not started | - |
 | 4. Typed Signatures + Signature Persistence | 0/TBD | Not started | - |
