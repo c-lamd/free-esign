@@ -56,9 +56,9 @@ All sizes are in px at base `font-size: 16px` (browser default, do not override)
 | Body | 16px | 400 (regular) | 1.5 | Upload zone privacy line, error messages, page count label |
 | Label | 14px | 400 (regular) | 1.4 | "Browse" button label, top-bar document actions, prev/next button labels |
 | Heading | 20px | 600 (semibold) | 1.2 | Upload zone prompt ("Drop your document here"), error headings |
-| Display | 22px | 700 (bold) | 1.1 | "FreeESign" wordmark in the top bar |
+| Display | 24px | 600 (semibold) | 1.1 | "FreeESign" wordmark in the top bar |
 
-Font weights declared: 400 (regular) and 600 (semibold). The wordmark uses 700 (bold) as a one-off exception for brand identity — this is the only bold usage in Phase 1.
+Font weights declared: 400 (regular) and 600 (semibold). No exceptions. If additional wordmark presence is needed, use `letter-spacing`, not a third weight.
 
 ---
 
@@ -99,7 +99,7 @@ Components to build in Phase 1 (no shadcn — all hand-crafted with Tailwind v4)
 - Height: 56px fixed
 - Background: `--color-surface-elevated` (white)
 - Bottom border: 1px solid `--color-border`
-- Left slot: "FreeESign" wordmark — Display size (22px/700)
+- Left slot: "FreeESign" wordmark — Display size (24px/600)
 - Right slot: "Open another" button — shown only when a document is loaded; Label size (14px/400), text style, accent color on hover
 - Horizontal padding: 16px (md)
 
@@ -141,7 +141,7 @@ Components to build in Phase 1 (no shadcn — all hand-crafted with Tailwind v4)
 - Fixed position: bottom-center of the viewport, 24px above the bottom edge
 - Background: white, border-radius 20px (pill), box-shadow: `0 2px 8px rgba(0,0,0,0.15)`, padding: 8px 16px
 - Layout: [prev button] [page indicator] [next button], gap 8px
-- Prev/Next: inline SVG chevron (16px), min 44px touch target, `--color-text-primary`, disabled state at opacity 0.35 when at first/last page
+- Prev/Next: inline SVG chevron (16px), min 44px touch target, `--color-text-primary`, disabled state at opacity 0.35 when at first/last page. Each button must include both `aria-label="Previous page"` / `aria-label="Next page"` AND a visually-hidden `<span class="sr-only">Previous page</span>` / `<span class="sr-only">Next page</span>` inside the button element so a visible-in-DOM label exists for keyboard users.
 - Page indicator: "1 / N" — Label size (14px/400), `--color-text-secondary`
 
 ---
@@ -235,6 +235,7 @@ Only one of `UploadZone / LoadingSpinner / ErrorBanner / DocumentViewer` renders
 - The file input (`<input type="file">`) is visually hidden but accessible — the Browse button activates it
 - Page indicator is `aria-live="polite"` so screen readers announce page changes
 - Prev/next buttons use `aria-disabled="true"` (not `disabled`) at boundaries so focus remains reachable
+- Prev/next buttons are icon-only visually but must include both `aria-label` and a `<span class="sr-only">` text label inside the button — the `sr-only` class uses `position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap` and must be defined in `src/index.css`
 - Error banner has `role="alert"` so screen readers announce it immediately on appearance
 - Color contrast: all text/background combinations must meet WCAG AA (4.5:1 for body text, 3:1 for large text)
   - `--color-text-primary` (#111827) on white: 16.75:1 — passes
@@ -294,11 +295,11 @@ No third-party component registries are used in Phase 1. All components are hand
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [ ] Dimension 1 Copywriting: pending re-check
+- [ ] Dimension 2 Visuals: pending re-check
+- [ ] Dimension 3 Color: pending re-check
+- [ ] Dimension 4 Typography: pending re-check
+- [ ] Dimension 5 Spacing: pending re-check
+- [ ] Dimension 6 Registry Safety: pending re-check
 
 **Approval:** pending
