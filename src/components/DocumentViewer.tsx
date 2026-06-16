@@ -1,10 +1,11 @@
-// Import pdfWorker FIRST — sets GlobalWorkerOptions.workerSrc before react-pdf initialises.
-// RESEARCH Pitfall 3: module execution order; this import must stay at the top.
-import '../lib/pdfWorker'
+// pdfWorker side-effect is anchored in main.tsx (WR-02); the named import here
+// gives access to pdfOptions. The bare side-effect import on the previous line
+// has been removed — it was dead code after main.tsx started importing the module.
 import { pdfOptions } from '../lib/pdfWorker'
 
 import { Document } from 'react-pdf'
-import 'react-pdf/dist/Page/AnnotationLayer.css'
+// AnnotationLayer.css intentionally NOT imported — renderAnnotationLayer={false} on every Page.
+// Re-add alongside a security review of the annotation attack surface when annotations are enabled.
 // TextLayer.css intentionally NOT imported — renderTextLayer={false} in Phase 1
 
 import { useCallback, useEffect, useRef, useState } from 'react'
