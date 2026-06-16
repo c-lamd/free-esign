@@ -87,13 +87,41 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (pending roadmap) | — | Pending |
+| DOC-01 | Phase 1 | Pending |
+| DOC-02 | Phase 1 | Pending |
+| DOC-03 | Phase 1 | Pending |
+| PRV-01 | Phase 1 | Pending |
+| PRV-02 | Phase 1 | Pending |
+| SIG-01 | Phase 2 | Pending |
+| FLD-01 | Phase 2 | Pending |
+| FLD-05 | Phase 2 | Pending |
+| FLD-06 | Phase 2 | Pending |
+| FLD-07 | Phase 2 | Pending |
+| EXP-01 | Phase 2 | Pending |
+| EXP-02 | Phase 2 | Pending |
+| EXP-03 | Phase 2 | Pending |
+| DOC-04 | Phase 3 | Pending |
+| DOC-05 | Phase 3 | Pending |
+| FLD-02 | Phase 3 | Pending |
+| FLD-03 | Phase 3 | Pending |
+| FLD-04 | Phase 3 | Pending |
+| FLD-08 | Phase 3 | Pending |
+| FLD-09 | Phase 3 | Pending |
+| SIG-02 | Phase 4 | Pending |
+| SIG-03 | Phase 4 | Pending |
+| SIG-04 | Phase 4 | Pending |
+| SIG-05 | Phase 4 | Pending |
+| LND-01 | Phase 5 | Pending |
+| LND-02 | Phase 5 | Pending |
+| LND-03 | Phase 5 | Pending |
+| LND-04 | Phase 5 | Pending |
+| PRV-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 29 total
-- Mapped to phases: pending roadmap creation
-- Unmapped: pending ⚠️
+- Mapped to phases: 29 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-16*
-*Last updated: 2026-06-16 after initial definition*
+*Last updated: 2026-06-16 after roadmap creation (traceability populated)*
