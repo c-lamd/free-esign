@@ -138,3 +138,24 @@ All three checks ran after all fixes were applied:
 _Fixed: 2026-06-16T15:31:00Z_
 _Fixer: Claude (gsd-code-fixer)_
 _Iteration: 1_
+
+---
+
+## Follow-up correction (orchestrator, post-fix verification)
+
+CR-02's first fix was **incomplete**: `viteStaticCopy` was given absolute (and later
+glob/relative) paths from `require.resolve`, which made it reconstruct the full
+`node_modules/pdfjs-dist/...` tree **under** `dist/` (e.g. `dist/node_modules/pdfjs-dist/cmaps/`)
+instead of placing assets at `dist/cmaps/`, `dist/standard_fonts/`, and `dist/pdf.worker.min.mjs`.
+The build still produced a worker at the dist root **only** because a committed
+`public/pdf.worker.min.mjs` was being auto-copied by Vite — masking the bug. With the runtime
+URLs (`/pdf.worker.min.mjs`, `/cmaps/`, `/standard_fonts/`) all pointing at the dist root, cmaps
+and standard fonts would have **404'd at runtime**, and the worker would have 404'd once the
+committed copy was removed — a real PRV-02 regression.
+
+**Resolution (commit `c65119b`):** replaced `viteStaticCopy` with `scripts/copy-pdf-assets.mjs`,
+wired to `prepare`/`predev`/`prebuild`. It copies the worker + `cmaps/` + `standard_fonts/` from
+the installed `pdfjs-dist` into `public/`, which Vite serves at the site root in **both** dev and
+build. Verified: clean `dist/` now contains `pdf.worker.min.mjs`, `cmaps/` (169 files),
+`standard_fonts/` (16 files) at the root and **no** `dist/node_modules/`. `vite-plugin-static-copy`
+was removed from devDependencies. tsc clean, 117/117 tests pass, build exit 0.
