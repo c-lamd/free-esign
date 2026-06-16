@@ -9,8 +9,8 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 ### Document Handling
 
-- [ ] **DOC-01**: User can open a PDF by drag-and-drop or file picker
-- [ ] **DOC-02**: User can open an image (JPG/PNG) to sign
+- [x] **DOC-01**: User can open a PDF by drag-and-drop or file picker
+- [x] **DOC-02**: User can open an image (JPG/PNG) to sign
 - [x] **DOC-03**: User can view and navigate all pages of a multi-page PDF
 - [ ] **DOC-04**: User can zoom the document in and out, with placed fields scaling correctly with the page
 - [ ] **DOC-05**: When a user selects a Word document (.doc/.docx), the app clearly instructs them to export it to PDF first — no silent conversion that could change formatting
@@ -87,8 +87,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DOC-01 | Phase 1 | Pending |
-| DOC-02 | Phase 1 | Pending |
+| DOC-01 | Phase 1 | Complete |
+| DOC-02 | Phase 1 | Complete |
 | DOC-03 | Phase 1 | Complete |
 | PRV-01 | Phase 1 | Complete |
 | PRV-02 | Phase 1 | Complete |

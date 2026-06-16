@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md (Walking Skeleton)
-last_updated: "2026-06-16T22:03:52.795Z"
+stopped_at: Completed 01-03-PLAN.md (Upload + Image Wrapping)
+last_updated: "2026-06-16T22:12:07.020Z"
 last_activity: 2026-06-16 -- Phase 01 execution started
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 01 (Foundation + PDF Viewer) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-16 -- Phase 01 execution started
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 16min | 3 tasks | 22 files |
+| Phase 01 P03 | 8min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase ?]: pdfjs-dist 5.4.296 (not 4.x) pinned by react-pdf 10.4.1; worker filename is pdf.worker.min.mjs (.mjs not .js)
 - [Phase ?]: public/ static copy for pdfjs worker avoids Vite content-hash 404s on redeployment
 - [Phase ?]: pdfWorker.ts imported first in DocumentViewer.tsx to prevent react-pdf workerSrc overwrite (Pitfall 3)
+- [Phase ?]: Defense-in-depth: MIME AND extension both whitelisted (T-01-06)
+- [Phase ?]: wrapImageAsPdf uses embedJpg/embedPng: original image bytes embedded, no canvas rasterization (CLAUDE.md document integrity)
+- [Phase ?]: Phase 2 DPI caveat: image px dimensions = PDF points at 72 DPI; export must handle DPI normalization
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-16T22:03:52.791Z
-Stopped at: Completed 01-01-PLAN.md (Walking Skeleton)
-Resume file: .planning/phases/01-foundation-pdf-viewer/01-02-PLAN.md
+Last session: 2026-06-16T22:12:07.016Z
+Stopped at: Completed 01-03-PLAN.md (Upload + Image Wrapping)
+Resume file: .planning/phases/01-foundation-pdf-viewer/01-04-PLAN.md
