@@ -29,6 +29,9 @@ dist-ssr/
 # Research cache
 .planning/research/.cache/
 
-# pdf.js worker — auto-copied from node_modules/pdfjs-dist by viteStaticCopy on build.
-# Never commit this file; it must stay in sync with the installed pdfjs-dist version.
+# Self-hosted pdf.js assets — generated into public/ by scripts/copy-pdf-assets.mjs
+# (prepare/predev/prebuild). Never commit; they must stay in sync with the installed
+# pdfjs-dist version and would otherwise bloat the repo.
 public/pdf.worker.min.mjs
+public/cmaps/
+public/standard_fonts/

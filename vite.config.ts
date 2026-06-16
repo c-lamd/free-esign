@@ -1,31 +1,15 @@
 /// <reference types="vitest/config" />
-import path from 'node:path'
-import { createRequire } from 'node:module'
-import { defineConfig, normalizePath } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
 
-const require = createRequire(import.meta.url)
-const pdfjsDistPath = path.dirname(require.resolve('pdfjs-dist/package.json'))
-const cMapsDir = normalizePath(path.join(pdfjsDistPath, 'cmaps'))
-const standardFontsDir = normalizePath(path.join(pdfjsDistPath, 'standard_fonts'))
-// Auto-copy the worker so it stays in sync with the installed pdfjs-dist version.
-// Do NOT commit public/pdf.worker.min.mjs — the build populates it from node_modules.
-const workerFile = normalizePath(path.join(pdfjsDistPath, 'build', 'pdf.worker.min.mjs'))
-
+// Self-hosted pdf.js assets (worker, cmaps, standard_fonts) are copied into public/
+// by scripts/copy-pdf-assets.mjs (wired to prepare/predev/prebuild). Vite serves
+// public/ at the site root in both dev and build, so the runtime URLs
+// /pdf.worker.min.mjs, /cmaps/ and /standard_fonts/ resolve to the app's own origin
+// (PRV-02 — zero third-party network requests while signing).
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    viteStaticCopy({
-      targets: [
-        { src: cMapsDir, dest: '' },
-        { src: standardFontsDir, dest: '' },
-        { src: workerFile, dest: '' },
-      ],
-    }),
-  ],
+  plugins: [react(), tailwindcss()],
   test: {
     globals: true,
     environment: 'jsdom',
