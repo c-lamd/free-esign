@@ -13,7 +13,7 @@ FreeESign ships as five vertical slices, each delivering an observable end-to-en
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation + PDF Viewer** - Scaffold the Vite/React/TS app, build and test the Coordinate Mapper, ingest PDFs and images, and render all pages — nothing leaves the browser
+- [x] **Phase 1: Foundation + PDF Viewer** - Scaffold the Vite/React/TS app, build and test the Coordinate Mapper, ingest PDFs and images, and render all pages — nothing leaves the browser (completed 2026-06-16)
 - [ ] **Phase 2: Core Signing Loop** - Place a drawn signature on any page, drag/resize/delete it, and download a zero-alteration signed PDF
 - [ ] **Phase 3: Full Field Types + Workspace Controls** - Add initials, date, text, and checkbox fields; zoom with correct field scaling; multi-page placement; undo/redo; Word doc prompt
 - [ ] **Phase 4: Typed Signatures + Signature Persistence** - Type a signature in script fonts; save and reuse signatures and initials across sessions via IndexedDB
@@ -41,7 +41,7 @@ Plans:
 - [x] 01-01-PLAN.md — Walking Skeleton: scaffold (Vite/React/TS/Tailwind v4 + Vitest), self-hosted pdf.js assets, Zustand state machine, thinnest PDF→page-1 render slice (PRV-01, PRV-02)
 - [x] 01-02-PLAN.md — Coordinate Mapper: pure cssPixel↔pdfSpace module + round-trip property test across scales/rotations (success criterion 5; Phase 2 hand-off)
 - [x] 01-03-PLAN.md — Upload + image support: full-screen drag-drop/browse, type+size validation, image→PDF wrapping, friendly inline errors, "Open another" (DOC-01, DOC-02)
-- [ ] 01-04-PLAN.md — Continuous multi-page viewer: lazy fit-to-width pages on gray canvas + prev/next + "1 / N" navigation (DOC-03)
+- [x] 01-04-PLAN.md — Continuous multi-page viewer: lazy fit-to-width pages on gray canvas + prev/next + "1 / N" navigation (DOC-03)
 
 **UI hint**: yes
 
@@ -119,7 +119,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + PDF Viewer | 3/4 | In Progress|  |
+| 1. Foundation + PDF Viewer | 4/4 | Complete   | 2026-06-16 |
 | 2. Core Signing Loop | 0/TBD | Not started | - |
 | 3. Full Field Types + Workspace Controls | 0/TBD | Not started | - |
 | 4. Typed Signatures + Signature Persistence | 0/TBD | Not started | - |
