@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type ViewState = 'empty' | 'loading' | 'error' | 'loaded'
+export type ViewState = 'landing' | 'empty' | 'loading' | 'error' | 'loaded'
 
 /**
  * Discrete zoom steps for document zoom (50–200%).
@@ -41,6 +41,8 @@ export interface DocumentStore {
    */
   zoom: number
 
+  goToLanding: () => void
+  startSigning: () => void
   setView: (v: ViewState) => void
   loadDocument: (url: string) => void
   setNumPages: (n: number) => void
@@ -54,7 +56,7 @@ export interface DocumentStore {
 }
 
 export const useDocumentStore = create<DocumentStore>()((set) => ({
-  view: 'empty',
+  view: 'landing',
   docUrl: null,
   numPages: null,
   currentPage: 1,
@@ -64,6 +66,8 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   exportError: null,
   zoom: 1.0,
 
+  goToLanding: () => set({ view: 'landing' }),
+  startSigning: () => set({ view: 'empty' }),
   setView: (view) => set({ view }),
   loadDocument: (url) => set({ docUrl: url, view: 'loading', errorMessage: null }),
   setNumPages: (numPages) => set({ numPages, view: 'loaded' }),

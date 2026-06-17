@@ -7,9 +7,10 @@ describe('documentStore', () => {
     useDocumentStore.getState().reset()
   })
 
-  it('has initial state of empty view', () => {
+  it('has initial state of landing view', () => {
+    useDocumentStore.getState().goToLanding()
     const state = useDocumentStore.getState()
-    expect(state.view).toBe('empty')
+    expect(state.view).toBe('landing')
     expect(state.docUrl).toBeNull()
     expect(state.numPages).toBeNull()
     expect(state.currentPage).toBe(1)
@@ -18,6 +19,20 @@ describe('documentStore', () => {
     expect(state.fileName).toBeNull()
     expect(state.exportError).toBeNull()
     expect(state.zoom).toBe(1.0)
+  })
+
+  it('goToLanding sets view to landing', () => {
+    const store = useDocumentStore.getState()
+    store.setView('empty')
+    store.goToLanding()
+    expect(useDocumentStore.getState().view).toBe('landing')
+  })
+
+  it('startSigning sets view to empty', () => {
+    const store = useDocumentStore.getState()
+    store.goToLanding()
+    store.startSigning()
+    expect(useDocumentStore.getState().view).toBe('empty')
   })
 
   it('loadDocument sets docUrl and transitions to loading', () => {
