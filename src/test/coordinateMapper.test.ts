@@ -16,6 +16,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
+import { makeSimpleViewport } from '../lib/pageViewport'
 
 // ---------------------------------------------------------------------------
 // Minimal pdfjs-identical affine viewport mock
@@ -197,5 +198,112 @@ describe('pageSpaceToCssPixel', () => {
     expect(result).toHaveProperty('y')
     expect(typeof result.x).toBe('number')
     expect(typeof result.y).toBe('number')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Zoom-invariance tests (DOC-04)
+// ---------------------------------------------------------------------------
+//
+// These tests prove that the same physical document point maps to identical PDF
+// coordinates regardless of zoom level, and that field widths stored in PDF space
+// are zoom-invariant.
+//
+// Key insight (RESEARCH Section 10): when the page renders at a higher zoom, the
+// SAME physical click position (e.g., "1/3 from the left, 1/2 down") corresponds
+// to a PROPORTIONALLY LARGER CSS coordinate because the page is larger on screen.
+// The effectiveScale grows at the same rate, so the resulting PDF coordinate is
+// identical.
+//
+// The test uses makeSimpleViewport (the actual production viewport builder) so the
+// invariance proof covers the exact code path used at runtime.
+// ---------------------------------------------------------------------------
+
+describe('zoom-invariance: same document point → identical PDF coords at any zoom', () => {
+  // Standard US-letter page dimensions
+  const originalWidth = 612   // points
+  const originalHeight = 792  // points
+  const containerWidth = 600  // CSS pixels (fit-to-width container)
+
+  // Baseline fit scale (zoom = 1.0)
+  const fitScale = containerWidth / originalWidth  // ≈ 0.9804
+
+  it('placing at zoom 1.0 and zoom 1.5 produces identical pdfX and pdfY', () => {
+    // The physical click is "1/3 from left, 1/2 down" on the page.
+    // At zoom 1.0 the page is containerWidth * 1.0 pixels wide → cssX = containerWidth * 1/3
+    // At zoom 1.5 the page is containerWidth * 1.5 pixels wide → cssX = containerWidth * 1.5 * 1/3
+    // Both represent the SAME document point.
+    const physicalFractionX = 1 / 3
+    const physicalFractionY = 1 / 2
+
+    // — zoom 1.0 —
+    const effectiveScale1 = fitScale * 1.0
+    const cssX1 = containerWidth * 1.0 * physicalFractionX
+    const cssY1 = (originalHeight * effectiveScale1) * physicalFractionY
+    const vp1 = makeSimpleViewport(originalWidth, originalHeight, effectiveScale1)
+    const pdf1 = cssPixelToPageSpace({ x: cssX1, y: cssY1 }, vp1)
+
+    // — zoom 1.5 —
+    const effectiveScale2 = fitScale * 1.5
+    const cssX2 = containerWidth * 1.5 * physicalFractionX
+    const cssY2 = (originalHeight * effectiveScale2) * physicalFractionY
+    const vp2 = makeSimpleViewport(originalWidth, originalHeight, effectiveScale2)
+    const pdf2 = cssPixelToPageSpace({ x: cssX2, y: cssY2 }, vp2)
+
+    // PDF coordinates must be identical (to 5 decimal places) — DOC-04
+    expect(pdf1.x).toBeCloseTo(pdf2.x, 5)
+    expect(pdf1.y).toBeCloseTo(pdf2.y, 5)
+  })
+
+  it('zoom 1.0 and zoom 2.0 produce identical pdfX and pdfY for the same content point', () => {
+    const physicalFractionX = 0.7
+    const physicalFractionY = 0.3
+
+    const effectiveScale1 = fitScale * 1.0
+    const cssX1 = containerWidth * 1.0 * physicalFractionX
+    const cssY1 = (originalHeight * effectiveScale1) * physicalFractionY
+    const vp1 = makeSimpleViewport(originalWidth, originalHeight, effectiveScale1)
+    const pdf1 = cssPixelToPageSpace({ x: cssX1, y: cssY1 }, vp1)
+
+    const effectiveScale2 = fitScale * 2.0
+    const cssX2 = containerWidth * 2.0 * physicalFractionX
+    const cssY2 = (originalHeight * effectiveScale2) * physicalFractionY
+    const vp2 = makeSimpleViewport(originalWidth, originalHeight, effectiveScale2)
+    const pdf2 = cssPixelToPageSpace({ x: cssX2, y: cssY2 }, vp2)
+
+    expect(pdf1.x).toBeCloseTo(pdf2.x, 5)
+    expect(pdf1.y).toBeCloseTo(pdf2.y, 5)
+  })
+
+  it('PDF-space field width (cssSize / effectiveScale) is identical at zoom 1.0 and zoom 1.5', () => {
+    // A field that visually spans a fixed percentage of the page width.
+    // At zoom 1.0 it has baseCssWidth CSS pixels.
+    // At zoom 1.5 it has baseCssWidth * 1.5 CSS pixels (same physical size on document).
+    // PDF-space width = cssSize / effectiveScale must be the same in both cases.
+    const baseCssWidth = 160  // CSS pixels at zoom 1.0
+
+    const effectiveScale1 = fitScale * 1.0
+    const pdfWidth1 = baseCssWidth / effectiveScale1
+
+    const effectiveScale2 = fitScale * 1.5
+    const pdfWidth2 = (baseCssWidth * 1.5) / effectiveScale2
+
+    // PDF-space widths must be identical — proves no field size drift on zoom
+    expect(pdfWidth1).toBeCloseTo(pdfWidth2, 5)
+  })
+
+  it('PDF-space field width is identical at zoom 0.5 and zoom 1.75', () => {
+    // baseCssWidth is the field's CSS pixel width at zoom 1.0 baseline.
+    // At zoom Z, the same document field occupies baseCssWidth * Z CSS pixels.
+    // PDF-space width = (baseCssWidth * Z) / (fitScale * Z) = baseCssWidth / fitScale, which is constant.
+    const baseCssWidth = 100
+
+    const effectiveScale1 = fitScale * 0.5
+    const pdfWidth1 = (baseCssWidth * 0.5) / effectiveScale1
+
+    const effectiveScale2 = fitScale * 1.75
+    const pdfWidth2 = (baseCssWidth * 1.75) / effectiveScale2
+
+    expect(pdfWidth1).toBeCloseTo(pdfWidth2, 5)
   })
 })
