@@ -205,6 +205,7 @@ export async function exportSignedPdf(
       for (const field of fields) {
         if (
           (field.type === 'signature' || field.type === 'initials') &&
+          field.textValue &&
           field.fontFamily &&
           !embeddedFonts.has(field.fontFamily)
         ) {
