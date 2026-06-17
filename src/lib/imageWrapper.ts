@@ -18,7 +18,7 @@
  *   at true print size is required.
  */
 
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument } from 'pdf-lib-incremental-save'
 
 /**
  * Wraps a JPG or PNG File into a single-page PDF sized to the image's pixel
