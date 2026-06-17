@@ -31,6 +31,54 @@ function makeField(overrides: Partial<PlacedField> = {}): PlacedField {
   }
 }
 
+describe('undoRedo — CR-01 exactly N undos for N adds (no phantom steps)', () => {
+  beforeEach(() => {
+    useFieldStore.getState().resetFields()
+  })
+
+  it('1 add → 1 undo returns to empty; 2nd undo is a no-op', () => {
+    const store = useFieldStore.getState()
+    store.addField(makeField({ id: 'f1' }))
+    store.undo()
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+    store.undo() // no-op
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+  })
+
+  it('2 adds → exactly 2 undos return to empty (no phantom middle step)', () => {
+    const store = useFieldStore.getState()
+    store.addField(makeField({ id: 'f1' }))
+    store.addField(makeField({ id: 'f2' }))
+    // undo #1: back to [f1]
+    store.undo()
+    expect(useFieldStore.getState().fields).toHaveLength(1)
+    expect(useFieldStore.getState().fields[0].id).toBe('f1')
+    // undo #2: back to []
+    store.undo()
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+    // undo #3: no-op
+    store.undo()
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+  })
+
+  it('5 adds → exactly 5 undos return to empty', () => {
+    const store = useFieldStore.getState()
+    for (let i = 1; i <= 5; i++) {
+      store.addField(makeField({ id: `f${i}` }))
+    }
+    // Should have 5 fields
+    expect(useFieldStore.getState().fields).toHaveLength(5)
+    // Each undo removes exactly one field
+    for (let remaining = 4; remaining >= 0; remaining--) {
+      store.undo()
+      expect(useFieldStore.getState().fields).toHaveLength(remaining)
+    }
+    // Further undo is a no-op
+    store.undo()
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+  })
+})
+
 describe('undoRedo — FLD-09 redo-tail truncation', () => {
   beforeEach(() => {
     useFieldStore.getState().resetFields()

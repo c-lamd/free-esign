@@ -29,7 +29,7 @@ interface LazyPageProps {
  * - placementMode/setPlacementMode replaced by armedFieldType/setArmedFieldType.
  * - handleOverlayClick dispatches all five armed types with per-type defaults.
  * - Date fields default to today (M/D/YYYY format).
- * - pushHistory called BEFORE addField (one undo entry per drop).
+ * - addField owns the pre+post history snapshot pair (one undo entry per drop).
  *
  * Plan 03-03 zoom threading:
  * - subscribes to zoom from documentStore.
@@ -61,7 +61,6 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   const setSelectedFieldId  = useFieldStore((s) => s.setSelectedFieldId)
   const setArmedFieldType   = useFieldStore((s) => s.setArmedFieldType)
   const setPageDimensions   = useFieldStore((s) => s.setPageDimensions)
-  const pushHistory         = useFieldStore((s) => s.pushHistory)
 
   // Fields that belong to this page
   const pageFields = fields.filter((f) => f.pageNumber === pageNumber)
@@ -193,11 +192,8 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         ...(textValue !== undefined ? { textValue } : {}),
       }
 
-      // Push undo history BEFORE adding the field (one undo entry per drop)
-      // NOTE: addField itself also pushes pre+post history internally.
-      // We call pushHistory here to comply with the plan spec; addField then adds
-      // its own pre-state snapshot before the field is appended.
-      pushHistory()
+      // addField handles the complete pre+post history snapshot pair internally —
+      // one undo step per field drop with no phantom entries.
       addField(newField)
       setSelectedFieldId(newField.id)
       setArmedFieldType(null) // disarm after drop
@@ -210,7 +206,6 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       pageNumber,
       containerWidth,
       zoom,
-      pushHistory,
       addField,
       setSelectedFieldId,
       setArmedFieldType,

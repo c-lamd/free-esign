@@ -11,9 +11,11 @@
  *
  * MP-01 seam: PlacedField.role is reserved for v2 multi-party routing.
  *
- * History invariant: the first push seeds history[0] as the pre-action snapshot.
+ * History invariant: history[0] is seeded with the empty-document state; each user
+ * action appends exactly ONE entry (post-mutation for add/delete; pre-mutation for
+ * drag/resize/text-blur via pushHistory). historyIndex points to the current state.
  * undo() restores history[historyIndex-1]; redo() restores history[historyIndex+1].
- * historyIndex <= 0 means no further undo is possible.
+ * historyIndex <= 0 means no further undo is possible (at the baseline empty state).
  */
 
 import { create } from 'zustand'
@@ -44,6 +46,28 @@ export interface PageDimensions {
 // ---------- History cap constant ----------
 
 const MAX_HISTORY = 50
+
+// ---------- History helpers ----------
+
+/**
+ * Appends a single snapshot to a history array and bounds it to MAX_HISTORY.
+ * Returns [newHistory, newHistoryIndex].
+ *
+ * This implements a single-state-per-operation model:
+ *   - addField/deleteField push the POST-mutation state.
+ *   - pushHistory (before drag/resize/text blur) pushes the PRE-mutation state.
+ * Each user action = exactly one entry = exactly one undo step.
+ */
+function appendSnapshot(
+  history: PlacedField[][],
+  historyIndex: number,
+  snapshot: PlacedField[],
+): [PlacedField[][], number] {
+  const truncated = history.slice(0, historyIndex + 1)
+  truncated.push(snapshot)
+  const bounded = truncated.slice(-MAX_HISTORY)
+  return [bounded, bounded.length - 1]
+}
 
 // ---------- Store shape ----------
 
@@ -100,8 +124,12 @@ const initialFieldState = {
   fields: [] as PlacedField[],
   selectedFieldId: null as string | null,
   pageDimensions: new Map<number, PageDimensions>(),
-  history: [] as PlacedField[][],
-  historyIndex: -1,
+  // History is seeded with one empty-state snapshot so that the undo guard
+  // (historyIndex <= 0) correctly prevents undo past the initial state.
+  // Each user action appends exactly ONE entry (post-mutation state for
+  // add/delete; pre-mutation state for drag/resize/text-blur via pushHistory).
+  history: [[]] as PlacedField[][],
+  historyIndex: 0,
 }
 
 // ---------- Store ----------
@@ -121,38 +149,30 @@ export const useFieldStore = create<FieldStore>()((set) => ({
   openInitialsModal: () => set({ initialsModalOpen: true }),
   closeInitialsModal: () => set({ initialsModalOpen: false }),
 
-  // pushHistory — snapshot current fields before a mutation.
-  // Invariant: history[historyIndex] is the "before" state before the next undo.
-  // Slices off the redo tail (anything after historyIndex), appends the snapshot,
-  // then bounds to MAX_HISTORY.
+  // pushHistory — snapshot current fields BEFORE a mutation (drag/resize/text-blur).
+  // Called by drag/resize/blur handlers before updateField().
+  // Undo restores history[historyIndex - 1] which is the state just before this snapshot.
+  // Note: the post-mutation state is NOT stored in history, so redo after drag/resize
+  // restores the same pre-drag state (redo of drag/resize is intentionally not supported).
   pushHistory: () =>
     set((state) => {
       const snapshot = [...state.fields]
-      const newHistory = state.history.slice(0, state.historyIndex + 1)
-      newHistory.push(snapshot)
-      const bounded = newHistory.slice(-MAX_HISTORY)
-      return { history: bounded, historyIndex: bounded.length - 1 }
+      const [newHistory, newIndex] = appendSnapshot(state.history, state.historyIndex, snapshot)
+      return { history: newHistory, historyIndex: newIndex }
     }),
 
-  // addField: push a pre-add snapshot first, then append the new field.
-  // This seeds history[0] as the empty state so undo can fully revert.
+  // addField: append the new field and push exactly ONE post-mutation snapshot.
+  // One user action = one history entry = one undo step.
+  // The initial seeded history[0] = [] acts as the "empty document" baseline
+  // that undo can never go past (historyIndex <= 0 guard in undo()).
   addField: (field) =>
     set((state) => {
-      // Snapshot the pre-add state (redo tail truncated)
-      const preMutation = [...state.fields]
-      const newHistory = state.history.slice(0, state.historyIndex + 1)
-      newHistory.push(preMutation)
-      const bounded = newHistory.slice(-MAX_HISTORY)
-      // Append the new field
       const newFields = [...state.fields, field]
-      // Push the post-add state too so redo can re-apply
-      const withPostState = bounded.slice(0, bounded.length)
-      withPostState.push([...newFields])
-      const bounded2 = withPostState.slice(-MAX_HISTORY)
+      const [newHistory, newIndex] = appendSnapshot(state.history, state.historyIndex, [...newFields])
       return {
         fields: newFields,
-        history: bounded2,
-        historyIndex: bounded2.length - 1,
+        history: newHistory,
+        historyIndex: newIndex,
       }
     }),
 
@@ -161,23 +181,16 @@ export const useFieldStore = create<FieldStore>()((set) => ({
       fields: state.fields.map((f) => (f.id === id ? { ...f, ...updates } : f)),
     })),
 
-  // deleteField: push a pre-delete snapshot first, then remove the field.
+  // deleteField: remove the field and push exactly ONE post-mutation snapshot.
+  // One user action = one history entry = one undo step.
   deleteField: (id) =>
     set((state) => {
-      // Snapshot the pre-delete state
-      const preMutation = [...state.fields]
-      const newHistory = state.history.slice(0, state.historyIndex + 1)
-      newHistory.push(preMutation)
-      const bounded = newHistory.slice(-MAX_HISTORY)
-      // Remove the field
       const newFields = state.fields.filter((f) => f.id !== id)
-      // Push the post-delete state
-      const withPostState = [...bounded, [...newFields]]
-      const bounded2 = withPostState.slice(-MAX_HISTORY)
+      const [newHistory, newIndex] = appendSnapshot(state.history, state.historyIndex, [...newFields])
       return {
         fields: newFields,
-        history: bounded2,
-        historyIndex: bounded2.length - 1,
+        history: newHistory,
+        historyIndex: newIndex,
         // FLD-07: deleting the selected field clears the selection
         selectedFieldId: state.selectedFieldId === id ? null : state.selectedFieldId,
       }

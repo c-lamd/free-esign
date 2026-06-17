@@ -153,8 +153,8 @@ describe('useFieldStore', () => {
     expect(state.modalOpen).toBe(false)
     expect(state.initialsDataUrl).toBeNull()
     expect(state.initialsModalOpen).toBe(false)
-    expect(state.history).toEqual([])
-    expect(state.historyIndex).toBe(-1)
+    expect(state.history).toEqual([[]])
+    expect(state.historyIndex).toBe(0)
   })
 
   // ---------- openModal / closeModal ----------
