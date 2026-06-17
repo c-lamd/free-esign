@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 Plan 03 complete
-last_updated: "2026-06-17T01:00:00.000Z"
+stopped_at: Phase 3 Plan 04 complete
+last_updated: "2026-06-17T08:03:02.465Z"
 last_activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 13
-  completed_plans: 11
-  percent: 40
+  completed_plans: 13
+  percent: 60
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 03 (Full Field Types + Workspace Controls) — IN PROGRESS
-Plan: 3 of 5 complete
+Plan: 4 of 5 complete
 Status: Phase 3 Plan 03 complete; DOC-04 zoom closed
 Last activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
 
@@ -63,6 +63,7 @@ Progress: [███░░░░░░░] 60% (3/5 plans in Phase 3 done)
 | Phase 03 P02 | 5 | 3 tasks | 7 files |
 | Phase 03 P05 | 3 | 2 tasks | 4 files |
 | Phase 03 P03 | 12 | 3 tasks | 6 files |
+| Phase 03 P04 | 8 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase ?]: PlacementModeOverlay rendered as fragment sibling before scroll div so sticky top:56px resolves to viewport (not scroll container)
 - [Phase ?]: makeSimpleViewport rotation=0 only; rotated pages deferred to Phase 3 (full pdfjs affine required)
 - [Phase ?]: lockAspectRatio=true (not numeric ratio) sufficient for v1 — field dims computed from PNG aspect so ratio is preserved
+- [Phase 03-04]: Undo/redo keyboard shortcuts extend DocumentViewer single keydown handler; undo/redo branches placed before selectedFieldId gate
+- [Phase 03-04]: T-03-11: INPUT/TEXTAREA guard fires first in shared handler for both delete and undo/redo shortcuts
+- [Phase 03-04]: InitialsDrawModal uses 2:1 canvas aspect ratio; mirrors SignatureDrawModal gated on initialsModalOpen
 
 ### Pending Todos
 
@@ -144,6 +148,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T01:00:00.000Z
-Stopped at: Phase 3 Plan 03 complete
-Resume file: None (continue with 03-04-PLAN.md)
+Last session: 2026-06-17T08:03:02.461Z
+Stopped at: Phase 3 Plan 04 complete
+Resume file: None (continue with 03-05-PLAN.md)

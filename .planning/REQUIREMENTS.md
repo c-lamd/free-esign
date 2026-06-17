@@ -106,7 +106,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | FLD-03 | Phase 3 | Complete |
 | FLD-04 | Phase 3 | Complete |
 | FLD-08 | Phase 3 | Complete |
-| FLD-09 | Phase 3 | Pending |
+| FLD-09 | Phase 3 | Complete |
 | SIG-02 | Phase 4 | Pending |
 | SIG-03 | Phase 4 | Pending |
 | SIG-04 | Phase 4 | Pending |

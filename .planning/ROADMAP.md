@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + PDF Viewer** - Scaffold the Vite/React/TS app, build and test the Coordinate Mapper, ingest PDFs and images, and render all pages — nothing leaves the browser (completed 2026-06-16)
 - [ ] **Phase 2: Core Signing Loop** - Place a drawn signature on any page, drag/resize/delete it, and download a zero-alteration signed PDF
-- [ ] **Phase 3: Full Field Types + Workspace Controls** - Add initials, date, text, and checkbox fields; zoom with correct field scaling; multi-page placement; undo/redo; Word doc prompt
+- [x] **Phase 3: Full Field Types + Workspace Controls** - Add initials, date, text, and checkbox fields; zoom with correct field scaling; multi-page placement; undo/redo; Word doc prompt (completed 2026-06-17)
 - [ ] **Phase 4: Typed Signatures + Signature Persistence** - Type a signature in script fonts; save and reuse signatures and initials across sessions via IndexedDB
 - [ ] **Phase 5: Landing Page + Launch** - Publish the personal hero landing page, pass the privacy audit, deploy to Vercel at free-esign.com
 
@@ -90,7 +90,7 @@ Plans:
 - [x] 03-01-PLAN.md — Field model + export spine: extend PlacedField union (initials/date/text/checkbox) + textValue, armedFieldType migration, initials state seam, undo/redo history stack (cap 50), exportPdf drawText/checkbox-X branches preserving EXP-02 (FLD-02, FLD-03, FLD-04, FLD-08, FLD-09)
 - [x] 03-02-PLAN.md — Clickable field-type UI: FieldPalette (5 buttons), placementMode→armedFieldType migration, per-type PlacedFieldWidget render + inline text/date editing, multi-page drop, history call sites on drag/resize/blur (FLD-02, FLD-03, FLD-04, FLD-08, FLD-09)
 - [x] 03-03-PLAN.md — Zoom: documentStore zoom + ZOOM_STEPS, ZoomControl pill (50–200%), effectiveScale threading in LazyPage (page width + overlay), zoom-invariance test (zero field drift) (DOC-04)
-- [ ] 03-04-PLAN.md — Undo/redo controls + initials: UndoRedoControls buttons + guarded Cmd/Ctrl+Z/Shift+Z/Ctrl+Y shortcuts, InitialsDrawModal (draw → arm 'initials'), redo-tail + initials-history tests (FLD-02, FLD-09)
+- [x] 03-04-PLAN.md — Undo/redo controls + initials: UndoRedoControls buttons + guarded Cmd/Ctrl+Z/Shift+Z/Ctrl+Y shortcuts, InitialsDrawModal (draw → arm 'initials'), redo-tail + initials-history tests (FLD-02, FLD-09)
 - [x] 03-05-PLAN.md — Word-doc prompt: fileValidation 'word-doc' result (MIME + extension), WordDocBanner guidance (export-to-PDF-first, no conversion), UploadZone routing (DOC-05)
 
 **UI hint**: yes
@@ -136,6 +136,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation + PDF Viewer | 4/4 | Complete   | 2026-06-16 |
 | 2. Core Signing Loop | 4/4 | Complete   | 2026-06-17 |
-| 3. Full Field Types + Workspace Controls | 3/5 | In Progress | — |
+| 3. Full Field Types + Workspace Controls | 5/5 | Complete   | 2026-06-17 |
 | 4. Typed Signatures + Signature Persistence | 0/TBD | Not started | - |
 | 5. Landing Page + Launch | 0/TBD | Not started | - |
