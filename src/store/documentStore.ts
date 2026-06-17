@@ -15,6 +15,17 @@ export interface DocumentStore {
    * cannot recover the underlying bytes after creation).
    */
   originalPdfBytes: ArrayBuffer | null
+  /**
+   * Original filename (e.g. 'report.pdf', 'photo.png').
+   * Used by the download handler to produce the signed filename via signedFilename().
+   */
+  fileName: string | null
+  /**
+   * Inline export error message shown by ExportErrorBanner.
+   * Null when no export error is present.
+   * Set on exportSignedPdf failure; cleared at the start of each download attempt.
+   */
+  exportError: string | null
 
   setView: (v: ViewState) => void
   loadDocument: (url: string) => void
@@ -22,6 +33,8 @@ export interface DocumentStore {
   setCurrentPage: (n: number) => void
   setError: (msg: string) => void
   setOriginalPdfBytes: (bytes: ArrayBuffer | null) => void
+  setFileName: (name: string | null) => void
+  setExportError: (msg: string | null) => void
   reset: () => void
 }
 
@@ -32,6 +45,8 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   currentPage: 1,
   errorMessage: null,
   originalPdfBytes: null,
+  fileName: null,
+  exportError: null,
 
   setView: (view) => set({ view }),
   loadDocument: (url) => set({ docUrl: url, view: 'loading', errorMessage: null }),
@@ -39,6 +54,8 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   setCurrentPage: (currentPage) => set({ currentPage }),
   setError: (errorMessage) => set({ errorMessage, view: 'error' }),
   setOriginalPdfBytes: (originalPdfBytes) => set({ originalPdfBytes }),
+  setFileName: (fileName) => set({ fileName }),
+  setExportError: (exportError) => set({ exportError }),
   reset: () =>
     set({
       view: 'empty',
@@ -47,5 +64,7 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
       currentPage: 1,
       errorMessage: null,
       originalPdfBytes: null,
+      fileName: null,
+      exportError: null,
     }),
 }))

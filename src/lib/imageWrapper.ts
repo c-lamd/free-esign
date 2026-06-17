@@ -21,6 +21,36 @@
 import { PDFDocument } from 'pdf-lib-incremental-save'
 
 /**
+ * Core implementation: builds a single-page PDF from image bytes.
+ * Shared by both wrapImageAsPdf (returns Blob URL) and wrapImageAsPdfBytes (returns raw bytes).
+ *
+ * @internal
+ */
+async function buildWrappedPdf(file: File, arrayBuffer: ArrayBuffer): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create()
+
+  // embedPng for PNG; embedJpg for everything else (JPEG/JPG).
+  // Original bytes are embedded directly — no lossy re-encoding (document integrity).
+  const image =
+    file.type === 'image/png'
+      ? await pdfDoc.embedPng(arrayBuffer)
+      : await pdfDoc.embedJpg(arrayBuffer)
+
+  // Page dimensions match image pixel dimensions (treated as PDF points at 72 DPI).
+  // See Phase 2 DPI note above for implications on print-accurate placement.
+  const page = pdfDoc.addPage([image.width, image.height])
+
+  page.drawImage(image, {
+    x: 0,
+    y: 0,
+    width: image.width,
+    height: image.height,
+  })
+
+  return pdfDoc.save()
+}
+
+/**
  * Wraps a JPG or PNG File into a single-page PDF sized to the image's pixel
  * dimensions (treated as PDF points).
  *
@@ -41,29 +71,49 @@ export async function wrapImageAsPdf(file: File): Promise<string> {
   }
 
   try {
-    const pdfDoc = await PDFDocument.create()
-
-    // embedPng for PNG; embedJpg for everything else (JPEG/JPG).
-    // Original bytes are embedded directly — no lossy re-encoding (document integrity).
-    const image =
-      file.type === 'image/png'
-        ? await pdfDoc.embedPng(arrayBuffer)
-        : await pdfDoc.embedJpg(arrayBuffer)
-
-    // Page dimensions match image pixel dimensions (treated as PDF points at 72 DPI).
-    // See Phase 2 DPI note above for implications on print-accurate placement.
-    const page = pdfDoc.addPage([image.width, image.height])
-
-    page.drawImage(image, {
-      x: 0,
-      y: 0,
-      width: image.width,
-      height: image.height,
-    })
-
-    const pdfBytes = await pdfDoc.save()
+    const pdfBytes = await buildWrappedPdf(file, arrayBuffer)
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     return URL.createObjectURL(blob)
+  } catch (cause) {
+    // Re-throw as a tagged Error so callers can display the corrupt-file copy
+    // without leaking internal pdf-lib error messages to the UI.
+    throw new Error(
+      'Image could not be embedded in PDF: ' +
+        (cause instanceof Error ? cause.message : String(cause)),
+    )
+  }
+}
+
+/**
+ * Wraps a JPG or PNG File into a single-page PDF and returns BOTH the Blob URL
+ * (for display) and the raw PDF bytes (for export via exportSignedPdf).
+ *
+ * This satisfies EXP-03: image-sourced documents export as a PDF containing the
+ * original image plus overlaid signature fields.
+ *
+ * @param file - A File with type 'image/jpeg' or 'image/png'
+ * @returns A Promise resolving to { url: string, bytes: Uint8Array }
+ * @throws An Error with a descriptive message if embedding fails
+ */
+export async function wrapImageAsPdfWithBytes(
+  file: File,
+): Promise<{ url: string; bytes: Uint8Array }> {
+  let arrayBuffer: ArrayBuffer
+
+  try {
+    arrayBuffer = await file.arrayBuffer()
+  } catch (cause) {
+    throw new Error(
+      'Could not read image file bytes: ' +
+        (cause instanceof Error ? cause.message : String(cause)),
+    )
+  }
+
+  try {
+    const pdfBytes = await buildWrappedPdf(file, arrayBuffer)
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    return { url, bytes: pdfBytes }
   } catch (cause) {
     // Re-throw as a tagged Error so callers can display the corrupt-file copy
     // without leaking internal pdf-lib error messages to the UI.

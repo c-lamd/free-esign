@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useDocumentStore } from '../store/documentStore'
 import { validateFile } from '../lib/fileValidation'
-import { wrapImageAsPdf } from '../lib/imageWrapper'
+import { wrapImageAsPdfWithBytes } from '../lib/imageWrapper'
 
 /**
  * UploadZone — full-screen drag-and-drop + Browse empty state.
@@ -22,6 +22,8 @@ export function UploadZone() {
   const loadDocument = useDocumentStore((s) => s.loadDocument)
   const setError = useDocumentStore((s) => s.setError)
   const setView = useDocumentStore((s) => s.setView)
+  const setOriginalPdfBytes = useDocumentStore((s) => s.setOriginalPdfBytes)
+  const setFileName = useDocumentStore((s) => s.setFileName)
 
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -29,6 +31,12 @@ export function UploadZone() {
   /**
    * Core ingestion handler — used by both drag-drop and Browse picker.
    * Validates, wraps images if needed, then loads into the store.
+   *
+   * Stores originalPdfBytes and fileName for use by the export/download handler.
+   * - PDF path: reads file bytes via arrayBuffer() and stores them directly.
+   * - Image path (EXP-03): wrapImageAsPdfWithBytes returns both the Blob URL
+   *   and the wrapped PDF bytes; the bytes are stored as originalPdfBytes so
+   *   exportSignedPdf() produces a PDF containing the image + signature.
    */
   const handleFile = useCallback(
     async (file: File) => {
@@ -48,12 +56,17 @@ export function UploadZone() {
         return
       }
 
+      // Store the original filename for the download handler (signedFilename())
+      setFileName(file.name)
+
       // File is valid — transition to loading state immediately
       // Images need to be wrapped; PDFs go straight through
       if (file.type === 'image/jpeg' || file.type === 'image/png') {
         setView('loading') // show spinner before the async wrap (can take seconds for large images)
         try {
-          const blobUrl = await wrapImageAsPdf(file)
+          const { url: blobUrl, bytes } = await wrapImageAsPdfWithBytes(file)
+          // EXP-03: store the wrapped PDF bytes so export includes the image
+          setOriginalPdfBytes(bytes.buffer as ArrayBuffer)
           loadDocument(blobUrl)
         } catch {
           setError(
@@ -61,12 +74,15 @@ export function UploadZone() {
           )
         }
       } else {
-        // PDF — create a Blob URL from the original bytes (no re-encoding)
+        // PDF — read bytes for export, then create a Blob URL for display
+        // (Pitfall 5: Blob URLs cannot recover bytes; must read before createObjectURL)
+        const bytes = await file.arrayBuffer()
+        setOriginalPdfBytes(bytes)
         const blobUrl = URL.createObjectURL(file)
         loadDocument(blobUrl)
       }
     },
-    [loadDocument, setError, setView],
+    [loadDocument, setError, setView, setOriginalPdfBytes, setFileName],
   )
 
   // ── Drag event handlers ──────────────────────────────────────────────────
