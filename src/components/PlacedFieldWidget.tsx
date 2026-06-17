@@ -285,7 +285,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
     <div
       role={field.type === 'checkbox' ? 'img' : undefined}
       aria-label={WRAPPER_ARIA_LABEL[field.type]}
-      aria-selected={isSelected}
+      data-selected={isSelected ? 'true' : undefined}
       onClick={handleClick}
       style={{
         // Outer wrapper: no border or background — visual chrome is on the Rnd inner div
