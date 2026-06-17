@@ -46,7 +46,7 @@ Inherited from Phase 1 unchanged. Declared tokens in `src/index.css` `:root` are
 | 3xl | 64px | Not used in Phase 2 |
 
 **Phase 2 exceptions:**
-- Signature draw canvas: minimum 44px height for touch targets on Clear/Done buttons (WCAG 2.5.5)
+- Signature draw canvas: minimum 44px height for touch targets on "Clear canvas" / "Add signature" / "Discard" buttons (WCAG 2.5.5)
 - Modal dialog itself: `max-width: 560px`, `width: calc(100vw - 32px)` at smaller viewports (16px gutter each side)
 - Placed-field widget minimum size: 80px wide × 24px tall (enforces a usable resize floor); enforced via react-rnd `minWidth`/`minHeight`
 - Delete control (`×`) size: 24px × 24px visual, but wrapped to 32px × 32px touch target (invisible padding)
@@ -60,7 +60,7 @@ Inherited from Phase 1 — the same four sizes and two weights apply. No new siz
 | Role | Size | Weight | Line Height | Phase 2 Usage |
 |------|------|--------|-------------|--------------|
 | Body | 16px | 400 (regular) | 1.5 | Modal hint text, placement-mode instruction banner |
-| Label | 14px | 400 (regular) | 1.4 | Modal button labels ("Clear", "Done", "Cancel"), TopBar "Download" button |
+| Label | 14px | 400 (regular) | 1.4 | Modal button labels ("Clear canvas", "Add signature", "Discard"), TopBar "Download PDF" button |
 | Heading | 20px | 600 (semibold) | 1.2 | Modal title ("Draw your signature") |
 | Display | 24px | 600 (semibold) | 1.1 | "FreeESign" wordmark — unchanged from Phase 1 |
 
@@ -88,13 +88,13 @@ All tokens are already declared in `src/index.css`. Phase 2 adds no new CSS cust
 2. The drag-over state border of the upload zone (Phase 1 — unchanged)
 3. The prev/next navigation button focus ring (Phase 1 — unchanged)
 4. Spinner stroke color (Phase 1 — unchanged)
-5. **"Done" button background in the signature draw-pad modal** (primary CTA of the modal)
-6. **"Download" button background in the TopBar** (primary export CTA)
+5. **"Add signature" button background in the signature draw-pad modal** (primary CTA of the modal)
+6. **"Download PDF" button background in the TopBar** (primary export CTA)
 7. **Selected placed-field widget border** (2px solid `--color-accent` when a widget is selected)
 8. **Resize handle dots on a selected widget** (filled `--color-accent`)
-9. **Focus rings on all new interactive elements** (2px outline, `--color-accent`, 2px offset — consistent with Phase 1 pattern)
+9. **Focus rings on all new interactive elements** (2px outline, `--color-accent`, 2px offset — accent is scoped to focus rings only on these elements)
 
-Accent is NOT used for: the modal scrim, the draw-canvas surface, unselected widget borders, the "Clear" or "Cancel" button text, body text, or the placement-mode instruction copy.
+Accent is NOT used for: the modal scrim, the draw-canvas surface, unselected widget borders, the "Clear canvas" or "Discard" button text, body text, or the placement-mode instruction copy.
 
 **Modal scrim:** `rgba(0, 0, 0, 0.45)` — semi-transparent black overlay behind the modal dialog. Not a token; used only for the scrim.
 
@@ -120,16 +120,16 @@ A centered, focus-trapped modal dialog for drawing a signature.
 - Canvas hint text: shown only when canvas is empty — "Sign here" centered in the canvas, Body size (16px/400), `--color-text-secondary`, pointer-events: none (removed on first stroke)
 - Canvas live preview: the signature_pad library renders strokes directly on the `<canvas>` element — no extra preview element needed
 - Controls row: appears below the canvas, gap: 16px, flex-direction: row, justify-content: space-between
-  - Left: "Clear" button — ghost style (no background, `--color-text-secondary` text, 14px/400, hover: `--color-text-primary`, min 44px height)
-  - Right group: "Cancel" button (ghost, same as Clear) + "Done" button (accent background, white text, 14px/400, same shape as Phase 1 "Browse files" button: 8px vertical, 16px horizontal padding, 6px border-radius, min 44px height)
+  - Left: "Clear canvas" button — ghost style (no background, `--color-text-secondary` text, 14px/400, hover: `--color-text-primary`, min 44px height)
+  - Right group: "Discard" button (ghost, same as "Clear canvas") + "Add signature" button (accent background, white text, 14px/400, same shape as Phase 1 "Browse files" button: 8px vertical, 16px horizontal padding, 6px border-radius, min 44px height)
 
 **Focus management:**
 - On open: focus moves to the draw canvas (`tabIndex={0}`)
-- Focus trap: Tab cycles among Clear → Done → Cancel → (back to canvas). Nothing outside the modal receives focus while it is open.
-- Escape key: closes the modal (same as "Cancel") — handler on `keydown` on the dialog element
-- After close (either Done or Cancel): focus returns to the element that triggered the modal open (the "Add signature" trigger button)
+- Focus trap: Tab cycles among Clear canvas → Add signature → Discard → (back to canvas). Nothing outside the modal receives focus while it is open.
+- Escape key: closes the modal (same as "Discard") — handler on `keydown` on the dialog element
+- After close (either Add signature or Discard): focus returns to the element that triggered the modal open (the "Add signature" trigger button)
 
-**Done / disabled state:** "Done" button has `aria-disabled="true"` and visual opacity 0.45 when the canvas is empty (no strokes drawn). Once any stroke is drawn, it becomes fully interactive.
+**Add signature / disabled state:** "Add signature" button has `aria-disabled="true"` and visual opacity 0.45 when the canvas is empty (no strokes drawn). Once any stroke is drawn, it becomes fully interactive.
 
 ---
 
@@ -140,7 +140,7 @@ A full-document overlay that arms the click-to-place gesture after the user conf
 **Appearance:**
 - A thin sticky banner below the TopBar: `position: sticky; top: 56px; z-index: 20; background: var(--color-surface-elevated); border-bottom: 1px solid var(--color-border); padding: 8px 16px`
 - Banner copy: "Click anywhere on the document to place your signature." — Body size (16px/400), `--color-text-secondary`
-- Cancel link on the right: "Cancel" — Label size (14px/400), `--color-text-secondary`, hover: `--color-text-primary`, no background
+- "Stop placing" link on the right — Label size (14px/400), `--color-text-secondary`, hover: `--color-text-primary`, no background
 - Cursor: on the document canvas area (behind pages), cursor changes to `crosshair` during placement mode
 
 **Interaction:**
@@ -191,17 +191,17 @@ The draggable, resizable overlay widget for a placed signature field. One widget
 
 ### TopBar (extended)
 
-Phase 1 TopBar gains a "Download" button in the right slot, placed to the left of "Open another".
+Phase 1 TopBar gains a "Download PDF" button in the right slot, placed to the left of "Open another".
 
-**Download button:**
+**Download PDF button:**
 - Style: accent background (`--color-accent`), white text, 14px/400, 8px vertical padding, 16px horizontal padding, 6px border-radius, min 44px height — matches the Phase 1 "Browse files" button shape exactly
-- Label: "Download"
+- Label: "Download PDF"
 - Disabled state: when zero fields are placed (`fields.length === 0`), the button uses `aria-disabled="true"` and visual opacity 0.45; it remains focusable (same `aria-disabled` pattern as Phase 1 prev/next)
 - Hover (enabled): `#1D4ED8` (blue-700) background — same hover as "Browse files" in Phase 1
 - Focus: 2px outline `--color-accent`, 2px offset
 - Active: `#1E40AF` (blue-800) background
 
-**TopBar right slot order (when document is loaded):** `[Download] [Open another]`, gap: 8px
+**TopBar right slot order (when document is loaded):** `[Download PDF] [Open another]`, gap: 8px
 
 ---
 
@@ -209,12 +209,12 @@ Phase 1 TopBar gains a "Download" button in the right slot, placed to the left o
 
 | Component | State | Visual |
 |-----------|-------|--------|
-| SignatureDrawModal | Canvas empty | "Sign here" hint visible, "Done" at 0.45 opacity with aria-disabled |
-| SignatureDrawModal | Strokes present | Hint hidden, "Done" fully interactive |
+| SignatureDrawModal | Canvas empty | "Sign here" hint visible, "Add signature" at 0.45 opacity with aria-disabled |
+| SignatureDrawModal | Strokes present | Hint hidden, "Add signature" fully interactive |
 | SignatureDrawModal | Open | Scrim behind, focus trapped inside |
-| SignatureDrawModal | Escape / Cancel | Modal closes, focus returns to trigger |
+| SignatureDrawModal | Escape / Discard | Modal closes, focus returns to trigger |
 | PlacementModeOverlay | Armed | Sticky banner visible, cursor `crosshair` over pages |
-| PlacementModeOverlay | Escape / Cancel click | Banner disappears, cursor restored, placement disarmed |
+| PlacementModeOverlay | Escape / Stop placing click | Banner disappears, cursor restored, placement disarmed |
 | PlacedFieldWidget | Unselected | 1px faint border, no handles, move cursor |
 | PlacedFieldWidget | Hover (unselected) | 1px border darkens to `rgba(0,0,0,0.3)` |
 | PlacedFieldWidget | Selected | 2px accent border, 8 handle dots, × delete control visible |
@@ -223,11 +223,11 @@ Phase 1 TopBar gains a "Download" button in the right slot, placed to the left o
 | DeleteControl (×) | Default | Red circle, white × |
 | DeleteControl (×) | Hover | `#B91C1C` (red-700) background |
 | DeleteControl (×) | Focus | 2px outline `--color-accent`, 2px offset |
-| TopBar Download | Zero fields | Accent background at 0.45 opacity, aria-disabled |
-| TopBar Download | ≥1 field | Accent background fully opaque |
-| TopBar Download | Hover (enabled) | `#1D4ED8` (blue-700) background |
-| TopBar Download | Active (enabled) | `#1E40AF` (blue-800) background |
-| TopBar Download | Focus | 2px outline `--color-accent`, 2px offset |
+| TopBar Download PDF | Zero fields | Accent background at 0.45 opacity, aria-disabled |
+| TopBar Download PDF | ≥1 field | Accent background fully opaque |
+| TopBar Download PDF | Hover (enabled) | `#1D4ED8` (blue-700) background |
+| TopBar Download PDF | Active (enabled) | `#1E40AF` (blue-800) background |
+| TopBar Download PDF | Focus | 2px outline `--color-accent`, 2px offset |
 
 ---
 
@@ -239,17 +239,18 @@ Phase 1 TopBar gains a "Download" button in the right slot, placed to the left o
 |---------|------|
 | **Signature draw modal — title** | "Draw your signature" |
 | **Signature draw modal — canvas hint (empty)** | "Sign here" |
-| **Signature draw modal — Clear button** | "Clear" |
-| **Signature draw modal — Done button** | "Done" |
-| **Signature draw modal — Cancel button** | "Cancel" |
-| **Signature draw modal — Done (aria-label when disabled)** | `aria-label="Done — draw a signature first"` |
+| **Signature draw modal — Clear canvas button** | "Clear canvas" |
+| **Signature draw modal — primary CTA button** | "Add signature" |
+| **Signature draw modal — Discard button** | "Discard" |
+| **Signature draw modal — Add signature (aria-label when disabled)** | `aria-label="Add signature — draw a signature first"` |
 | **Placement mode banner** | "Click anywhere on the document to place your signature." |
-| **Placement mode cancel** | "Cancel" |
+| **Placement mode disarm link** | "Stop placing" |
 | **Placed-field delete control (aria-label)** | `aria-label="Delete signature"` |
 | **Placed-field delete control (sr-only)** | "Delete signature" |
-| **TopBar Download button** | "Download" |
-| **TopBar Download (aria-label when disabled)** | `aria-label="Download — place at least one signature first"` |
+| **TopBar Download PDF button** | "Download PDF" |
+| **TopBar Download PDF (aria-label when disabled)** | `aria-label="Download PDF — place at least one signature first"` |
 | **Trigger button (opens draw modal)** | "Add signature" |
+| **Export error (inline ErrorBanner)** | "Could not export the signed PDF. Try downloading again." |
 
 **Empty state:** No fields placed, document loaded — no new UI state is needed. The document viewer shows normally; the absence of any overlay is the empty state. There is no empty-state copy needed for the field layer in Phase 2 (undo/redo feedback is Phase 3).
 
@@ -258,7 +259,11 @@ Phase 1 TopBar gains a "Download" button in the right slot, placed to the left o
 - Rationale: undo/redo is Phase 3. In Phase 2, deletion is low-stakes because only one signature type exists and the user can re-place easily. A confirmation dialog adds friction without undo.
 - Voice note: consistent with Phase 1's calm, direct tone. No alarming copy, no exclamation marks.
 
-**Voice notes (additive):** Modal copy is imperative and minimal — no marketing language. "Sign here" is a direct affordance label, not an instruction paragraph. "Done" is final; "Cancel" is safe exit. Placement mode copy uses "anywhere on the document" to communicate spatial freedom without overpromising precision.
+**Export error surface:** The "Could not export the signed PDF. Try downloading again." string surfaces in the existing inline ErrorBanner pattern (reused from Phase 1 — `role="alert"`, `aria-live="assertive"`, positioned below the TopBar). It replaces any spinner state and persists until the user dismisses it or successfully downloads.
+
+**Visual anchor declaration:** The loaded document content is the primary visual anchor of the signed-document view. The "Download PDF" button in the TopBar is the primary action anchor — it is the single highest-intent control on the page once a field is placed.
+
+**Voice notes (additive):** Modal copy is imperative and minimal — no marketing language. "Sign here" is a direct affordance label, not an instruction paragraph. "Add signature" is the final confirming action; "Discard" is the safe exit (discards all drawn strokes and closes the modal). "Stop placing" disarms placement mode without losing the confirmed signature. Placement mode copy uses "anywhere on the document" to communicate spatial freedom without overpromising precision.
 
 ---
 
@@ -266,12 +271,12 @@ Phase 1 TopBar gains a "Download" button in the right slot, placed to the left o
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  TopBar (56px, sticky, z-index: 10)              │
-│  [FreeESign wordmark]   [Download] [Open another]│
+│  TopBar (56px, sticky, z-index: 10)                    │
+│  [FreeESign wordmark]   [Download PDF] [Open another]  │
 ├─────────────────────────────────────────────────┤
 │                                                   │
-│  [PLACEMENT MODE ARMED: sticky banner, z:20]     │
-│  "Click anywhere to place your signature."  Cancel│
+│  [PLACEMENT MODE ARMED: sticky banner, z:20]              │
+│  "Click anywhere to place your signature."  Stop placing  │
 │                                                   │
 ├─────────────────────────────────────────────────┤
 │  DocumentViewer (gray canvas, scrollable)         │
@@ -302,7 +307,7 @@ MODAL (z-index: 50, fixed, full-screen scrim):
 │  │  │      "Sign here" (when empty)          │   ││
 │  │  │                                        │   ││
 │  │  └────────────────────────────────────────┘   ││
-│  │  [Clear]                    [Cancel] [Done]    ││
+│  │  [Clear canvas]      [Discard] [Add signature] ││
 │  └────────────────────────────────────────────────┘│
 └──────────────────────────────────────────────────┘
 ```
@@ -338,11 +343,11 @@ MODAL (z-index: 50, fixed, full-screen scrim):
 
 All Phase 1 requirements carry forward. Phase 2 additions:
 
-- **Modal focus trap:** When SignatureDrawModal opens, focus moves to the canvas (`tabIndex={0}`). Tab cycles Clear → Done → Cancel → canvas. No element outside the modal is reachable via Tab while the modal is open. Implement with a `useEffect` that moves focus on mount and a keydown listener that prevents Tab from escaping.
+- **Modal focus trap:** When SignatureDrawModal opens, focus moves to the canvas (`tabIndex={0}`). Tab cycles Clear canvas → Add signature → Discard → canvas. No element outside the modal is reachable via Tab while the modal is open. Implement with a `useEffect` that moves focus on mount and a keydown listener that prevents Tab from escaping.
 - **Escape closes modal:** `keydown` listener on the dialog `div` with `role="dialog"`. `aria-modal="true"` on the dialog element.
 - **Modal role and label:** `<div role="dialog" aria-modal="true" aria-labelledby="modal-title">` where `id="modal-title"` is on the heading element "Draw your signature".
 - **Canvas accessibility:** The draw canvas has `role="img"` and `aria-label="Signature drawing canvas"`. It is not keyboard-operable for drawing (freehand drawing is inherently pointer-based); keyboard deletion and modal controls are the accessibility surface.
-- **Done button disabled state:** `aria-disabled="true"` (not `disabled`) — keeps focus reachable. Clicking it while disabled has no effect (handler checks canvas empty state).
+- **Add signature button disabled state:** `aria-disabled="true"` (not `disabled`) — keeps focus reachable. Clicking it while disabled has no effect (handler checks canvas empty state).
 - **Delete control:** `aria-label="Delete signature"` on the button + `<span class="sr-only">Delete signature</span>` inside — same dual-label pattern as Phase 1 prev/next buttons.
 - **Download button disabled state:** `aria-disabled="true"` when no fields placed — same pattern.
 - **Placement mode banner:** `role="status"` and `aria-live="polite"` so screen readers announce when placement mode arms or disarms.
@@ -395,7 +400,7 @@ No third-party component registries are used in Phase 2. All components are hand
 | Aspect-ratio locked corner resize | 02-CONTEXT.md — Placed Field Widget |
 | Drag bounded within page (bounds="parent") | 02-CONTEXT.md — Placed Field Widget |
 | PDF-space coordinate storage via Coordinate Mapper | 02-CONTEXT.md — Placed Field Widget |
-| "Download" button in TopBar next to "Open another" | 02-CONTEXT.md — Export / Download |
+| "Download PDF" button in TopBar next to "Open another" | 02-CONTEXT.md — Export / Download |
 | Output filename `{original-name}-signed.pdf` | 02-CONTEXT.md — Export / Download |
 | App stays on document after download (no reset) | 02-CONTEXT.md — Export / Download |
 | Recipient/role seam reserved in PlacedField model | 02-CONTEXT.md — Integration Points |
