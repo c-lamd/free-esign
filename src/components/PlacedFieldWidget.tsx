@@ -328,7 +328,11 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
 
   return (
     <div
-      role={field.type === 'checkbox' ? 'img' : undefined}
+      role={
+        field.type === 'checkbox' || field.type === 'signature' || field.type === 'initials'
+          ? 'img'
+          : undefined
+      }
       aria-label={getWrapperAriaLabel(field)}
       data-selected={isSelected ? 'true' : undefined}
       onClick={handleClick}

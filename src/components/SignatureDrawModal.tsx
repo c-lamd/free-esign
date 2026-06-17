@@ -402,7 +402,7 @@ export function SignatureDrawModal() {
       backgroundColor: 'var(--color-accent)',
       color: '#FFFFFF',
       fontSize: '14px',
-      fontWeight: 400,
+      fontWeight: 600,
       padding: '8px 16px',
       borderRadius: '6px',
       border: 'none',
