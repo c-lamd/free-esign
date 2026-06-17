@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 01 complete — executing Plan 02
-last_updated: "2026-06-17T19:53:19.761Z"
-last_activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
+stopped_at: Phase 4 complete (verified, human-verify deferred) — ready for Phase 5
+last_updated: "2026-06-17T20:00:00.000Z"
+last_activity: 2026-06-17 -- Phase 04 complete (all 3 plans; 296 tests green, tsc clean)
 progress:
   total_phases: 5
   completed_phases: 4
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Sign a PDF in your browser, for free, without your document ever leaving your device or being altered.
-**Current focus:** Phase 03 complete (5/5 plans, verified, code-review-fixed) — ready for Phase 04
+**Current focus:** Phase 04 complete (3/3 plans, verified, code-review-fixed, UI 87/100) — ready for Phase 05
 
 ## Current Position
 
-Phase: 04 (Typed Signatures + Signature Persistence) — IN PROGRESS
+Phase: 04 (Typed Signatures + Signature Persistence) — COMPLETE
 Plan: 3 of 3 complete
-Status: Phase 04 Plan 02 complete — executing Plan 03
-Last activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
+Status: Phase 4 complete — verified 16/16, 9 code-review fixes, UI audit 87/100; human browser-verify deferred. Ready for Phase 5.
+Last activity: 2026-06-17 -- Phase 04 complete (all 3 plans; 296 tests green, tsc clean)
 
-Progress: [██████░░░░] 60% (3/5 phases complete)
+Progress: [████████░░] 80% (4/5 phases complete)
 
 ## Performance Metrics
 
@@ -169,6 +169,8 @@ None currently.
 | Human verify | Phase 2 end-of-phase browser verification (02-04-SUMMARY.md) | Pending | 02-04 |
 | Human verify | Phase 3 browser checks (8 items in 03-VERIFICATION.md): zoom pixel-alignment 50→200%, inline edit no-drag, undo/redo shortcut focus guard, exported field visual fidelity | Pending | 03 (autonomous) |
 | Refinement | Undo/redo: redo-after-drag/resize/text-edit does not re-apply the moved position (pushHistory stores pre-mutation only). Undo works; placement+deletion redo are correct (FLD-09 criterion met). Fix later via commit-post-mutation snapshot if desired. | Open | 03 (code review CR-01) |
+| Human verify | Phase 4 browser checks (6 items in 04-VERIFICATION.md): typed-sig WYSIWYG vs PDF glyphs, cross-session IndexedDB persist + delete, PDF vector-text crispness at zoom, zero third-party requests on font load/export, Saved-tab kind filtering | Pending | 04 (autonomous) |
+| UI advisory | Phase 4 UI audit (87/100) minor items in 04-UI-REVIEW.md: font-load-failure inline note (system-ui fallback works; note not implemented — near-impossible for same-origin bundled fonts), SavedItemCard 32px delete touch target, delete sr-only double-announce | Open | 04 (UI review) |
 
 ### Correction (03 code review)
 
