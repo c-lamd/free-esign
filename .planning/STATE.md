@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 complete (verified, human-verify deferred) — ready for Phase 4
-last_updated: "2026-06-17T08:35:30.341Z"
-last_activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
+stopped_at: "Phase 4 Plan 01 complete — executing Plan 02"
+last_updated: "2026-06-17T19:32:00.000Z"
+last_activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 16
+  completed_plans: 14
   percent: 60
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 03 (Full Field Types + Workspace Controls) — COMPLETE
-Plan: 5 of 5 complete
-Status: Phase 3 complete — verified 22/22, code-review fixed, UI audit 89/100; human browser-verify deferred. Ready for Phase 4.
-Last activity: 2026-06-17 -- Phase 03 complete (all 5 plans; 256 tests green)
+Phase: 04 (Typed Signatures + Signature Persistence) — IN PROGRESS
+Plan: 1 of 3 complete
+Status: Phase 04 Plan 01 complete — executing Plan 02
+Last activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
 
 Progress: [██████░░░░] 60% (3/5 phases complete)
 
@@ -64,6 +64,7 @@ Progress: [██████░░░░] 60% (3/5 phases complete)
 | Phase 03 P05 | 3 | 2 tasks | 4 files |
 | Phase 03 P03 | 12 | 3 tasks | 6 files |
 | Phase 03 P04 | 8 | 3 tasks | 6 files |
+| Phase 04 P01 | 10 | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,14 @@ Recent decisions affecting current work:
 - [Phase 03-04]: Undo/redo keyboard shortcuts extend DocumentViewer single keydown handler; undo/redo branches placed before selectedFieldId gate
 - [Phase 03-04]: T-03-11: INPUT/TEXTAREA guard fires first in shared handler for both delete and undo/redo shortcuts
 - [Phase 03-04]: InitialsDrawModal uses 2:1 canvas aspect ratio; mirrors SignatureDrawModal gated on initialsModalOpen
+
+### New Decisions (04-01)
+
+- savedItems excluded from initialFieldState — resetFields() preserves saved items (document-independent SIG-04 persistence)
+- Optimistic update pattern for addSavedItem/deleteSavedItem: Zustand state updated first, IndexedDB write is best-effort/non-blocking
+- idb-keyval@6.2.5 checkpoint pre-approved per user authorization (package is legitimate, SUS flag was timing artifact)
+- TTF fonts downloaded from fonts.gstatic.com (Dancing Script v29, Great Vibes v21, Pacifico v23) — real OFL binaries
+- IDB_KEY exported from savedSignatures.ts for test assertions on the correct key name
 
 ### Pending Todos
 
@@ -154,6 +163,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T08:35:30.336Z
-Stopped at: Phase 3 complete (verified, human-verify deferred)
-Resume file: None
+Last session: 2026-06-17T19:32:00.000Z
+Stopped at: Phase 4 Plan 01 complete — executing Plan 02
+Resume file: .planning/phases/04-typed-signatures-signature-persistence/04-02-PLAN.md

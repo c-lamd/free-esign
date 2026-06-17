@@ -111,7 +111,7 @@ Plans:
 **Plans**: 3 plans
 Plans:
 
-- [ ] 04-01-PLAN.md — Foundation (Wave 1): install @pdf-lib/fontkit + idb-keyval (legitimacy gate), vendor 3 script TTFs + @font-face, extend fieldStore (fontFamily + armedTypedPayload + savedItems slice + CRUD), savedSignatures.ts idb-keyval helpers, savedItems.test.ts + idb-keyval mock (SIG-04, SIG-05)
+- [x] 04-01-PLAN.md — Foundation (Wave 1): install @pdf-lib/fontkit + idb-keyval (legitimacy gate), vendor 3 script TTFs + @font-face, extend fieldStore (fontFamily + armedTypedPayload + savedItems slice + CRUD), savedSignatures.ts idb-keyval helpers, savedItems.test.ts + idb-keyval mock (SIG-04, SIG-05)
 - [ ] 04-02-PLAN.md — Typed export end-to-end (Wave 2): fonts.ts loader (FONT_FILE_MAP allowlist + cache), exportPdf registerFontkit + drawSignatureText (fit-to-box, no truncation) + font-backed branch preserving EXP-02, PlacedFieldWidget font-backed render + lockAspectRatio fix, LazyPage typed drop (SIG-02, SIG-03)
 - [ ] 04-03-PLAN.md — Tabbed modal UI (Wave 3): SignatureDrawModal + InitialsDrawModal Saved/Draw/Type tabs + font picker + live preview + save-for-reuse, SavedItemCard, App-mount loadSavedItems hydration, Type-tab render tests (SIG-02, SIG-03, SIG-04, SIG-05)
 
@@ -143,5 +143,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation + PDF Viewer | 4/4 | Complete   | 2026-06-16 |
 | 2. Core Signing Loop | 4/4 | Complete   | 2026-06-17 |
 | 3. Full Field Types + Workspace Controls | 5/5 | Complete   | 2026-06-17 |
-| 4. Typed Signatures + Signature Persistence | 0/3 | Planned | - |
+| 4. Typed Signatures + Signature Persistence | 1/3 | In Progress|  |
 | 5. Landing Page + Launch | 0/TBD | Not started | - |
