@@ -15,18 +15,29 @@
  *   - drawTextInBox helper: sizes text to 75% of box height, baseline-centered vertically
  *   - drawCheckboxX helper: ASCII 'X' ONLY — U+2715 (✕) throws WinAnsi encode error (Pitfall 1)
  *
+ * Phase 4 additions:
+ *   - hasFontBackedFields gate: registers @pdf-lib/fontkit and embeds each unique script font
+ *     once (subset:true) before the per-field loop.
+ *   - drawSignatureText helper: fits text to box height AND width — no truncation (CONTEXT Area 2).
+ *   - Font-backed branch in per-field loop: typed sig/initials → drawSignatureText (not embedPng).
+ *   - loadFontBytes: same-origin fetch with 3-key FONT_FILE_MAP allowlist (T-04-04 / PRV-02).
+ *
  * Security:
  *   T-02-01: dataUrl validated to start with 'data:image/png;base64,' before embedPng (type-gated).
  *   T-02-02: entire export wrapped in try/catch; re-thrown as tagged Error for ErrorBanner.
  *   T-03-04: checkbox uses ASCII 'X', not U+2715 — WinAnsi cannot encode U+2715.
+ *   T-04-04: font family validated against FONT_FILE_MAP allowlist before fetch (fonts.ts).
+ *   T-04-05: page.drawText emits PDF text objects — no HTML, no script execution.
  *
  * Architecture:
- *   PRV-01 / PRV-02: no network calls — all processing is in-browser via pdf-lib-incremental-save.
+ *   PRV-01 / PRV-02: no third-party network calls — font bytes fetched same-origin from public/fonts/.
  */
 
+import fontkit from '@pdf-lib/fontkit'
 import { PDFDocument, StandardFonts } from 'pdf-lib-incremental-save'
 import type { PDFFont, PDFPage } from 'pdf-lib-incremental-save'
 import type { PlacedField } from '../store/fieldStore'
+import { loadFontBytes } from './fonts'
 
 const PNG_DATA_URL_PREFIX = 'data:image/png;base64,'
 
@@ -85,6 +96,44 @@ function drawTextInBox(page: PDFPage, text: string, font: PDFFont, field: Placed
 }
 
 /**
+ * Draws typed signature/initials text inside a field box, scaled to fit BOTH height
+ * and width WITHOUT truncation (CONTEXT Area 2 / SIG-02 / SIG-03).
+ *
+ * Algorithm:
+ *   1. sizeFromHeight = font.sizeAtHeight(pdfHeight × 0.85)
+ *   2. If text at that size exceeds maxWidth, scale down: size × (maxWidth / textWidth)
+ *   3. Center horizontally via xOffset; center baseline vertically via heightAtSize
+ *
+ * CRITICAL: Do NOT call truncateToFit here — typed signatures must show the full text.
+ * Returns immediately if text is empty (no-op guard).
+ *
+ * @param page - The PDF page to draw on.
+ * @param text - The typed signature/initials text (full string, never truncated).
+ * @param font - An already-embedded PDFFont (custom script font via fontkit).
+ * @param field - The PlacedField providing position/size in PDF user-space.
+ */
+function drawSignatureText(page: PDFPage, text: string, font: PDFFont, field: PlacedField): void {
+  if (!text) return
+  const padding = 4 // pt — total horizontal padding (2pt each side)
+  const sizeFromHeight = font.sizeAtHeight(field.pdfHeight * 0.85)
+  const textWidthAtTarget = font.widthOfTextAtSize(text, sizeFromHeight)
+  const maxWidth = field.pdfWidth - padding
+  const finalSize =
+    textWidthAtTarget > maxWidth
+      ? sizeFromHeight * (maxWidth / textWidthAtTarget)
+      : sizeFromHeight
+  const glyphH = font.heightAtSize(finalSize)
+  const xOffset = (field.pdfWidth - font.widthOfTextAtSize(text, finalSize)) / 2
+  const baselineY = field.pdfY + (field.pdfHeight - glyphH) / 2
+  page.drawText(text, {
+    x: field.pdfX + xOffset,
+    y: baselineY,
+    font,
+    size: finalSize,
+  })
+}
+
+/**
  * Draws a bold ASCII 'X' centered inside a field box.
  *
  * CRITICAL: Use ASCII 'X', NOT '✕' (U+2715) — WinAnsi cannot encode U+2715 and
@@ -139,6 +188,33 @@ export async function exportSignedPdf(
       ? await pdfDoc.embedFont(StandardFonts.HelveticaBold)
       : null
 
+    // Phase 4: register fontkit and embed each unique script font once — only when
+    // font-backed (typed) signature/initials fields are present.
+    // CRITICAL: registerFontkit MUST be called before any embedFont for custom TTFs;
+    // otherwise fontkit throws FontkitNotRegisteredError (RESEARCH Pitfall 1).
+    const hasFontBackedFields = fields.some(
+      (f) =>
+        (f.type === 'signature' || f.type === 'initials') && !!f.textValue && !!f.fontFamily,
+    )
+
+    const embeddedFonts = new Map<string, PDFFont>()
+    if (hasFontBackedFields) {
+      pdfDoc.registerFontkit(fontkit)
+      // Embed each UNIQUE font family exactly once (dedup via Map).
+      // Embedding the same font N times wastes space — one embed per family per export.
+      for (const field of fields) {
+        if (
+          (field.type === 'signature' || field.type === 'initials') &&
+          field.fontFamily &&
+          !embeddedFonts.has(field.fontFamily)
+        ) {
+          const ttfBytes = await loadFontBytes(field.fontFamily)
+          const pdfFont = await pdfDoc.embedFont(ttfBytes, { subset: true })
+          embeddedFonts.set(field.fontFamily, pdfFont)
+        }
+      }
+    }
+
     for (const field of fields) {
       const page = pages[field.pageNumber - 1]
       if (!page) {
@@ -151,25 +227,37 @@ export async function exportSignedPdf(
       snapshot.markRefForSave(page.ref)
 
       if (field.type === 'signature' || field.type === 'initials') {
-        // T-02-01: validate dataUrl — now type-gated (Pitfall 6)
-        if (!field.dataUrl?.startsWith(PNG_DATA_URL_PREFIX)) {
+        if (field.dataUrl) {
+          // Image-backed (drawn) path — UNCHANGED (T-02-01 validation preserved)
+          if (!field.dataUrl.startsWith(PNG_DATA_URL_PREFIX)) {
+            throw new Error(
+              `Invalid dataUrl for field "${field.id}": must start with "${PNG_DATA_URL_PREFIX}"`,
+            )
+          }
+          // Decode base64 PNG data URL to bytes
+          const base64 = field.dataUrl.slice(PNG_DATA_URL_PREFIX.length)
+          const pngBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+          const pngImage = await pdfDoc.embedPng(pngBytes)
+
+          // field.pdfY is already bottom-left PDF-space (Coordinate Mapper handles Y-flip).
+          // Do NOT additionally flip Y — that would double-invert (RESEARCH Pitfall 2).
+          page.drawImage(pngImage, {
+            x: field.pdfX,
+            y: field.pdfY,
+            width: field.pdfWidth,
+            height: field.pdfHeight,
+          })
+        } else if (field.textValue && field.fontFamily) {
+          // Font-backed (typed) path — real embedded vector text, NOT rasterized PNG (SIG-02/SIG-03).
+          // T-04-05: page.drawText emits PDF text objects — no HTML, no script execution.
+          const pdfFont = embeddedFonts.get(field.fontFamily)!
+          drawSignatureText(page, field.textValue, pdfFont, field)
+        } else {
+          // Neither image-backed nor font-backed — reject
           throw new Error(
-            `Invalid dataUrl for field "${field.id}": must start with "${PNG_DATA_URL_PREFIX}"`,
+            `Invalid signature/initials field "${field.id}": must have either dataUrl or textValue+fontFamily`,
           )
         }
-        // Decode base64 PNG data URL to bytes
-        const base64 = field.dataUrl.slice(PNG_DATA_URL_PREFIX.length)
-        const pngBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
-        const pngImage = await pdfDoc.embedPng(pngBytes)
-
-        // field.pdfY is already bottom-left PDF-space (Coordinate Mapper handles Y-flip).
-        // Do NOT additionally flip Y — that would double-invert (RESEARCH Pitfall 2).
-        page.drawImage(pngImage, {
-          x: field.pdfX,
-          y: field.pdfY,
-          width: field.pdfWidth,
-          height: field.pdfHeight,
-        })
       } else if (field.type === 'date' || field.type === 'text') {
         // helvetica is guaranteed non-null here: hasTextFields is true when
         // any date/text/checkbox field is present, so embedFont ran above.
