@@ -10,9 +10,11 @@ import { Document } from 'react-pdf'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDocumentStore } from '../store/documentStore'
+import { useFieldStore } from '../store/fieldStore'
 import { LazyPage } from './LazyPage'
 import { PageNavigation } from './PageNavigation'
 import { LoadingSpinner } from './LoadingSpinner'
+import { PlacementModeOverlay } from './PlacementModeOverlay'
 
 /**
  * Full continuous multi-page PDF viewer.
@@ -36,6 +38,10 @@ export function DocumentViewer() {
   const setCurrentPage = useDocumentStore((s) => s.setCurrentPage)
   const setError = useDocumentStore((s) => s.setError)
 
+  // Field store subscriptions for keyboard delete (FLD-07)
+  const selectedFieldId = useFieldStore((s) => s.selectedFieldId)
+  const deleteField     = useFieldStore((s) => s.deleteField)
+
   // Revoke the previous Blob URL after DocumentViewer unmounts or docUrl changes,
   // ensuring revocation happens after react-pdf has released its internal reference.
   // This replaces the eager URL.revokeObjectURL() calls in TopBar and ErrorBanner (WR-01).
@@ -45,6 +51,34 @@ export function DocumentViewer() {
       if (url) URL.revokeObjectURL(url)
     }
   }, [docUrl])
+
+  // FLD-07: Keyboard delete handler — Delete/Backspace removes the selected field.
+  // Security (T-02-07): only fires when:
+  //   1. A field is selected (selectedFieldId !== null)
+  //   2. The event target is NOT an <input>, <textarea>, or contentEditable element
+  //      (guards against deleting a field while typing in a text control)
+  // preventDefault on Backspace prevents browser back-navigation.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (!selectedFieldId) return
+
+      // T-02-07 guard: do not intercept keystrokes in text input contexts
+      const target = e.target as HTMLElement | null
+      if (target) {
+        const tag = target.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return
+        if (target.isContentEditable) return
+      }
+
+      // Prevent Backspace from triggering browser back-navigation
+      e.preventDefault()
+      deleteField(selectedFieldId)
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedFieldId, deleteField])
 
   // Width of the inner constrained container — passed to each LazyPage
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined)
@@ -114,57 +148,65 @@ export function DocumentViewer() {
     : []
 
   return (
-    <div
-      ref={scrollContainerRef}
-      style={{
-        backgroundColor: 'var(--color-canvas)',
-        minHeight: 'calc(100dvh - 56px)',
-        overflowY: 'auto',
-        paddingTop: '24px',
-        paddingBottom: '24px',
-        // Constrained width container is inside this — no fit-content here (Pitfall 5)
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      {/* Inner container: constrained max-width, 100% width — ResizeObserver attached here */}
+    <>
+      {/* PlacementModeOverlay: sticky banner below TopBar (z-index:20, top:56px).
+          Rendered outside the scrollable canvas div so it sticks to the viewport,
+          not to the scroll container. Announces armed state to screen readers
+          (role="status" aria-live="polite" on the overlay itself). */}
+      <PlacementModeOverlay />
+
       <div
-        ref={innerContainerRef}
+        ref={scrollContainerRef}
         style={{
-          width: '100%',
-          maxWidth: '900px',
+          backgroundColor: 'var(--color-canvas)',
+          minHeight: 'calc(100dvh - 56px)',
+          overflowY: 'auto',
+          paddingTop: '24px',
+          paddingBottom: '24px',
+          // Constrained width container is inside this — no fit-content here (Pitfall 5)
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '24px',
         }}
       >
-        <Document
-          file={docUrl}
-          options={pdfOptions}
-          onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-          onLoadError={() =>
-            setError(
-              "This file couldn't be read. It may be corrupt or password-protected. Try another file.",
-            )
-          }
-          loading={<LoadingSpinner />}
+        {/* Inner container: constrained max-width, 100% width — ResizeObserver attached here */}
+        <div
+          ref={innerContainerRef}
+          style={{
+            width: '100%',
+            maxWidth: '900px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '24px',
+          }}
         >
-          {pageNumbers.map((pageNumber) => (
-            <LazyPage
-              key={pageNumber}
-              pageNumber={pageNumber}
-              containerWidth={containerWidth}
-            />
-          ))}
-        </Document>
-      </div>
+          <Document
+            file={docUrl}
+            options={pdfOptions}
+            onLoadSuccess={({ numPages: n }) => setNumPages(n)}
+            onLoadError={() =>
+              setError(
+                "This file couldn't be read. It may be corrupt or password-protected. Try another file.",
+              )
+            }
+            loading={<LoadingSpinner />}
+          >
+            {pageNumbers.map((pageNumber) => (
+              <LazyPage
+                key={pageNumber}
+                pageNumber={pageNumber}
+                containerWidth={containerWidth}
+              />
+            ))}
+          </Document>
+        </div>
 
-      {/* PageNavigation pill: fixed bottom-center, wired to scroll container */}
-      {numPages !== null && numPages > 0 && (
-        <PageNavigation scrollContainerRef={scrollContainerRef} />
-      )}
-    </div>
+        {/* PageNavigation pill: fixed bottom-center, wired to scroll container */}
+        {numPages !== null && numPages > 0 && (
+          <PageNavigation scrollContainerRef={scrollContainerRef} />
+        )}
+      </div>
+    </>
   )
 }
