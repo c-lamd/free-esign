@@ -150,11 +150,15 @@ export function SignatureDrawModal() {
         const dialog = dialogRef.current
         if (!dialog) return
 
-        // Include ALL focusable elements including inputs and radios
+        // Include ALL focusable elements including inputs and radios,
+        // but exclude those inside hidden tab panels — they aren't reachable
+        // (browsers silently drop .focus() on hidden subtrees, breaking wrap).
         const allFocusable = dialog.querySelectorAll<HTMLElement>(
           'button, canvas[tabindex="0"], input, [role="radio"]',
         )
-        const nodes = Array.from(allFocusable)
+        const nodes = Array.from(allFocusable).filter(
+          (el) => !el.closest('[hidden]') && !el.closest('[aria-hidden="true"]'),
+        )
         if (nodes.length === 0) return
 
         const first = nodes[0]
