@@ -9,7 +9,7 @@
  * See threat model entries T-01-05 (DoS) and T-01-06 (spoofed file type).
  */
 
-export type FileValidationError = 'unsupported-type' | 'too-large' | null
+export type FileValidationError = 'unsupported-type' | 'too-large' | 'word-doc' | null
 
 /** 100 MB in bytes — checked BEFORE calling file.arrayBuffer() */
 const MAX_FILE_SIZE = 100 * 1024 * 1024
@@ -25,6 +25,21 @@ const ALLOWED_MIMES = new Set([
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png'])
 
 /**
+ * Word-document MIME types (defense-in-depth: checked alongside extension).
+ * See threat model T-03-05 and RESEARCH Section 8.
+ */
+const WORD_MIMES = new Set([
+  'application/msword', // .doc
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+])
+
+/**
+ * Word-document extensions (lowercase, with leading dot).
+ * Used as fallback when the browser reports application/zip for .docx files.
+ */
+const WORD_EXTENSIONS = new Set(['.doc', '.docx'])
+
+/**
  * Validate a File for type (MIME + extension whitelist) and size cap.
  *
  * Returns:
@@ -38,16 +53,24 @@ export function validateFile(file: File): FileValidationError {
     return 'too-large'
   }
 
-  // 2. MIME type check (T-01-06 — primary signal from browser)
+  // 2. Word-doc check BEFORE generic unsupported-type (T-03-05, DOC-05)
+  // Extract extension early so both MIME and extension checks can use it.
+  // Defense-in-depth: either MIME or extension triggers the 'word-doc' result.
+  // This covers the browser quirk where .docx is reported as application/zip.
+  const lastDot = file.name.lastIndexOf('.')
+  const ext = lastDot >= 0 ? file.name.slice(lastDot).toLowerCase() : ''
+  if (WORD_MIMES.has(file.type) || WORD_EXTENSIONS.has(ext)) {
+    return 'word-doc'
+  }
+
+  // 3. MIME type check (T-01-06 — primary signal from browser)
   if (!ALLOWED_MIMES.has(file.type)) {
     return 'unsupported-type'
   }
 
-  // 3. Extension check — defense in depth (T-01-06)
-  // Extract the extension from the filename; toLowerCase for case-insensitivity.
-  const lastDot = file.name.lastIndexOf('.')
-  const extension = lastDot >= 0 ? file.name.slice(lastDot).toLowerCase() : ''
-  if (!ALLOWED_EXTENSIONS.has(extension)) {
+  // 4. Extension check — defense in depth (T-01-06)
+  // Reuse the extension already extracted above.
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
     return 'unsupported-type'
   }
 
