@@ -83,7 +83,7 @@ export function ZoomControl() {
     >
       {/* Zoom-out button */}
       <button
-        aria-label={isAtMin ? 'Zoom out (already at minimum)' : 'Zoom out'}
+        aria-label={isAtMin ? 'Zoom out — already at minimum zoom' : 'Zoom out'}
         aria-disabled={isAtMin ? 'true' : undefined}
         onClick={handleZoomOut}
         style={{
@@ -144,7 +144,7 @@ export function ZoomControl() {
 
       {/* Zoom-in button */}
       <button
-        aria-label={isAtMax ? 'Zoom in (already at maximum)' : 'Zoom in'}
+        aria-label={isAtMax ? 'Zoom in — already at maximum zoom' : 'Zoom in'}
         aria-disabled={isAtMax ? 'true' : undefined}
         onClick={handleZoomIn}
         style={{
