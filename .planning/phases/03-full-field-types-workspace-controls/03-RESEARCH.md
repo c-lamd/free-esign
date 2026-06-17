@@ -1057,7 +1057,7 @@ if (field.type === 'signature' || field.type === 'initials') {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `deleteField` also clear the undo history?**
    - What we know: CONTEXT.md says "delete field" is undoable (it IS a history-pushing action)
