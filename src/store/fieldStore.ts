@@ -19,6 +19,7 @@
  */
 
 import { create } from 'zustand'
+import { loadAll, addItem, deleteItem } from '../lib/savedSignatures'
 
 // ---------- Types (consumed by exportPdf.ts and downstream plans) ----------
 
@@ -33,8 +34,27 @@ export interface PlacedField {
   pdfWidth: number
   pdfHeight: number
   dataUrl?: string // image types only (signature, initials); optional
-  textValue?: string // date and text fields; checkbox has neither
+  textValue?: string // date, text, AND typed signature/initials text
+  fontFamily?: string // Phase 4: typed signature/initials only (optional)
   role?: string // v2 multi-party seam (MP-01) — reserved, unused in Phase 2/3
+}
+
+/**
+ * SavedItem — persisted to IndexedDB via idb-keyval.
+ * Represents a reusable drawn or typed signature/initials entry.
+ *
+ * fontFamily stores only the font name (e.g. "Dancing Script") — never font bytes.
+ * Font bytes are always loaded from the static public/fonts/ allowlist at export
+ * time (security: T-04-01 — no user-supplied bytes into the export pipeline).
+ */
+export interface SavedItem {
+  id: string // crypto.randomUUID()
+  kind: 'signature' | 'initials'
+  source: 'drawn' | 'typed'
+  dataUrl?: string // drawn items: PNG data URL
+  text?: string // typed items: the text string
+  fontFamily?: string // typed items: font family name
+  createdAt: number // Date.now()
 }
 
 export interface PageDimensions {
@@ -94,11 +114,19 @@ interface FieldStore {
   history: PlacedField[][]
   historyIndex: number
 
+  // Typed-arming seam (Phase 4): set when a typed sig/initials is confirmed in the modal.
+  // Null when the armed item is drawn (use signatureDataUrl/initialsDataUrl instead).
+  armedTypedPayload: { text: string; fontFamily: string; kind: 'signature' | 'initials' } | null
+
+  // Saved items (persisted to IndexedDB via idb-keyval; hydrated on app mount)
+  savedItems: SavedItem[]
+
   // Actions
   openModal: () => void
   closeModal: () => void
   setSignatureDataUrl: (url: string | null) => void
   setArmedFieldType: (type: FieldType | null) => void
+  setArmedTypedPayload: (p: FieldStore['armedTypedPayload']) => void
   setInitialsDataUrl: (url: string | null) => void
   openInitialsModal: () => void
   closeInitialsModal: () => void
@@ -111,6 +139,11 @@ interface FieldStore {
   undo: () => void
   redo: () => void
   resetFields: () => void
+
+  // Async saved-items actions (wired to idb-keyval via savedSignatures.ts)
+  loadSavedItems: () => Promise<void>
+  addSavedItem: (item: SavedItem) => Promise<void>
+  deleteSavedItem: (id: string) => Promise<void>
 }
 
 // ---------- Initial state (extracted for reset) ----------
@@ -119,6 +152,8 @@ const initialFieldState = {
   modalOpen: false,
   signatureDataUrl: null,
   armedFieldType: null as FieldType | null,
+  // Phase 4: typed-arming seam — cleared to null on each document reset
+  armedTypedPayload: null as { text: string; fontFamily: string; kind: 'signature' | 'initials' } | null,
   initialsDataUrl: null as string | null,
   initialsModalOpen: false,
   fields: [] as PlacedField[],
@@ -130,6 +165,9 @@ const initialFieldState = {
   // add/delete; pre-mutation state for drag/resize/text-blur via pushHistory).
   history: [[]] as PlacedField[][],
   historyIndex: 0,
+  // savedItems is NOT in initialFieldState on purpose — resetFields must NOT
+  // clear savedItems (persistence is document-independent; SIG-04/SIG-05).
+  // It is initialised separately in the store and kept out of the reset spread.
 }
 
 // ---------- Store ----------
@@ -137,12 +175,18 @@ const initialFieldState = {
 export const useFieldStore = create<FieldStore>()((set) => ({
   ...initialFieldState,
 
+  // Phase 4: savedItems initialised here (NOT in initialFieldState) so that
+  // resetFields() spreading initialFieldState does not clear persisted items.
+  savedItems: [] as SavedItem[],
+
   openModal: () => set({ modalOpen: true }),
   closeModal: () => set({ modalOpen: false }),
 
   setSignatureDataUrl: (signatureDataUrl) => set({ signatureDataUrl }),
 
   setArmedFieldType: (armedFieldType) => set({ armedFieldType }),
+
+  setArmedTypedPayload: (armedTypedPayload) => set({ armedTypedPayload }),
 
   setInitialsDataUrl: (initialsDataUrl) => set({ initialsDataUrl }),
 
@@ -231,9 +275,59 @@ export const useFieldStore = create<FieldStore>()((set) => ({
     }),
 
   resetFields: () =>
-    set({
+    set((state) => ({
       ...initialFieldState,
       // New Map instance so pageDimensions identity resets cleanly
       pageDimensions: new Map(),
-    }),
+      // savedItems is intentionally preserved across document resets —
+      // persistence is document-independent (SIG-04/SIG-05 requirement).
+      savedItems: state.savedItems,
+    })),
+
+  // ---------- Async saved-items actions (idb-keyval via savedSignatures.ts) ----------
+
+  /**
+   * Load all saved items from IndexedDB and hydrate the savedItems slice.
+   * Called once on app mount via App.tsx useEffect.
+   */
+  loadSavedItems: async () => {
+    try {
+      const items = await loadAll()
+      set({ savedItems: items })
+    } catch (err) {
+      // Non-blocking — if IndexedDB is unavailable, start with empty list
+      console.warn('[savedItems] loadSavedItems failed:', err)
+      set({ savedItems: [] })
+    }
+  },
+
+  /**
+   * Optimistically add a saved item to state, then persist to IndexedDB.
+   * Failure is non-blocking — UI copy ("Couldn't save for reuse") handled by Plan 03.
+   */
+  addSavedItem: async (item: SavedItem) => {
+    // Optimistic update first for immediate UI feedback
+    set((state) => ({ savedItems: [item, ...state.savedItems] }))
+    try {
+      await addItem(item)
+    } catch (err) {
+      // Persist failed — do NOT roll back the in-memory state; the item is usable
+      // for the current session even if it won't survive a reload.
+      console.warn('[savedItems] addSavedItem persist failed:', err)
+    }
+  },
+
+  /**
+   * Optimistically remove a saved item from state, then persist the deletion to IndexedDB.
+   * Failure is non-blocking.
+   */
+  deleteSavedItem: async (id: string) => {
+    // Optimistic update first
+    set((state) => ({ savedItems: state.savedItems.filter((i) => i.id !== id) }))
+    try {
+      await deleteItem(id)
+    } catch (err) {
+      console.warn('[savedItems] deleteSavedItem persist failed:', err)
+    }
+  },
 }))

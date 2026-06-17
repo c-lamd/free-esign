@@ -36,7 +36,12 @@ function makeItem(overrides: Partial<SavedItem> = {}): SavedItem {
 
 describe('savedItems slice', () => {
   beforeEach(() => {
+    // Reset document-related state (fields, armed state, etc.)
     useFieldStore.getState().resetFields()
+    // Directly clear savedItems for test isolation — resetFields intentionally
+    // preserves savedItems in production (document-independent persistence),
+    // but tests need a clean slate between runs.
+    useFieldStore.setState({ savedItems: [] })
     vi.clearAllMocks()
     // Restore default mock resolved values after clearAllMocks
     vi.mocked(idbKeyval.get).mockResolvedValue(undefined)

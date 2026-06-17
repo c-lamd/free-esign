@@ -1,4 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// fieldStore now transitively imports idb-keyval via savedSignatures.ts.
+// jsdom has no IndexedDB implementation so we must mock idb-keyval at module
+// level before importing fieldStore (RESEARCH Pitfall 4).
+vi.mock('idb-keyval', () => ({
+  get: vi.fn().mockResolvedValue(undefined),
+  set: vi.fn().mockResolvedValue(undefined),
+  del: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { useFieldStore, type PlacedField, type PageDimensions } from '../store/fieldStore'
 
 /** Helpers to build test fixtures */
