@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-06-17T06:35:00Z"
-last_activity: 2026-06-17 -- Phase 02 Plan 04 completed (Phase 2 all plans done)
+status: in-progress
+stopped_at: Phase 3 Plan 01 complete
+last_updated: "2026-06-17T00:30:00Z"
+last_activity: 2026-06-17 -- Phase 03 Plan 01 completed (field model + undo/redo + new-type export)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 7
+  total_plans: 13
+  completed_plans: 8
   percent: 40
 ---
 
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 02 (Core Signing Loop) — COMPLETE
-Plan: 4 of 4 (all plans complete)
-Status: Phase 2 complete; awaiting Phase 3 planning
-Last activity: 2026-06-17 -- Phase 02 Plan 04 completed (Phase 2 all plans done)
+Phase: 03 (Full Field Types + Workspace Controls) — IN PROGRESS
+Plan: 1 of 5 complete
+Status: Phase 3 Plan 01 complete; Plan 02 next
+Last activity: 2026-06-17 -- Phase 03 Plan 01 completed (field model + undo/redo + new-type export)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 10% (1/5 plans in Phase 3)
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P02 | 14 | 3 tasks | 5 files |
 | Phase 02 P03 | 4 | 3 tasks | 6 files |
 | Phase 02 P04 | 4 | 2 tasks | 8 files |
+| Phase 03 P01 | 5 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -94,7 +95,14 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- Phase 3 planning: prototype react-rnd controlled-mode + zoom-aware PDF-space coordinate update loop before finalizing implementation plan
+None currently. Phase 3 Plan 02 next.
+
+### New Decisions (03-01)
+
+- History stores pre+post snapshots per addField/deleteField so undo/redo works bidirectionally (both remove and restore fields)
+- updateField does NOT push history — callers (drag, resize, blur) push explicitly to prevent per-keystroke flood
+- ASCII 'X' for checkbox PDF export; U+2715 (✕) throws WinAnsi encode error at runtime (VERIFIED)
+- SignatureDrawModal migrated setPlacementMode→setArmedFieldType('signature') in Plan 01 to keep test suite green
 
 ### New Decisions (02-04)
 
@@ -110,6 +118,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-06-17T06:35:00Z
-Stopped at: Completed 02-04-PLAN.md
-Resume file: None
+Last session: 2026-06-17T00:30:00Z
+Stopped at: Phase 3 Plan 01 complete
+Resume file: .planning/phases/03-full-field-types-workspace-controls/03-02-PLAN.md

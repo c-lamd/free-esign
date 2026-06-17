@@ -25,15 +25,15 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 ### Field Placement
 
-- [ ] **FLD-01**: User can place a saved signature anywhere on the document
-- [ ] **FLD-02**: User can place initials, a date, free text, and a checkbox/X mark on the document
-- [ ] **FLD-03**: User can set the date field value (defaults to today, editable)
-- [ ] **FLD-04**: User can type the content of a free-text field
-- [ ] **FLD-05**: User can drag any placed field to reposition it on the page
-- [ ] **FLD-06**: User can resize a placed field using handles
+- [x] **FLD-01**: User can place a saved signature anywhere on the document
+- [x] **FLD-02**: User can place initials, a date, free text, and a checkbox/X mark on the document
+- [x] **FLD-03**: User can set the date field value (defaults to today, editable)
+- [x] **FLD-04**: User can type the content of a free-text field
+- [x] **FLD-05**: User can drag any placed field to reposition it on the page
+- [x] **FLD-06**: User can resize a placed field using handles
 - [x] **FLD-07**: User can delete a placed field
-- [ ] **FLD-08**: User can place fields on any page of a multi-page document
-- [ ] **FLD-09**: User can undo and redo placement actions
+- [x] **FLD-08**: User can place fields on any page of a multi-page document
+- [x] **FLD-09**: User can undo and redo placement actions
 
 ### Export
 
