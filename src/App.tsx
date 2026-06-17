@@ -4,6 +4,7 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 import { DocumentViewer } from './components/DocumentViewer'
 import { UploadZone } from './components/UploadZone'
 import { ErrorBanner } from './components/ErrorBanner'
+import { ExportErrorBanner } from './components/ExportErrorBanner'
 import { SignatureDrawModal } from './components/SignatureDrawModal'
 
 /**
@@ -22,6 +23,9 @@ import { SignatureDrawModal } from './components/SignatureDrawModal'
  * onLoadError: DocumentViewer handles load errors internally via the store's
  * setError action (T-01-08), so a corrupt PDF that passes type/size validation
  * still lands in the friendly ErrorBanner state rather than a blank canvas.
+ *
+ * ExportErrorBanner mounts unconditionally — self-gates on exportError being set.
+ * It renders as a sticky banner below the TopBar when an export failure occurs (T-02-02).
  */
 function App() {
   const view = useDocumentStore((s) => s.view)
@@ -35,6 +39,8 @@ function App() {
       }}
     >
       <TopBar />
+      {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
+      <ExportErrorBanner />
       {view === 'empty' && <UploadZone />}
       {view === 'loading' && <LoadingSpinner />}
       {view === 'error' && <ErrorBanner />}
