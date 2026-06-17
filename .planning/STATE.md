@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Phase 4 Plan 01 complete — executing Plan 02"
-last_updated: "2026-06-17T19:32:00.000Z"
-last_activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
+stopped_at: "Phase 4 Plan 02 complete — executing Plan 03"
+last_updated: "2026-06-17T19:43:00.000Z"
+last_activity: 2026-06-17 -- Phase 04 Plan 02 complete (fonts.ts + fontkit export + lockAspectRatio fix; 283 tests green)
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 60
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 04 (Typed Signatures + Signature Persistence) — IN PROGRESS
-Plan: 1 of 3 complete
-Status: Phase 04 Plan 01 complete — executing Plan 02
+Plan: 2 of 3 complete
+Status: Phase 04 Plan 02 complete — executing Plan 03
 Last activity: 2026-06-17 -- Phase 04 Plan 01 complete (deps+fonts+store; 269 tests green)
 
 Progress: [██████░░░░] 60% (3/5 phases complete)
@@ -65,6 +65,7 @@ Progress: [██████░░░░] 60% (3/5 phases complete)
 | Phase 03 P03 | 12 | 3 tasks | 6 files |
 | Phase 03 P04 | 8 | 3 tasks | 6 files |
 | Phase 04 P01 | 10 | 3 tasks | 12 files |
+| Phase 04 P02 | 7 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,17 @@ Recent decisions affecting current work:
 - idb-keyval@6.2.5 checkpoint pre-approved per user authorization (package is legitimate, SUS flag was timing artifact)
 - TTF fonts downloaded from fonts.gstatic.com (Dancing Script v29, Great Vibes v21, Pacifico v23) — real OFL binaries
 - IDB_KEY exported from savedSignatures.ts for test assertions on the correct key name
+
+### New Decisions (04-02)
+
+- fonts.ts FONT_FILE_MAP is a static 3-key allowlist; unknown families throw BEFORE fetch (T-04-04/PRV-02 path-traversal guard)
+- fetch mock in exportPdf.test.ts returns REAL Dancing Script TTF bytes — fontkit rejects minimal/fake bytes during embedFont
+- _clearFontBytesCache() exported as test seam for cache isolation between typed-sig test runs
+- drawSignatureText: no truncateToFit — full text scales to fit BOTH height and width (CONTEXT Area 2 / SIG-02/SIG-03)
+- lockAspectRatio now keys on !!field.dataUrl for sig/initials: drawn (dataUrl present) locks; typed (font-backed, no dataUrl) resizes freely
+- LazyPage isTyped flag controls 200x56 default size and skips PNG Image() aspect-ratio block for typed drops
+- Both setArmedTypedPayload(null) AND setArmedFieldType(null) called after typed drop (RESEARCH Pitfall 6 guard)
+- EXP-02 first-512-byte identity holds for typed-signature export (saveIncremental→concat path unchanged)
 
 ### Pending Todos
 
@@ -163,6 +175,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T19:32:00.000Z
+Last session: 2026-06-17T19:42:23.872Z
 Stopped at: Phase 4 Plan 01 complete — executing Plan 02
 Resume file: .planning/phases/04-typed-signatures-signature-persistence/04-02-PLAN.md

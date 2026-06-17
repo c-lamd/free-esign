@@ -18,8 +18,8 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 ### Signatures & Initials
 
 - [x] **SIG-01**: User can create a signature by drawing it with mouse, trackpad, or touch
-- [ ] **SIG-02**: User can create a signature by typing it and choosing among several script fonts
-- [ ] **SIG-03**: User can create reusable initials (drawn or typed)
+- [x] **SIG-02**: User can create a signature by typing it and choosing among several script fonts
+- [x] **SIG-03**: User can create reusable initials (drawn or typed)
 - [x] **SIG-04**: Saved signatures and initials persist in the browser across sessions (IndexedDB)
 - [x] **SIG-05**: User can view and delete their saved signatures and initials
 
@@ -107,8 +107,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | FLD-04 | Phase 3 | Complete |
 | FLD-08 | Phase 3 | Complete |
 | FLD-09 | Phase 3 | Complete |
-| SIG-02 | Phase 4 | Pending |
-| SIG-03 | Phase 4 | Pending |
+| SIG-02 | Phase 4 | Complete |
+| SIG-03 | Phase 4 | Complete |
 | SIG-04 | Phase 4 | Complete |
 | SIG-05 | Phase 4 | Complete |
 | LND-01 | Phase 5 | Pending |
