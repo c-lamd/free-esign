@@ -1,0 +1,251 @@
+/**
+ * PlacedFieldWidget.tsx
+ *
+ * A react-rnd controlled drag/resize widget that renders one placed signature field.
+ * Position and size are derived from PDF-space coordinates and converted to CSS pixels
+ * at the current render scale via the Coordinate Mapper.
+ *
+ * On drag/resize stop the widget converts back to PDF-space and updates the store
+ * so positions are render-scale-independent.
+ *
+ * @see 02-03-PLAN.md Task 2
+ * @see 02-UI-SPEC.md PlacedFieldWidget
+ * @see src/lib/coordinateMapper.ts (cssPixelToPageSpace / pageSpaceToCssPixel)
+ * @see src/lib/pageViewport.ts (SimpleViewport)
+ */
+
+import { Rnd } from 'react-rnd'
+import type { PlacedField } from '../store/fieldStore'
+import { useFieldStore } from '../store/fieldStore'
+import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
+import type { SimpleViewport } from '../lib/pageViewport'
+
+// ---------------------------------------------------------------------------
+// Resize handle dot — 8px accent circle with white ring (UI-SPEC)
+// ---------------------------------------------------------------------------
+
+function ResizeHandle() {
+  return (
+    <div
+      style={{
+        width: '8px',
+        height: '8px',
+        backgroundColor: 'var(--color-accent)',
+        border: '2px solid white',
+        borderRadius: '50%',
+        // Center the dot on the handle position
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+      }}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface PlacedFieldWidgetProps {
+  field: PlacedField
+  viewport: SimpleViewport
+  isSelected: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWidgetProps) {
+  const updateField = useFieldStore((s) => s.updateField)
+  const deleteField = useFieldStore((s) => s.deleteField)
+  const setSelectedFieldId = useFieldStore((s) => s.setSelectedFieldId)
+
+  // Convert PDF-space rect to CSS pixels for react-rnd controlled mode
+  const cssPos = pageSpaceToCssPixel({ x: field.pdfX, y: field.pdfY }, viewport)
+  const cssWidth  = field.pdfWidth  * viewport.scale
+  const cssHeight = field.pdfHeight * viewport.scale
+
+  // ---------------------------------------------------------------------------
+  // Event handlers
+  // ---------------------------------------------------------------------------
+
+  function handleClick(e: React.MouseEvent) {
+    // Stop propagation so the page overlay click-away does not immediately deselect
+    e.stopPropagation()
+    setSelectedFieldId(field.id)
+  }
+
+  function handleDeleteClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    deleteField(field.id)
+  }
+
+  function handleDragStop(_e: unknown, d: { x: number; y: number }) {
+    // d.x, d.y are the new CSS pixel position after drag (top-left corner)
+    // No double Y-flip: cssPixelToPageSpace already handles the Y-axis inversion (Pitfall 2)
+    const newPdfPos = cssPixelToPageSpace({ x: d.x, y: d.y }, viewport)
+    updateField(field.id, { pdfX: newPdfPos.x, pdfY: newPdfPos.y })
+  }
+
+  function handleResizeStop(
+    _e: unknown,
+    _direction: unknown,
+    ref: HTMLElement,
+    _delta: unknown,
+    position: { x: number; y: number },
+  ) {
+    // ref.style.width/height are CSS strings like "180px" — use parseFloat (Pitfall 7)
+    const newCssWidth  = parseFloat(ref.style.width)
+    const newCssHeight = parseFloat(ref.style.height)
+    const newPdfWidth  = newCssWidth  / viewport.scale
+    const newPdfHeight = newCssHeight / viewport.scale
+    const newPdfPos    = cssPixelToPageSpace({ x: position.x, y: position.y }, viewport)
+    updateField(field.id, {
+      pdfX:      newPdfPos.x,
+      pdfY:      newPdfPos.y,
+      pdfWidth:  newPdfWidth,
+      pdfHeight: newPdfHeight,
+    })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Resize handle component map (only shown when selected, but Rnd always needs them)
+  // ---------------------------------------------------------------------------
+  const handleComponents = isSelected
+    ? {
+        topLeft:     <ResizeHandle />,
+        topRight:    <ResizeHandle />,
+        bottomLeft:  <ResizeHandle />,
+        bottomRight: <ResizeHandle />,
+        top:         <ResizeHandle />,
+        bottom:      <ResizeHandle />,
+        left:        <ResizeHandle />,
+        right:       <ResizeHandle />,
+      }
+    : undefined
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  return (
+    <div
+      role="img"
+      aria-label="Placed signature — press Delete to remove"
+      aria-selected={isSelected}
+      onClick={handleClick}
+      style={{
+        // Outer wrapper: no border or background — visual chrome is on the Rnd inner div
+        position: 'relative',
+        display: 'inline-block',
+        pointerEvents: 'auto', // Re-enable pointer events on the widget (overlay is pointer-events:none)
+      }}
+    >
+      <Rnd
+        position={{ x: cssPos.x, y: cssPos.y }}
+        size={{ width: cssWidth, height: cssHeight }}
+        bounds="parent"
+        lockAspectRatio={true}
+        minWidth={80}
+        minHeight={24}
+        disableDragging={false}
+        enableResizing={true}
+        resizeHandleComponent={handleComponents}
+        onDragStop={handleDragStop}
+        onResizeStop={handleResizeStop}
+        style={{
+          border: isSelected
+            ? '2px solid var(--color-accent)'
+            : '1px solid rgba(0,0,0,0.15)',
+          boxSizing: 'border-box',
+          // cursor: move is react-rnd default for draggable; will shift to grabbing during drag
+        }}
+      >
+        {/* Signature image — fills the widget */}
+        <img
+          src={field.dataUrl}
+          alt="Placed signature"
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+            userSelect: 'none',
+          }}
+        />
+
+        {/* Delete control — shown only when selected (UI-SPEC: × button top-right) */}
+        {isSelected && (
+          <button
+            onClick={handleDeleteClick}
+            aria-label="Delete signature"
+            style={{
+              // Position: top-right corner of the widget, overlapping the border
+              position: 'absolute',
+              top: '-12px',
+              right: '-12px',
+              // Visual: 24px × 24px red circle with white ×
+              width: '24px',
+              height: '24px',
+              backgroundColor: 'var(--color-destructive)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 600,
+              lineHeight: 1,
+              // Touch target: 32px × 32px transparent padding (UI-SPEC 32px touch target)
+              padding: '4px',
+              // Keep the button above the widget border
+              zIndex: 10,
+              // Focus ring: 2px accent outline (UI-SPEC + accessibility)
+              outline: 'none',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = '2px solid var(--color-accent)'
+              e.currentTarget.style.outlineOffset = '2px'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none'
+              e.currentTarget.style.outlineOffset = '0'
+            }}
+            onMouseEnter={(e) => {
+              // Hover: #B91C1C (red-700) — UI-SPEC DeleteControl hover
+              e.currentTarget.style.backgroundColor = '#B91C1C'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-destructive)'
+            }}
+          >
+            {/* Visible × character */}
+            ×
+            {/* Screen-reader text (sr-only) */}
+            <span
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0,0,0,0)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              Delete signature
+            </span>
+          </button>
+        )}
+      </Rnd>
+    </div>
+  )
+}
