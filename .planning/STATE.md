@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
+stopped_at: All 5 phases complete — ready for milestone audit → complete → cleanup
 last_updated: "2026-06-17T20:59:05.458Z"
 last_activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
 progress:
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 05 (Landing Page + Launch) — IN PROGRESS
+Phase: 05 (Landing Page + Launch) — COMPLETE
 Plan: 2 of 2 complete
-Status: Executing — Plan 01 complete (landing page wired, 305 tests green), Plan 02 remaining
-Last activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
+Status: ALL 5 PHASES COMPLETE — 545 tests pass + 1 pre-launch skip, tsc clean, build clean, privacy guard sound. Live deploy + DNS + live audit + real BMC handle deferred to human (README §Deploy). Ready for milestone audit.
+Last activity: 2026-06-17 -- Phase 05 complete (landing + privacy guard + deploy-ready; verified 7/8, UI 19/24, 7 review fixes)
 
-Progress: [█████████░] 94% (17/18 plans complete)
+Progress: [██████████] 100% (18/18 plans complete; 5/5 phases)
 
 ## Performance Metrics
 
@@ -187,6 +187,7 @@ None currently.
 | Human deploy | Attach free-esign.com + configure DNS in Vercel dashboard. See README §Deploy Step 5. | Pending | 05-02 |
 | Human verify | Post-deploy DevTools network audit: full signing workflow (open PDF → place fields → download), confirm zero third-party requests. See README §Deploy Step 6. (PRV-03 live proof) | Pending | 05-02 |
 | Human verify | Verify BMC link opens real BMC page after replacing PLACEHOLDER in src/config.ts. See README §Deploy Step 7. (LND-03) | Pending | 05-02 |
+| UI advisory | Phase 5 UI audit (19/24) residual minors in 05-UI-REVIEW.md: index.html `<title>` differs from spec (actual phrasing is better — update spec if intentional); hover/active hex (#1D4ED8/#1E40AF) are spec-declared but unregistered tokens. Top-3 (wordmark type=button, step h3, mobile clamp padding) already fixed. | Open | 05 (UI review) |
 
 ### Correction (03 code review)
 
