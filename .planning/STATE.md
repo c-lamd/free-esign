@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 01 complete — executing Plan 02
-last_updated: "2026-06-17T21:00:00.000Z"
+stopped_at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
+last_updated: "2026-06-17T20:59:05.458Z"
 last_activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 17
-  percent: 94
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 05 (Landing Page + Launch) — IN PROGRESS
-Plan: 1 of 2 complete
+Plan: 2 of 2 complete
 Status: Executing — Plan 01 complete (landing page wired, 305 tests green), Plan 02 remaining
 Last activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 94% (17/18 plans complete)
 | Phase 04 P02 | 7 | 3 tasks | 6 files |
 | Phase 04-typed-signatures-signature-persistence P03 | 7 | 3 tasks | 5 files |
 | Phase 05-landing-page-launch P01 | 4 | 3 tasks | 14 files |
+| Phase 05-landing-page-launch P02 | 3 minutes | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 03-04]: Undo/redo keyboard shortcuts extend DocumentViewer single keydown handler; undo/redo branches placed before selectedFieldId gate
 - [Phase 03-04]: T-03-11: INPUT/TEXTAREA guard fires first in shared handler for both delete and undo/redo shortcuts
 - [Phase 03-04]: InitialsDrawModal uses 2:1 canvas aspect ratio; mirrors SignatureDrawModal gated on initialsModalOpen
+- [Phase 05-landing-page-launch]: ASSET_LOADING_PATTERNS scoped to 6 constructs to avoid xmlns false-positives and BMC anchor false-positive; scan src/ not dist/
+- [Phase 05-landing-page-launch]: Deploy checkpoint (vercel --prod + DNS + live network audit) deferred to human per CONTEXT.md and user authorization; repo is fully deploy-ready
 
 ### New Decisions (04-01)
 
@@ -180,6 +183,10 @@ None currently.
 | Refinement | Undo/redo: redo-after-drag/resize/text-edit does not re-apply the moved position (pushHistory stores pre-mutation only). Undo works; placement+deletion redo are correct (FLD-09 criterion met). Fix later via commit-post-mutation snapshot if desired. | Open | 03 (code review CR-01) |
 | Human verify | Phase 4 browser checks (6 items in 04-VERIFICATION.md): typed-sig WYSIWYG vs PDF glyphs, cross-session IndexedDB persist + delete, PDF vector-text crispness at zoom, zero third-party requests on font load/export, Saved-tab kind filtering | Pending | 04 (autonomous) |
 | UI advisory | Phase 4 UI audit (87/100) minor items in 04-UI-REVIEW.md: font-load-failure inline note (system-ui fallback works; note not implemented — near-impossible for same-origin bundled fonts), SavedItemCard 32px delete touch target, delete sr-only double-announce | Open | 04 (UI review) |
+| Human deploy | Phase 5 deploy: run `vercel --prod` from repo root — requires Vercel account and CLI. See README §Deploy Step 4. | Pending | 05-02 |
+| Human deploy | Attach free-esign.com + configure DNS in Vercel dashboard. See README §Deploy Step 5. | Pending | 05-02 |
+| Human verify | Post-deploy DevTools network audit: full signing workflow (open PDF → place fields → download), confirm zero third-party requests. See README §Deploy Step 6. (PRV-03 live proof) | Pending | 05-02 |
+| Human verify | Verify BMC link opens real BMC page after replacing PLACEHOLDER in src/config.ts. See README §Deploy Step 7. (LND-03) | Pending | 05-02 |
 
 ### Correction (03 code review)
 
@@ -187,6 +194,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T21:00:00.000Z
-Stopped at: Phase 5 Plan 01 complete — ready for Plan 02
-Resume file: .planning/phases/05-landing-page-launch/05-02-PLAN.md
+Last session: 2026-06-17T20:59:05.453Z
+Stopped at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
+Resume file: None

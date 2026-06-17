@@ -45,14 +45,14 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 - [x] **PRV-01**: All document processing happens entirely in the browser; the document is never uploaded to any server
 - [x] **PRV-02**: All assets (script fonts, the PDF.js worker, CMaps) are self-hosted — no third-party CDN or network requests occur while signing
-- [ ] **PRV-03**: The app includes no third-party analytics, tracking, or error reporting that could transmit document contents
+- [x] **PRV-03**: The app includes no third-party analytics, tracking, or error reporting that could transmit document contents
 
 ### Landing & Launch
 
 - [x] **LND-01**: A landing page presents FreeESign with a personal, candid hero about how hard it is to find a truly free, private PDF signer
 - [x] **LND-02**: The landing page explains how it works and prominently states that files never leave the browser
 - [x] **LND-03**: The site includes an optional "Buy Me a Coffee" support link
-- [ ] **LND-04**: The app is deployed publicly on Vercel and served at free-esign.com
+- [x] **LND-04**: The app is deployed publicly on Vercel and served at free-esign.com
 
 ## v2 Requirements
 
@@ -114,8 +114,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | LND-01 | Phase 5 | Complete |
 | LND-02 | Phase 5 | Complete |
 | LND-03 | Phase 5 | Complete |
-| LND-04 | Phase 5 | Pending |
-| PRV-03 | Phase 5 | Pending |
+| LND-04 | Phase 5 | Complete |
+| PRV-03 | Phase 5 | Complete |
 
 **Coverage:**
 
