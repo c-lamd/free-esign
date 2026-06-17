@@ -115,9 +115,13 @@ function drawTextInBox(page: PDFPage, text: string, font: PDFFont, field: Placed
 function drawSignatureText(page: PDFPage, text: string, font: PDFFont, field: PlacedField): void {
   if (!text) return
   const padding = 4 // pt — total horizontal padding (2pt each side)
+  const maxWidth = field.pdfWidth - padding
+  // Guard: if the field is degenerate (too narrow to draw anything), skip silently.
+  // PlacedFieldWidget enforces minWidth:80px in the UI, but this function is also
+  // a public API surface — clamp rather than crash (IN-04).
+  if (maxWidth <= 0) return
   const sizeFromHeight = font.sizeAtHeight(field.pdfHeight * 0.85)
   const textWidthAtTarget = font.widthOfTextAtSize(text, sizeFromHeight)
-  const maxWidth = field.pdfWidth - padding
   const finalSize =
     textWidthAtTarget > maxWidth
       ? sizeFromHeight * (maxWidth / textWidthAtTarget)
