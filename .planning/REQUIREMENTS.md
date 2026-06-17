@@ -52,7 +52,7 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 - [x] **LND-01**: A landing page presents FreeESign with a personal, candid hero about how hard it is to find a truly free, private PDF signer
 - [x] **LND-02**: The landing page explains how it works and prominently states that files never leave the browser
 - [x] **LND-03**: The site includes an optional "Buy Me a Coffee" support link
-- [x] **LND-04**: The app is deployed publicly on Vercel and served at free-esign.com
+- [~] **LND-04**: The app is deployed publicly on Vercel and served at free-esign.com — *deploy-ready (vercel.json + build + README runbook); live `vercel --prod` + domain DNS deferred to human (needs Vercel account + domain ownership)*
 
 ## v2 Requirements
 
@@ -93,9 +93,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PRV-01 | Phase 1 | Complete |
 | PRV-02 | Phase 1 | Complete |
 | SIG-01 | Phase 2 | Complete |
-| FLD-01 | Phase 2 | Pending |
-| FLD-05 | Phase 2 | Pending |
-| FLD-06 | Phase 2 | Pending |
+| FLD-01 | Phase 2 | Complete |
+| FLD-05 | Phase 2 | Complete |
+| FLD-06 | Phase 2 | Complete |
 | FLD-07 | Phase 2 | Complete |
 | EXP-01 | Phase 2 | Complete |
 | EXP-02 | Phase 2 | Complete |
@@ -114,7 +114,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | LND-01 | Phase 5 | Complete |
 | LND-02 | Phase 5 | Complete |
 | LND-03 | Phase 5 | Complete |
-| LND-04 | Phase 5 | Complete |
+| LND-04 | Phase 5 | Deploy-ready (live `vercel --prod` + free-esign.com DNS deferred to human — see README §Deploy) |
 | PRV-03 | Phase 5 | Complete |
 
 **Coverage:**
@@ -125,4 +125,4 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 ---
 *Requirements defined: 2026-06-16*
-*Last updated: 2026-06-16 after roadmap creation (traceability populated)*
+*Last updated: 2026-06-17 — milestone v1.0 audit: 28/29 fully delivered + verified; LND-04 deploy-ready (live deploy deferred to human).*
