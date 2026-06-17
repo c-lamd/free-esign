@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: typed-signatures-signature-persistence
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-17
+reviewed_at: 2026-06-17
 ---
 
 # Phase 4 — UI Design Contract
@@ -60,6 +61,7 @@ Inherited from Phase 1/2/3 unchanged. All tokens declared in `src/index.css` `:r
 - Saved-item thumbnail cards: minimum 44px × 44px touch target (click to place).
 - Save-for-reuse checkbox row: minimum 44px height touch target wrapping the checkbox + label.
 - Delete per-item button: 32px × 32px visual, wrapped to 44px × 44px touch target via invisible padding (same pattern as Phase 2/3 delete control).
+- **Intra-component 12px:** the Type-tab name input padding (`8px 12px`), font-picker `margin-top: 12px`, and live-preview box (`12px 16px` / `margin-top: 12px`) use 12px. 12px is a multiple of 4 (grid-aligned); it is an accepted intra-component value, not a new global token. Implementers may substitute `sm` (8px) or `md` (16px) if preferred — both are acceptable.
 
 ---
 
@@ -441,6 +443,8 @@ Inherits all Phase 1/2/3 states. Phase 4 additions:
 | **Saved panel — signature empty state heading** | "No saved signatures yet" |
 | **Saved panel — initials empty state heading** | "No saved initials yet" |
 | **Saved panel — empty state body** | "Create a signature in the Draw or Type tab, check 'Save for reuse', and it will appear here." |
+| **Save-for-reuse failure (IndexedDB write fails)** | Inline, non-blocking: "Couldn't save this for reuse, but it's ready to place now." — the signature still arms for placement; the failure never blocks the core flow. |
+| **Font load failure (live preview / on-canvas)** | If a script TTF fails to load, the preview falls back to the system font with a quiet inline note: "Preview font unavailable — your signature will still embed correctly." (font-display: block already prevents a garbled flash) |
 | **Saved panel — radiogroup aria-label (signature)** | `"Saved signatures"` |
 | **Saved panel — radiogroup aria-label (initials)** | `"Saved initials"` |
 | **Saved panel CTA (signature)** | "Use signature" |
