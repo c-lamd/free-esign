@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 complete (verified, human-verify deferred) — ready for Phase 5
-last_updated: "2026-06-17T20:00:00.000Z"
-last_activity: 2026-06-17 -- Phase 04 complete (all 3 plans; 296 tests green, tsc clean)
+stopped_at: Phase 5 Plan 01 complete — executing Plan 02
+last_updated: "2026-06-17T21:00:00.000Z"
+last_activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 80
+  total_plans: 18
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 04 (Typed Signatures + Signature Persistence) — COMPLETE
-Plan: 3 of 3 complete
-Status: Phase 4 complete — verified 16/16, 9 code-review fixes, UI audit 87/100; human browser-verify deferred. Ready for Phase 5.
-Last activity: 2026-06-17 -- Phase 04 complete (all 3 plans; 296 tests green, tsc clean)
+Phase: 05 (Landing Page + Launch) — IN PROGRESS
+Plan: 1 of 2 complete
+Status: Executing — Plan 01 complete (landing page wired, 305 tests green), Plan 02 remaining
+Last activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
 
-Progress: [████████░░] 80% (4/5 phases complete)
+Progress: [█████████░] 94% (17/18 plans complete)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 80% (4/5 phases complete)
 | Phase 04 P01 | 10 | 3 tasks | 12 files |
 | Phase 04 P02 | 7 | 3 tasks | 6 files |
 | Phase 04-typed-signatures-signature-persistence P03 | 7 | 3 tasks | 5 files |
+| Phase 05-landing-page-launch P01 | 4 | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,14 @@ None currently.
 - exportError + fileName slices added to documentStore (reset clears both); ExportErrorBanner self-gates on exportError null
 - Post-download: no document/field reset — app stays on document (LOCKED CONTEXT.md enforced)
 
+### New Decisions (05-01)
+
+- 'landing' added to ViewState as initial view; goToLanding()/startSigning() are named actions (not setView aliases); reset() unchanged — stays returning 'empty' (signing-session intent, locked)
+- BUY_ME_A_COFFEE_URL is a plain string constant in src/config.ts — plain anchor href only, no BMC script/widget (LND-03)
+- LandingPage has its own LandingHeader; TopBar renders only when view !== 'landing'; both modals gated under view !== 'landing' (Pitfall 7)
+- TopBar FreeESign wordmark converted from static span to ghost button calling goToLanding(); aria-label="FreeESign — return to home"
+- public/favicon.svg self-hosted SVG pen icon replaces broken /vite.svg 404 reference in index.html
+
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
@@ -178,6 +187,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T19:53:19.757Z
-Stopped at: Phase 4 Plan 01 complete — executing Plan 02
-Resume file: .planning/phases/04-typed-signatures-signature-persistence/04-02-PLAN.md
+Last session: 2026-06-17T21:00:00.000Z
+Stopped at: Phase 5 Plan 01 complete — ready for Plan 02
+Resume file: .planning/phases/05-landing-page-launch/05-02-PLAN.md

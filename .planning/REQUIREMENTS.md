@@ -49,9 +49,9 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 
 ### Landing & Launch
 
-- [ ] **LND-01**: A landing page presents FreeESign with a personal, candid hero about how hard it is to find a truly free, private PDF signer
-- [ ] **LND-02**: The landing page explains how it works and prominently states that files never leave the browser
-- [ ] **LND-03**: The site includes an optional "Buy Me a Coffee" support link
+- [x] **LND-01**: A landing page presents FreeESign with a personal, candid hero about how hard it is to find a truly free, private PDF signer
+- [x] **LND-02**: The landing page explains how it works and prominently states that files never leave the browser
+- [x] **LND-03**: The site includes an optional "Buy Me a Coffee" support link
 - [ ] **LND-04**: The app is deployed publicly on Vercel and served at free-esign.com
 
 ## v2 Requirements
@@ -111,9 +111,9 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SIG-03 | Phase 4 | Complete |
 | SIG-04 | Phase 4 | Complete |
 | SIG-05 | Phase 4 | Complete |
-| LND-01 | Phase 5 | Pending |
-| LND-02 | Phase 5 | Pending |
-| LND-03 | Phase 5 | Pending |
+| LND-01 | Phase 5 | Complete |
+| LND-02 | Phase 5 | Complete |
+| LND-03 | Phase 5 | Complete |
 | LND-04 | Phase 5 | Pending |
 | PRV-03 | Phase 5 | Pending |
 
