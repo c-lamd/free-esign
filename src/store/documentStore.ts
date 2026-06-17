@@ -2,6 +2,13 @@ import { create } from 'zustand'
 
 export type ViewState = 'empty' | 'loading' | 'error' | 'loaded'
 
+/**
+ * Discrete zoom steps for document zoom (50–200%).
+ * Shared between documentStore and ZoomControl — import from this module.
+ */
+export const ZOOM_STEPS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0] as const
+export type ZoomStep = (typeof ZOOM_STEPS)[number]
+
 export interface DocumentStore {
   view: ViewState
   docUrl: string | null
@@ -27,6 +34,13 @@ export interface DocumentStore {
    */
   exportError: string | null
 
+  /**
+   * Document zoom multiplier.
+   * Default 1.0 (fit-to-width). Range 0.5–2.0 using ZOOM_STEPS.
+   * Used to compute effectiveScale in LazyPage; stored PDF coords are never mutated on zoom.
+   */
+  zoom: number
+
   setView: (v: ViewState) => void
   loadDocument: (url: string) => void
   setNumPages: (n: number) => void
@@ -35,6 +49,7 @@ export interface DocumentStore {
   setOriginalPdfBytes: (bytes: ArrayBuffer | null) => void
   setFileName: (name: string | null) => void
   setExportError: (msg: string | null) => void
+  setZoom: (z: number) => void
   reset: () => void
 }
 
@@ -47,6 +62,7 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   originalPdfBytes: null,
   fileName: null,
   exportError: null,
+  zoom: 1.0,
 
   setView: (view) => set({ view }),
   loadDocument: (url) => set({ docUrl: url, view: 'loading', errorMessage: null }),
@@ -56,6 +72,7 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   setOriginalPdfBytes: (originalPdfBytes) => set({ originalPdfBytes }),
   setFileName: (fileName) => set({ fileName }),
   setExportError: (exportError) => set({ exportError }),
+  setZoom: (zoom) => set({ zoom }),
   reset: () =>
     set({
       view: 'empty',
@@ -66,5 +83,6 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
       originalPdfBytes: null,
       fileName: null,
       exportError: null,
+      zoom: 1.0,
     }),
 }))
