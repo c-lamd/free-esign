@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-06-17T06:21:30Z"
-last_activity: 2026-06-17 -- Phase 02 Plan 03 completed
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-06-17T06:35:00Z"
+last_activity: 2026-06-17 -- Phase 02 Plan 04 completed (Phase 2 all plans done)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 6
-  percent: 20
+  completed_plans: 7
+  percent: 40
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Sign a PDF in your browser, for free, without your document ever leaving your device or being altered.
-**Current focus:** Phase 02 — Core Signing Loop
+**Current focus:** Phase 02 complete — ready for Phase 03
 
 ## Current Position
 
-Phase: 02 (Core Signing Loop) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 02 Plan 03 completed
+Phase: 02 (Core Signing Loop) — COMPLETE
+Plan: 4 of 4 (all plans complete)
+Status: Phase 2 complete; awaiting Phase 3 planning
+Last activity: 2026-06-17 -- Phase 02 Plan 04 completed (Phase 2 all plans done)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P01 | 12 | 3 tasks | 9 files |
 | Phase 02 P02 | 14 | 3 tasks | 5 files |
 | Phase 02 P03 | 4 | 3 tasks | 6 files |
+| Phase 02 P04 | 4 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -89,21 +90,26 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Human verify Phase 2 signing loop (see 02-04-SUMMARY.md deferred checkpoint section)
 
 ### Blockers/Concerns
 
-- Phase 2 planning: validate `pdf-lib-incremental-save` maintenance status and compatibility with pdf-lib 1.17.1 before writing export code
 - Phase 3 planning: prototype react-rnd controlled-mode + zoom-aware PDF-space coordinate update loop before finalizing implementation plan
+
+### New Decisions (02-04)
+
+- wrapImageAsPdfWithBytes added as sibling to wrapImageAsPdf; shared buildWrappedPdf helper; existing callers and tests unchanged
+- exportError + fileName slices added to documentStore (reset clears both); ExportErrorBanner self-gates on exportError null
+- Post-download: no document/field reset — app stays on document (LOCKED CONTEXT.md enforced)
 
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| Human verify | Phase 2 end-of-phase browser verification (02-04-SUMMARY.md) | Pending | 02-04 |
 
 ## Session Continuity
 
-Last session: 2026-06-17T06:21:30Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-06-17T06:35:00Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
