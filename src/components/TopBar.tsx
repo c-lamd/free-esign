@@ -7,6 +7,7 @@ import { UndoRedoControls } from './UndoRedoControls'
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
   const reset = useDocumentStore((s) => s.reset)
+  const goToLanding = useDocumentStore((s) => s.goToLanding)
   const originalPdfBytes = useDocumentStore((s) => s.originalPdfBytes)
   const fileName = useDocumentStore((s) => s.fileName)
   const setExportError = useDocumentStore((s) => s.setExportError)
@@ -58,17 +59,37 @@ export function TopBar() {
         zIndex: 10,
       }}
     >
-      <span
+      <button
+        onClick={goToLanding}
+        aria-label="FreeESign — return to home"
         style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
           fontSize: '24px',
           fontWeight: 600,
           lineHeight: 1.1,
           color: 'var(--color-text-primary)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          padding: 0,
+          fontFamily: 'inherit',
+          outline: 'none',
+        }}
+        onMouseEnter={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-accent)'
+        }}
+        onMouseLeave={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-primary)'
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.outline = '2px solid var(--color-accent)'
+          e.currentTarget.style.outlineOffset = '2px'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.outline = 'none'
         }}
       >
         FreeESign
-      </span>
+      </button>
 
       {view === 'loaded' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

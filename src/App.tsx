@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useDocumentStore } from './store/documentStore'
 import { useFieldStore } from './store/fieldStore'
+import { LandingPage } from './components/LandingPage'
 import { TopBar } from './components/TopBar'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { DocumentViewer } from './components/DocumentViewer'
@@ -13,8 +14,9 @@ import { InitialsDrawModal } from './components/InitialsDrawModal'
 /**
  * App — view-router wired to the Zustand state machine.
  *
- * State machine: view ∈ { empty | loading | error | loaded }
+ * State machine: view ∈ { landing | empty | loading | error | loaded }
  *
+ * landing → <LandingPage>   — initial view; candid hero + how-it-works + privacy + footer
  * empty   → <UploadZone>    — drag-drop + Browse; validates + loads document
  * loading → <LoadingSpinner> — while pdf.js is parsing the document
  * error   → <ErrorBanner>   — friendly inline error + "Try another file" retry
@@ -27,8 +29,11 @@ import { InitialsDrawModal } from './components/InitialsDrawModal'
  * setError action (T-01-08), so a corrupt PDF that passes type/size validation
  * still lands in the friendly ErrorBanner state rather than a blank canvas.
  *
- * ExportErrorBanner mounts unconditionally — self-gates on exportError being set.
- * It renders as a sticky banner below the TopBar when an export failure occurs (T-02-02).
+ * ExportErrorBanner mounts unconditionally (inside the tool gate) — self-gates
+ * on exportError being set. It renders as a sticky banner below the TopBar when
+ * an export failure occurs (T-02-02).
+ *
+ * Both modals are tool-only and mount only when view !== 'landing' (Pitfall 7).
  */
 function App() {
   const view = useDocumentStore((s) => s.view)
@@ -47,17 +52,22 @@ function App() {
         backgroundColor: 'var(--color-surface)',
       }}
     >
-      <TopBar />
-      {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
-      <ExportErrorBanner />
-      {view === 'empty' && <UploadZone />}
-      {view === 'loading' && <LoadingSpinner />}
-      {view === 'error' && <ErrorBanner />}
-      {view === 'loaded' && <DocumentViewer />}
-      {/* SignatureDrawModal mounts unconditionally — self-gates on modalOpen */}
-      <SignatureDrawModal />
-      {/* InitialsDrawModal mounts unconditionally — self-gates on initialsModalOpen */}
-      <InitialsDrawModal />
+      {view === 'landing' && <LandingPage />}
+      {view !== 'landing' && (
+        <>
+          <TopBar />
+          {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
+          <ExportErrorBanner />
+          {view === 'empty' && <UploadZone />}
+          {view === 'loading' && <LoadingSpinner />}
+          {view === 'error' && <ErrorBanner />}
+          {view === 'loaded' && <DocumentViewer />}
+          {/* SignatureDrawModal mounts unconditionally — self-gates on modalOpen */}
+          <SignatureDrawModal />
+          {/* InitialsDrawModal mounts unconditionally — self-gates on initialsModalOpen */}
+          <InitialsDrawModal />
+        </>
+      )}
     </div>
   )
 }
