@@ -80,6 +80,7 @@ export function HeroSection() {
         </p>
 
         <button
+          type="button"
           onClick={startSigning}
           aria-label="Start signing — opens the document uploader"
           style={{

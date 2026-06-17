@@ -128,6 +128,7 @@ export function PrivacySection() {
           </div>
 
           <button
+            type="button"
             onClick={startSigning}
             aria-label="Start signing — opens the document uploader"
             style={{

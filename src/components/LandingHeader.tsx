@@ -38,6 +38,7 @@ export function LandingHeader() {
         </span>
 
         <button
+          type="button"
           onClick={startSigning}
           aria-label="Sign a document — opens the document uploader"
           style={{
