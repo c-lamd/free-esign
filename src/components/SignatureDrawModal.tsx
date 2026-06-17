@@ -610,7 +610,7 @@ export function SignatureDrawModal() {
           marginTop: '12px',
         }}
       >
-        {FONTS.map((font) => {
+        {FONTS.map((font, fontIdx) => {
           const isActive = selectedFont === font
           return (
             <div
@@ -623,6 +623,24 @@ export function SignatureDrawModal() {
                 if (e.key === ' ' || e.key === 'Enter') {
                   e.preventDefault()
                   setSelectedFont(font)
+                } else if (
+                  e.key === 'ArrowRight' || e.key === 'ArrowDown' ||
+                  e.key === 'ArrowLeft'  || e.key === 'ArrowUp'
+                ) {
+                  // ARIA radiogroup: arrow keys move selection (roving tabIndex pattern).
+                  // Tab is reserved for moving between widgets, not within them (IN-01).
+                  e.preventDefault()
+                  const delta = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1
+                  const nextFont = FONTS[(fontIdx + delta + FONTS.length) % FONTS.length]
+                  setSelectedFont(nextFont)
+                  // Move DOM focus to the newly selected radio (roving tabIndex)
+                  const radiogroup = (e.currentTarget as HTMLElement).parentElement
+                  if (radiogroup) {
+                    const nextEl = radiogroup.querySelectorAll<HTMLElement>('[role="radio"]')[
+                      (fontIdx + delta + FONTS.length) % FONTS.length
+                    ]
+                    nextEl?.focus()
+                  }
                 }
               }}
               style={{
