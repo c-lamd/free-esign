@@ -1,6 +1,7 @@
 import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
+import { FieldPalette } from './FieldPalette'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -8,7 +9,6 @@ export function TopBar() {
   const originalPdfBytes = useDocumentStore((s) => s.originalPdfBytes)
   const fileName = useDocumentStore((s) => s.fileName)
   const setExportError = useDocumentStore((s) => s.setExportError)
-  const openModal = useFieldStore((s) => s.openModal)
   const fields = useFieldStore((s) => s.fields)
 
   function handleOpenAnother() {
@@ -71,49 +71,28 @@ export function TopBar() {
 
       {view === 'loaded' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* "Add signature" trigger — ghost/secondary style; opens the draw modal */}
-          <button
-            onClick={openModal}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 400,
-              color: 'var(--color-text-secondary)',
-              padding: '8px',
-              minHeight: '44px',
-              minWidth: '44px',
-              borderRadius: '4px',
-              outline: 'none',
-            }}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-text-primary)'
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-text-secondary)'
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.outline = '2px solid var(--color-accent)'
-              e.currentTarget.style.outlineOffset = '2px'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.outline = 'none'
-            }}
-            aria-label="Add signature — open drawing modal"
-          >
-            Add signature
-          </button>
+          {/* FieldPalette — five field type buttons (Signature, Initials, Date, Text, Checkbox) */}
+          <FieldPalette />
 
-          {/* "Download PDF" — primary export CTA (UI-SPEC: between Add signature and Open another) */}
+          {/* Visual separator between palette and download group */}
+          <div
+            aria-hidden="true"
+            style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: 'var(--color-border)',
+              margin: '0 4px',
+              flexShrink: 0,
+            }}
+          />
+
+          {/* "Download PDF" — primary export CTA */}
           <button
             onClick={() => { void handleDownload() }}
             aria-disabled={isDownloadDisabled ? 'true' : undefined}
             aria-label={
               isDownloadDisabled
-                ? 'Download PDF — place at least one signature first'
+                ? 'Download PDF — place at least one field first'
                 : 'Download PDF'
             }
             style={{
@@ -169,34 +148,34 @@ export function TopBar() {
 
           <button
             onClick={handleOpenAnother}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 400,
-            color: 'var(--color-text-secondary)',
-            padding: '8px',
-            minHeight: '44px',
-            minWidth: '44px',
-            borderRadius: '4px',
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.color =
-              'var(--color-accent)'
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.color =
-              'var(--color-text-secondary)'
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid var(--color-accent)'
-            e.currentTarget.style.outlineOffset = '2px'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.outline = 'none'
-          }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 400,
+              color: 'var(--color-text-secondary)',
+              padding: '8px',
+              minHeight: '44px',
+              minWidth: '44px',
+              borderRadius: '4px',
+              outline: 'none',
+            }}
+            onMouseEnter={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.color =
+                'var(--color-accent)'
+            }}
+            onMouseLeave={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.color =
+                'var(--color-text-secondary)'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = '2px solid var(--color-accent)'
+              e.currentTarget.style.outlineOffset = '2px'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none'
+            }}
             aria-label="Open another document"
           >
             Open another

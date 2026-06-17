@@ -1,39 +1,51 @@
 /**
  * PlacementModeOverlay.tsx
  *
- * Sticky banner shown while placement mode is armed (placementMode === true).
- * Informs the user to click on the document to place their signature.
- * Provides a "Stop placing" link that disarms placement mode.
- * Listens for Escape key to cancel placement mode while armed.
+ * Sticky banner shown while any field type is armed (armedFieldType !== null).
+ * Shows type-specific placement instruction copy.
+ * Provides a "Stop placing" link that disarms placement.
+ * Listens for Escape key to disarm while armed.
  *
- * @see 02-UI-SPEC.md PlacementModeOverlay
- * @see 02-CONTEXT.md Placing the Signature
- * @see src/store/fieldStore.ts (placementMode, setPlacementMode)
+ * Phase 3 migration: placementMode/setPlacementMode replaced by armedFieldType/setArmedFieldType.
+ *
+ * @see 03-UI-SPEC.md PlacementModeOverlay
+ * @see 03-UI-SPEC.md Copywriting Contract (per-type banner copy)
+ * @see src/store/fieldStore.ts (armedFieldType, setArmedFieldType)
  */
 
 import { useEffect } from 'react'
 import { useFieldStore } from '../store/fieldStore'
+import type { FieldType } from '../store/fieldStore'
+
+// Per-type placement banner copy (Copywriting Contract)
+const BANNER_COPY: Record<FieldType, string> = {
+  signature: 'Click anywhere on the document to place your signature.',
+  initials:  'Click anywhere on the document to place your initials.',
+  date:      'Click anywhere on the document to place a date field.',
+  text:      'Click anywhere on the document to place a text field.',
+  checkbox:  'Click anywhere on the document to place a checkbox mark.',
+}
 
 export function PlacementModeOverlay() {
-  const placementMode    = useFieldStore((s) => s.placementMode)
-  const setPlacementMode = useFieldStore((s) => s.setPlacementMode)
+  const armedFieldType    = useFieldStore((s) => s.armedFieldType)
+  const setArmedFieldType = useFieldStore((s) => s.setArmedFieldType)
 
-  // ── Escape key cancels placement mode while armed ─────────────────────────
+  // ── Escape key disarms while armed ───────────────────────────────────────
   useEffect(() => {
-    if (!placementMode) return
+    if (!armedFieldType) return
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        setPlacementMode(false)
+        setArmedFieldType(null)
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [placementMode, setPlacementMode])
+  }, [armedFieldType, setArmedFieldType])
 
   // ── Render only while armed ───────────────────────────────────────────────
-  if (!placementMode) return null
+  if (!armedFieldType) return null
 
   return (
     <div
@@ -52,7 +64,7 @@ export function PlacementModeOverlay() {
         justifyContent: 'space-between',
       }}
     >
-      {/* Placement instruction copy — UI-SPEC Copywriting Contract */}
+      {/* Per-type placement instruction copy */}
       <span
         style={{
           fontSize: '16px',
@@ -61,12 +73,12 @@ export function PlacementModeOverlay() {
           color: 'var(--color-text-secondary)',
         }}
       >
-        Click anywhere on the document to place your signature.
+        {BANNER_COPY[armedFieldType]}
       </span>
 
-      {/* "Stop placing" link — disarms placement mode */}
+      {/* "Stop placing" link — disarms placement */}
       <button
-        onClick={() => setPlacementMode(false)}
+        onClick={() => setArmedFieldType(null)}
         style={{
           fontSize: '14px',
           fontWeight: 400,

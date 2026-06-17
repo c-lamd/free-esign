@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useFieldStore, type PlacedField, type PageDimensions, type FieldType } from '../store/fieldStore'
+import { useFieldStore, type PlacedField, type PageDimensions } from '../store/fieldStore'
 
 /** Helpers to build test fixtures */
 function makeField(overrides: Partial<PlacedField> = {}): PlacedField {

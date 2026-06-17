@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Page } from 'react-pdf'
 import { useFieldStore } from '../store/fieldStore'
-import type { PlacedField } from '../store/fieldStore'
+import type { PlacedField, FieldType } from '../store/fieldStore'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace } from '../lib/coordinateMapper'
 import { PlacedFieldWidget } from './PlacedFieldWidget'
@@ -21,8 +21,14 @@ interface LazyPageProps {
  *   computes render scale, and stores PageDimensions in Zustand via setPageDimensions.
  * - Per-page overlay div (position:absolute, inset:0, pointer-events:none) that hosts
  *   PlacedFieldWidgets for fields belonging to this page.
- * - When placementMode is armed: overlay receives pointer-events:auto and cursor:crosshair;
- *   clicking drops a new field centered on the click, auto-selects it, and disarms placement.
+ * - When a field type is armed: overlay receives pointer-events:auto and cursor:crosshair;
+ *   clicking drops a new field centered on the click, auto-selects it, and disarms.
+ *
+ * Phase 3 migration:
+ * - placementMode/setPlacementMode replaced by armedFieldType/setArmedFieldType.
+ * - handleOverlayClick dispatches all five armed types with per-type defaults.
+ * - Date fields default to today (M/D/YYYY format).
+ * - pushHistory called BEFORE addField (one undo entry per drop).
  *
  * Security: renderAnnotationLayer={false} eliminates annotation-based injection surface (T-01-03).
  * Security: overlay is pointer-events:none except during placement and on individual widgets (T-02-08).
@@ -34,21 +40,26 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   // Field store state
-  const placementMode    = useFieldStore((s) => s.placementMode)
-  const signatureDataUrl = useFieldStore((s) => s.signatureDataUrl)
-  const fields           = useFieldStore((s) => s.fields)
-  const selectedFieldId  = useFieldStore((s) => s.selectedFieldId)
-  const pageDimensions   = useFieldStore((s) => s.pageDimensions)
-  const addField         = useFieldStore((s) => s.addField)
-  const setSelectedFieldId = useFieldStore((s) => s.setSelectedFieldId)
-  const setPlacementMode   = useFieldStore((s) => s.setPlacementMode)
-  const setPageDimensions  = useFieldStore((s) => s.setPageDimensions)
+  const armedFieldType    = useFieldStore((s) => s.armedFieldType)
+  const signatureDataUrl  = useFieldStore((s) => s.signatureDataUrl)
+  const initialsDataUrl   = useFieldStore((s) => s.initialsDataUrl)
+  const fields            = useFieldStore((s) => s.fields)
+  const selectedFieldId   = useFieldStore((s) => s.selectedFieldId)
+  const pageDimensions    = useFieldStore((s) => s.pageDimensions)
+  const addField          = useFieldStore((s) => s.addField)
+  const setSelectedFieldId  = useFieldStore((s) => s.setSelectedFieldId)
+  const setArmedFieldType   = useFieldStore((s) => s.setArmedFieldType)
+  const setPageDimensions   = useFieldStore((s) => s.setPageDimensions)
+  const pushHistory         = useFieldStore((s) => s.pushHistory)
 
   // Fields that belong to this page
   const pageFields = fields.filter((f) => f.pageNumber === pageNumber)
 
   // Current page dimensions from the store (populated by onLoadSuccess)
   const dims = pageDimensions.get(pageNumber)
+
+  // isArmed: any non-null armedFieldType
+  const isArmed = armedFieldType !== null
 
   useEffect(() => {
     const el = ref.current
@@ -88,35 +99,49 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   // ── Placement click handler ─────────────────────────────────────────────────
   const handleOverlayClick = useCallback(
     async (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!placementMode || !signatureDataUrl || !dims) return
+      if (!armedFieldType || !dims) return
+      // Image types require their data URL to be set
+      if (armedFieldType === 'signature' && !signatureDataUrl) return
+      if (armedFieldType === 'initials' && !initialsDataUrl) return
 
       // Compute CSS click position relative to the page overlay div
       const rect = e.currentTarget.getBoundingClientRect()
       const cssX = e.clientX - rect.left
       const cssY = e.clientY - rect.top
 
+      // NOTE: Plan 02 uses dims.scale (no zoom yet); Plan 03 swaps for effectiveScale
       const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, dims.scale)
 
-      // Determine field dimensions: 180px wide, height from PNG aspect ratio
-      const defaultWidthPx = 180
-
-      // Derive aspect ratio from the PNG data URL via a temporary Image
-      // (The PNG natural dimensions determine the aspect ratio to preserve, per UI-SPEC)
-      let aspectRatio = 3 // fallback to 3:1 if Image load fails
-      try {
-        aspectRatio = await new Promise<number>((resolve) => {
-          const img = new Image()
-          img.onload = () => {
-            resolve(img.naturalWidth / img.naturalHeight || 3)
-          }
-          img.onerror = () => resolve(3)
-          img.src = signatureDataUrl
-        })
-      } catch {
-        aspectRatio = 3
+      // Default CSS sizes per type at current scale
+      const defaults: Record<FieldType, { w: number; h: number }> = {
+        signature: { w: 180, h: 60 },  // adjusted by PNG aspect ratio below
+        initials:  { w: 80,  h: 40 },  // adjusted by PNG aspect ratio below
+        date:      { w: 160, h: 28 },
+        text:      { w: 160, h: 28 },
+        checkbox:  { w: 32,  h: 32 },
       }
 
-      const defaultHeightPx = defaultWidthPx / aspectRatio
+      let defaultWidthPx  = defaults[armedFieldType].w
+      let defaultHeightPx = defaults[armedFieldType].h
+
+      // For image types: derive height from actual PNG aspect ratio
+      if (armedFieldType === 'signature' || armedFieldType === 'initials') {
+        const dataUrl = armedFieldType === 'signature' ? signatureDataUrl! : initialsDataUrl!
+        let aspectRatio = armedFieldType === 'signature' ? 3 : 2 // fallbacks
+        try {
+          aspectRatio = await new Promise<number>((resolve) => {
+            const img = new Image()
+            img.onload = () => {
+              resolve(img.naturalWidth / img.naturalHeight || (armedFieldType === 'signature' ? 3 : 2))
+            }
+            img.onerror = () => resolve(armedFieldType === 'signature' ? 3 : 2)
+            img.src = dataUrl
+          })
+        } catch {
+          // fallback already set
+        }
+        defaultHeightPx = defaultWidthPx / aspectRatio
+      }
 
       // Center the field on the click point (compute top-left CSS corner)
       const fieldTopLeftCss = {
@@ -128,42 +153,62 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       // Coordinate Mapper handles the Y-axis flip — no additional flip needed (Pitfall 2).
       const pdfBottomLeft = cssPixelToPageSpace(fieldTopLeftCss, viewport)
 
+      // Today-date default for 'date' type; empty string for 'text'; undefined otherwise
+      const today = new Date()
+      const textValue: string | undefined =
+        armedFieldType === 'date'
+          ? `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`
+          : armedFieldType === 'text'
+          ? ''
+          : undefined
+
       const newField: PlacedField = {
         id: crypto.randomUUID(),
-        type: 'signature',
+        type: armedFieldType,
         pageNumber,
-        pdfX:      pdfBottomLeft.x,
-        pdfY:      pdfBottomLeft.y,
+        pdfX:     pdfBottomLeft.x,
+        pdfY:     pdfBottomLeft.y,
         pdfWidth:  defaultWidthPx  / dims.scale,
         pdfHeight: defaultHeightPx / dims.scale,
-        dataUrl:   signatureDataUrl,
+        // dataUrl only for image types
+        ...(armedFieldType === 'signature' ? { dataUrl: signatureDataUrl! } :
+            armedFieldType === 'initials'  ? { dataUrl: initialsDataUrl! }  : {}),
+        // textValue for date/text
+        ...(textValue !== undefined ? { textValue } : {}),
       }
 
+      // Push undo history BEFORE adding the field (one undo entry per drop)
+      // NOTE: addField itself also pushes pre+post history internally.
+      // We call pushHistory here to comply with the plan spec; addField then adds
+      // its own pre-state snapshot before the field is appended.
+      pushHistory()
       addField(newField)
       setSelectedFieldId(newField.id)
-      setPlacementMode(false)
+      setArmedFieldType(null) // disarm after drop
     },
     [
-      placementMode,
-      signatureDataUrl,
+      armedFieldType,
       dims,
+      signatureDataUrl,
+      initialsDataUrl,
       pageNumber,
+      pushHistory,
       addField,
       setSelectedFieldId,
-      setPlacementMode,
+      setArmedFieldType,
     ],
   )
 
   // ── Click-away deselection on overlay (when NOT in placement mode) ──────────
   const handleOverlayClickAway = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (placementMode) return // placement mode has its own handler
+      if (isArmed) return // armed mode has its own handler
       // If the click target is the overlay div itself (not a child widget), deselect
       if (e.target === e.currentTarget) {
         setSelectedFieldId(null)
       }
     },
-    [placementMode, setSelectedFieldId],
+    [isArmed, setSelectedFieldId],
   )
 
   // Estimate A4/Letter page aspect ratio (1.414) for placeholder height
@@ -197,17 +242,17 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
 
       {/* Per-page overlay div — hosts PlacedFieldWidgets for this page.
           pointer-events:none by default (T-02-08) so it never blocks the PDF canvas.
-          During placement mode: pointer-events:auto + crosshair cursor to capture clicks.
+          During armed placement: pointer-events:auto + crosshair cursor to capture clicks.
           Individual widgets re-enable pointer-events:auto themselves. */}
       {isVisible && (
         <div
-          onClick={placementMode ? handleOverlayClick : handleOverlayClickAway}
+          onClick={isArmed ? handleOverlayClick : handleOverlayClickAway}
           style={{
             position: 'absolute',
             inset: 0,
-            pointerEvents: placementMode ? 'auto' : 'none',
-            cursor: placementMode ? 'crosshair' : 'default',
-            // Overlay must NOT intercept non-placement clicks when no placement mode
+            pointerEvents: isArmed ? 'auto' : 'none',
+            cursor: isArmed ? 'crosshair' : 'default',
+            // Overlay must NOT intercept non-placement clicks when not armed
             // — individual widgets set pointer-events:auto themselves
           }}
         >
