@@ -84,6 +84,12 @@ export function SavedItemCard({
       aria-checked={isSelected}
       tabIndex={isSelected ? 0 : -1}
       onClick={() => onSelect(item.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault() // prevent Space from scrolling the page
+          onSelect(item.id)
+        }
+      }}
       style={cardStyle}
       onMouseEnter={(e) => {
         if (!isSelected) {
