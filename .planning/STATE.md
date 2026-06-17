@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-17T06:15:47.116Z"
-last_activity: 2026-06-17 -- Phase 02 execution started
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-06-17T06:21:30Z"
+last_activity: 2026-06-17 -- Phase 02 Plan 03 completed
 progress:
   total_phases: 5
   completed_phases: 1
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 02 (Core Signing Loop) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 02 execution started
+Last activity: 2026-06-17 -- Phase 02 Plan 03 completed
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P04 | 6 | 2 tasks | 4 files |
 | Phase 02 P01 | 12 | 3 tasks | 9 files |
 | Phase 02 P02 | 14 | 3 tasks | 5 files |
+| Phase 02 P03 | 4 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase ?]: aria-disabled (not HTML disabled) on Add signature button to keep focus reachable while empty (WCAG 2.5.5)
 - [Phase ?]: SignatureDrawModal: transparent PNG (rgba(0,0,0,0) bg) ensures no white box artifact on PDF overlay
 - [Phase ?]: Canvas 2d jsdom mock in setup.ts is idempotent via _gsdCanvasMocked guard on prototype
+- [Phase ?]: PlacementModeOverlay rendered as fragment sibling before scroll div so sticky top:56px resolves to viewport (not scroll container)
+- [Phase ?]: makeSimpleViewport rotation=0 only; rotated pages deferred to Phase 3 (full pdfjs affine required)
+- [Phase ?]: lockAspectRatio=true (not numeric ratio) sufficient for v1 — field dims computed from PNG aspect so ratio is preserved
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-17T06:15:47.107Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-06-17T06:21:30Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
