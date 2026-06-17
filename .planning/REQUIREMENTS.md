@@ -31,15 +31,15 @@ Requirements for the initial release. Each maps to a roadmap phase (see Traceabi
 - [ ] **FLD-04**: User can type the content of a free-text field
 - [ ] **FLD-05**: User can drag any placed field to reposition it on the page
 - [ ] **FLD-06**: User can resize a placed field using handles
-- [ ] **FLD-07**: User can delete a placed field
+- [x] **FLD-07**: User can delete a placed field
 - [ ] **FLD-08**: User can place fields on any page of a multi-page document
 - [ ] **FLD-09**: User can undo and redo placement actions
 
 ### Export
 
-- [ ] **EXP-01**: User can download the signed document as a PDF
-- [ ] **EXP-02**: The exported PDF preserves the original content unaltered — overlays are appended to the original document bytes; the original is never re-encoded, reflowed, or rasterized
-- [ ] **EXP-03**: A signed image is exported as a PDF containing that image plus the placed fields
+- [x] **EXP-01**: User can download the signed document as a PDF
+- [x] **EXP-02**: The exported PDF preserves the original content unaltered — overlays are appended to the original document bytes; the original is never re-encoded, reflowed, or rasterized
+- [x] **EXP-03**: A signed image is exported as a PDF containing that image plus the placed fields
 
 ### Privacy & Trust
 
@@ -96,10 +96,10 @@ Which phases cover which requirements. Populated during roadmap creation.
 | FLD-01 | Phase 2 | Pending |
 | FLD-05 | Phase 2 | Pending |
 | FLD-06 | Phase 2 | Pending |
-| FLD-07 | Phase 2 | Pending |
-| EXP-01 | Phase 2 | Pending |
-| EXP-02 | Phase 2 | Pending |
-| EXP-03 | Phase 2 | Pending |
+| FLD-07 | Phase 2 | Complete |
+| EXP-01 | Phase 2 | Complete |
+| EXP-02 | Phase 2 | Complete |
+| EXP-03 | Phase 2 | Complete |
 | DOC-04 | Phase 3 | Pending |
 | DOC-05 | Phase 3 | Pending |
 | FLD-02 | Phase 3 | Pending |
