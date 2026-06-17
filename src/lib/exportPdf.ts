@@ -129,9 +129,15 @@ export async function exportSignedPdf(
     const snapshot = pdfDoc.takeSnapshot()
     const pages = pdfDoc.getPages()
 
-    // Embed standard fonts ONCE before the field loop (Pitfall 7 — never embed per field)
-    const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    // Embed standard fonts ONCE before the field loop, but only when text/checkbox
+    // fields are present — signature/initials-only exports need no font objects.
+    const hasTextFields = fields.some(
+      (f) => f.type === 'date' || f.type === 'text' || f.type === 'checkbox',
+    )
+    const helvetica = hasTextFields ? await pdfDoc.embedFont(StandardFonts.Helvetica) : null
+    const helveticaBold = hasTextFields
+      ? await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+      : null
 
     for (const field of fields) {
       const page = pages[field.pageNumber - 1]
@@ -165,9 +171,11 @@ export async function exportSignedPdf(
           height: field.pdfHeight,
         })
       } else if (field.type === 'date' || field.type === 'text') {
-        drawTextInBox(page, field.textValue ?? '', helvetica, field)
+        // helvetica is guaranteed non-null here: hasTextFields is true when
+        // any date/text/checkbox field is present, so embedFont ran above.
+        drawTextInBox(page, field.textValue ?? '', helvetica!, field)
       } else if (field.type === 'checkbox') {
-        drawCheckboxX(page, helveticaBold, field)
+        drawCheckboxX(page, helveticaBold!, field)
       }
     }
 
