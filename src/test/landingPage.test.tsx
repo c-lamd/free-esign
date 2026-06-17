@@ -47,14 +47,26 @@ describe('LandingPage', () => {
     expect(screen.getByText('Download the signed file')).toBeInTheDocument()
   })
 
-  it('BMC link has rel="noopener noreferrer" and href starting with buymeacoffee.com', async () => {
+  it('BMC link is well-formed: href present, target=_blank, rel correct', async () => {
     const { LandingPage } = await import('../components/LandingPage')
     await act(async () => {
       render(React.createElement(LandingPage))
     })
     const bmcLink = screen.getByRole('link', { name: /buy me a coffee/i })
-    expect(bmcLink).toHaveAttribute('rel', 'noopener noreferrer')
+    // href must be present and point at buymeacoffee.com
     expect((bmcLink as HTMLAnchorElement).href).toMatch(/^https:\/\/www\.buymeacoffee\.com\//)
+    // Must open in a new tab
+    expect(bmcLink).toHaveAttribute('target', '_blank')
+    // Must have the correct security attributes for external links
+    expect(bmcLink).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  // TODO (IN-03): Before shipping, replace BUY_ME_A_COFFEE_URL = 'https://www.buymeacoffee.com/PLACEHOLDER'
+  // in src/config.ts with the real handle. The test below is intentionally skipped while
+  // the placeholder is in place during development. Un-skip it (change it.skip → it) before launch.
+  it.skip('BUY_ME_A_COFFEE_URL does not contain PLACEHOLDER (un-skip before launch)', async () => {
+    const { BUY_ME_A_COFFEE_URL } = await import('../config')
+    expect(BUY_ME_A_COFFEE_URL).not.toMatch(/PLACEHOLDER/)
   })
 
   it('rendered landing page has no <script> or <iframe> elements', async () => {
