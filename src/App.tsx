@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useDocumentStore } from './store/documentStore'
+import { useFieldStore } from './store/fieldStore'
 import { TopBar } from './components/TopBar'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { DocumentViewer } from './components/DocumentViewer'
@@ -30,6 +32,12 @@ import { InitialsDrawModal } from './components/InitialsDrawModal'
  */
 function App() {
   const view = useDocumentStore((s) => s.view)
+  const loadSavedItems = useFieldStore((s) => s.loadSavedItems)
+
+  // SIG-04: hydrate saved items from IndexedDB once on mount
+  useEffect(() => {
+    loadSavedItems()
+  }, [loadSavedItems])
 
   return (
     <div
