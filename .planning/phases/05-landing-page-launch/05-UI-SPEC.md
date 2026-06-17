@@ -1,10 +1,11 @@
 ---
 phase: 5
 slug: landing-page-launch
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-17
+reviewed_at: 2026-06-17
 ---
 
 # Phase 5 — UI Design Contract
@@ -115,6 +116,7 @@ All 8 existing CSS tokens from `src/index.css` are reused. No new CSS custom pro
 12. Zoom +/− button hover icon (Phase 3)
 13. **Landing primary CTA button background** — "Start signing" hero button and the bottom CTA repeat (Phase 5 addition)
 14. **Decorative script flourish color** — the single hero signature decoration rendered in a script font (Phase 5 addition; aria-hidden)
+15. **LandingHeader "Sign a document" link text color (default state)** — one small ghost text link in the landing header; accent on the text only, no fill (Phase 5 addition)
 
 Accent is NOT used for: the landing header background, section headings, body copy, step number circles, footer text, the BMC link text (ghost link style, `--color-text-secondary`), or any background fill on the landing except the primary CTA buttons.
 
