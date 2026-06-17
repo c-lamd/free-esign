@@ -167,6 +167,45 @@ describe('useFieldStore', () => {
     expect(state.historyIndex).toBe(0)
   })
 
+  // ---------- WR-01: field isolation between documents ----------
+
+  it('WR-01: fields from document A do not appear after resetFields (simulating doc-B load)', () => {
+    // Simulate: user places fields on document A
+    const store = useFieldStore.getState()
+    store.addField(makeField({ id: 'docA-field-1' }))
+    store.addField(makeField({ id: 'docA-field-2' }))
+    expect(useFieldStore.getState().fields).toHaveLength(2)
+
+    // Simulate: user navigates away (goToLanding / handleOpenAnother) → resetFields()
+    store.resetFields()
+
+    // Document B loads — fields must be empty
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+  })
+
+  it('WR-01: resetFields preserves savedItems (document-independent persistence)', () => {
+    // Seed a savedItem directly in state (bypassing IndexedDB which is mocked)
+    const savedItem = {
+      id: 'saved-1',
+      kind: 'signature' as const,
+      source: 'drawn' as const,
+      dataUrl: 'data:image/png;base64,abc',
+      createdAt: Date.now(),
+    }
+    useFieldStore.setState({ savedItems: [savedItem] })
+    expect(useFieldStore.getState().savedItems).toHaveLength(1)
+
+    // Place a field and then reset (simulating loading a new document)
+    const store = useFieldStore.getState()
+    store.addField(makeField({ id: 'f1' }))
+    store.resetFields()
+
+    // fields cleared, savedItems preserved
+    expect(useFieldStore.getState().fields).toHaveLength(0)
+    expect(useFieldStore.getState().savedItems).toHaveLength(1)
+    expect(useFieldStore.getState().savedItems[0].id).toBe('saved-1')
+  })
+
   // ---------- openModal / closeModal ----------
 
   it('openModal sets modalOpen to true', () => {

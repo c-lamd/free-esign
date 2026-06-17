@@ -15,6 +15,9 @@ export function TopBar() {
 
   function handleOpenAnother() {
     // Blob URL is revoked by DocumentViewer's useEffect cleanup after unmount (WR-01).
+    // Reset placed fields before returning to empty view so fields from the
+    // current document do not bleed onto the next document (WR-01 field-leak fix).
+    useFieldStore.getState().resetFields()
     reset()
   }
 
@@ -60,7 +63,12 @@ export function TopBar() {
       }}
     >
       <button
-        onClick={goToLanding}
+        onClick={() => {
+          // Reset placed fields before navigating away so they never leak
+          // onto a subsequently loaded document (WR-01 field-leak fix).
+          useFieldStore.getState().resetFields()
+          goToLanding()
+        }}
         aria-label="FreeESign — return to home"
         style={{
           background: 'none',

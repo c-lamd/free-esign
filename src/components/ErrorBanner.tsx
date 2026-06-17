@@ -1,4 +1,5 @@
 import { useDocumentStore } from '../store/documentStore'
+import { useFieldStore } from '../store/fieldStore'
 
 /**
  * ErrorBanner — inline error card for failed file ingestion.
@@ -23,6 +24,9 @@ export function ErrorBanner() {
 
   function handleRetry() {
     // Blob URL revocation is handled by DocumentViewer's useEffect cleanup (WR-01).
+    // Reset placed fields so any fields from a previous document do not bleed
+    // onto the next document opened after an error (WR-01 field-leak fix).
+    useFieldStore.getState().resetFields()
     reset()
   }
 
