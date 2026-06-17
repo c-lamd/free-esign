@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Phase 3 Plan 01 complete
-last_updated: "2026-06-17T00:30:00Z"
-last_activity: 2026-06-17 -- Phase 03 Plan 01 completed (field model + undo/redo + new-type export)
+status: completed
+stopped_at: Phase 3 Plan 05 complete
+last_updated: "2026-06-17T07:36:00Z"
+last_activity: 2026-06-17 -- Phase 03 Plan 05 completed (Word-doc detection + WordDocBanner)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 13
-  completed_plans: 8
+  completed_plans: 10
   percent: 40
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 03 (Full Field Types + Workspace Controls) — IN PROGRESS
-Plan: 1 of 5 complete
-Status: Phase 3 Plan 01 complete; Plan 02 next
-Last activity: 2026-06-17 -- Phase 03 Plan 01 completed (field model + undo/redo + new-type export)
+Plan: 5 of 5 complete
+Status: Phase 3 Plan 05 complete; all Phase 3 plans done
+Last activity: 2026-06-17 -- Phase 03 Plan 05 completed (Word-doc detection + WordDocBanner)
 
-Progress: [█░░░░░░░░░] 10% (1/5 plans in Phase 3)
+Progress: [█████░░░░░] 50% (5/5 plans in Phase 3)
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [█░░░░░░░░░] 10% (1/5 plans in Phase 3)
 | Phase 02 P03 | 4 | 3 tasks | 6 files |
 | Phase 02 P04 | 4 | 2 tasks | 8 files |
 | Phase 03 P01 | 5 | 3 tasks | 6 files |
+| Phase 03 P05 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -95,7 +96,14 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-None currently. Phase 3 Plan 02 next.
+None currently.
+
+### New Decisions (03-05)
+
+- Word-doc check inserted BEFORE generic unsupported-type in validateFile; either MIME or extension alone is sufficient (defense-in-depth T-03-05)
+- Extension extracted once in validateFile and reused for both word-doc and ALLOWED_EXTENSIONS checks
+- wordDocMode local state in UploadZone swaps upload content with WordDocBanner; setError is NOT called for Word files
+- role=status (not role=alert) for WordDocBanner per UI-SPEC — guidance not urgent error
 
 ### New Decisions (03-01)
 
@@ -118,6 +126,6 @@ None currently. Phase 3 Plan 02 next.
 
 ## Session Continuity
 
-Last session: 2026-06-17T00:30:00Z
-Stopped at: Phase 3 Plan 01 complete
-Resume file: .planning/phases/03-full-field-types-workspace-controls/03-02-PLAN.md
+Last session: 2026-06-17T07:36:00Z
+Stopped at: Phase 3 Plan 05 complete
+Resume file: None (all Phase 3 plans complete)
