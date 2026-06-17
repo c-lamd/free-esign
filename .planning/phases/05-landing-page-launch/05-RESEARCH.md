@@ -750,7 +750,7 @@ All three assumptions are LOW risk. A1 is confirmed by the build output. A2 is s
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Favicon design**
    - What we know: A new `public/favicon.svg` is needed to replace the broken `/vite.svg` reference.
