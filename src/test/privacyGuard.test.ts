@@ -32,9 +32,21 @@ const ROOT = join(import.meta.dirname, '../..')
  */
 function collectFiles(dir: string, exts: string[]): string[] {
   const result: string[] = []
-  for (const entry of readdirSync(dir)) {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch (err) {
+    throw new Error(`collectFiles: cannot read directory ${dir}: ${String(err)}`)
+  }
+  for (const entry of entries) {
     const full = join(dir, entry)
-    const stat = statSync(full)
+    let stat: ReturnType<typeof statSync>
+    try {
+      stat = statSync(full)
+    } catch (err) {
+      // Skip broken symlinks and permission-denied entries with a clear message
+      throw new Error(`collectFiles: cannot stat ${full}: ${String(err)}`)
+    }
     if (stat.isDirectory()) {
       if (entry === 'test' || entry === 'node_modules' || entry === 'dist') continue
       result.push(...collectFiles(full, exts))
