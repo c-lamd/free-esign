@@ -1,54 +1,91 @@
 /**
- * InitialsDrawModal — centered, focus-trapped modal for drawing initials.
+ * InitialsDrawModal — tabbed modal (Saved / Draw / Type) for creating initials.
  *
- * Mirrors SignatureDrawModal exactly, with these differences:
+ * Mirrors SignatureDrawModal exactly with these differences:
  *   - Gated on initialsModalOpen (not modalOpen)
- *   - Title: "Draw your initials"
+ *   - Modal title: "Create initials"
  *   - Canvas hint: "Draw here"
- *   - Primary CTA: "Add initials"
- *   - Canvas aspect ratio 2:1 (padding-top: 50%) vs signature's 3:1
- *   - On confirm: setInitialsDataUrl(dataUrl) then setArmedFieldType('initials')
- *
- * The user draws with mouse/touch on a signature_pad canvas. On confirm:
- *   - Stores transparent-background PNG data URL in useFieldStore (initialsDataUrl)
- *   - Arms initials placement mode (setArmedFieldType('initials'))
- *   - Closes the modal
- *
- * "Discard" and Escape close the modal without saving.
+ *   - Canvas aspect ratio 2:1 (padding-top: 50%)
+ *   - Input placeholder: "Your initials"
+ *   - Input aria-label: "Your initials for signature"
+ *   - CTAs: "Use initials"
+ *   - Saved filter: kind === 'initials'
+ *   - SavedItemCard deleteAriaLabel: "Delete saved initials"
+ *   - On confirm: setInitialsDataUrl / setArmedTypedPayload(kind:'initials') + setArmedFieldType('initials')
+ *   - Save items with kind: 'initials'
  *
  * Threat model compliance:
  *   T-03-12: Canvas capped by fixed modal max-width (560px); DoS-safe.
  *            pad.off() called on unmount to prevent listener leaks.
+ *   T-04-08: initials input maxLength={100} — DoS guard.
+ *   T-04-09: typedText rendered as JSX text node — never dangerouslySetInnerHTML.
+ *   T-04-10: font picker is a fixed 3-option radiogroup; no free-form font path.
+ *   T-04-11: addSavedItem failure is non-blocking; UI copy shown on error.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import SignaturePad from 'signature_pad'
-import { useFieldStore } from '../store/fieldStore'
+import { useFieldStore, SavedItem } from '../store/fieldStore'
+import { SavedItemCard } from './SavedItemCard'
+
+type TabId = 'saved' | 'draw' | 'type'
+type FontFamily = 'Dancing Script' | 'Great Vibes' | 'Pacifico'
+
+const FONTS: FontFamily[] = ['Dancing Script', 'Great Vibes', 'Pacifico']
 
 export function InitialsDrawModal() {
   const initialsModalOpen = useFieldStore((s) => s.initialsModalOpen)
   const closeInitialsModal = useFieldStore((s) => s.closeInitialsModal)
   const setInitialsDataUrl = useFieldStore((s) => s.setInitialsDataUrl)
   const setArmedFieldType = useFieldStore((s) => s.setArmedFieldType)
+  const setArmedTypedPayload = useFieldStore((s) => s.setArmedTypedPayload)
+  const addSavedItem = useFieldStore((s) => s.addSavedItem)
+  const deleteSavedItem = useFieldStore((s) => s.deleteSavedItem)
+  const savedItems = useFieldStore((s) => s.savedItems)
+
+  // Initials-kind items only
+  const initialsItems = savedItems.filter((i) => i.kind === 'initials')
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const padRef = useRef<SignaturePad | null>(null)
   // Reference to the element that opened the modal (for focus restore on close)
   const triggerRef = useRef<Element | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([null, null, null])
 
   const [hasStrokes, setHasStrokes] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>('draw')
+  const [typedText, setTypedText] = useState('')
+  const [selectedFont, setSelectedFont] = useState<FontFamily>('Dancing Script')
+  const [saveForReuse, setSaveForReuse] = useState(true)
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState(false)
 
   // Capture the triggering element when modal opens so we can restore focus on close
   useEffect(() => {
     if (initialsModalOpen) {
       triggerRef.current = document.activeElement
+      // Reset state when modal opens
+      setActiveTab('draw')
+      setTypedText('')
+      setSelectedFont('Dancing Script')
+      setSaveForReuse(true)
+      setSelectedSavedId(null)
+      setSaveError(false)
     }
   }, [initialsModalOpen])
 
-  // Initialize signature_pad when modal opens; destroy on close
+  // Initialize signature_pad when modal opens (or when switching to Draw tab); destroy on close
   useEffect(() => {
-    if (!initialsModalOpen) return
+    if (!initialsModalOpen || activeTab !== 'draw') {
+      // Destroy pad when not on draw tab or modal closed
+      if (padRef.current) {
+        padRef.current.off()
+        padRef.current = null
+        setHasStrokes(false)
+      }
+      return
+    }
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -84,7 +121,26 @@ export function InitialsDrawModal() {
       padRef.current = null
       setHasStrokes(false)
     }
-  }, [initialsModalOpen])
+  }, [initialsModalOpen, activeTab])
+
+  // Tab keyboard navigation (Left/Right arrow keys — ARIA tab widget pattern)
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>, idx: number) => {
+      const tabOrder: TabId[] = ['saved', 'draw', 'type']
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        const nextIdx = (idx + 1) % tabOrder.length
+        setActiveTab(tabOrder[nextIdx])
+        tabRefs.current[nextIdx]?.focus()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        const prevIdx = (idx - 1 + tabOrder.length) % tabOrder.length
+        setActiveTab(tabOrder[prevIdx])
+        tabRefs.current[prevIdx]?.focus()
+      }
+    },
+    [],
+  )
 
   // Focus trap: intercept Tab to cycle only among modal controls
   const handleKeyDown = useCallback(
@@ -99,9 +155,9 @@ export function InitialsDrawModal() {
         const dialog = dialogRef.current
         if (!dialog) return
 
-        // Include ALL buttons plus canvas (aria-disabled buttons must still be focusable per UI-SPEC)
+        // Include ALL focusable elements including inputs and radios
         const allFocusable = dialog.querySelectorAll<HTMLElement>(
-          'button, canvas[tabindex="0"]',
+          'button, canvas[tabindex="0"], input, [role="radio"]',
         )
         const nodes = Array.from(allFocusable)
         if (nodes.length === 0) return
@@ -132,11 +188,70 @@ export function InitialsDrawModal() {
     setHasStrokes(false)
   }
 
-  function handleAddInitials() {
+  async function handleUseInitialsFromDraw() {
     if (!hasStrokes || !padRef.current) return
     const dataUrl = padRef.current.toDataURL('image/png')
     setInitialsDataUrl(dataUrl)
     setArmedFieldType('initials')
+
+    if (saveForReuse) {
+      try {
+        const item: SavedItem = {
+          id: crypto.randomUUID(),
+          kind: 'initials',
+          source: 'drawn',
+          dataUrl,
+          createdAt: Date.now(),
+        }
+        await addSavedItem(item)
+      } catch {
+        setSaveError(true)
+        // Non-blocking — still proceed to close
+      }
+    }
+
+    handleClose()
+  }
+
+  async function handleUseInitialsFromType() {
+    if (!typedText) return
+
+    const item: SavedItem = {
+      id: crypto.randomUUID(),
+      kind: 'initials',
+      source: 'typed',
+      text: typedText,
+      fontFamily: selectedFont,
+      createdAt: Date.now(),
+    }
+
+    if (saveForReuse) {
+      try {
+        await addSavedItem(item)
+      } catch {
+        setSaveError(true)
+        // Non-blocking — still proceed
+      }
+    }
+
+    setArmedTypedPayload({ text: typedText, fontFamily: selectedFont, kind: 'initials' })
+    setArmedFieldType('initials')
+    handleClose()
+  }
+
+  async function handleUseInitialsFromSaved() {
+    if (!selectedSavedId) return
+    const item = initialsItems.find((i) => i.id === selectedSavedId)
+    if (!item) return
+
+    if (item.dataUrl) {
+      setInitialsDataUrl(item.dataUrl)
+      setArmedFieldType('initials')
+    } else if (item.text && item.fontFamily) {
+      setArmedTypedPayload({ text: item.text, fontFamily: item.fontFamily, kind: 'initials' })
+      setArmedFieldType('initials')
+    }
+
     handleClose()
   }
 
@@ -223,17 +338,10 @@ export function InitialsDrawModal() {
   const controlsRowStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: '16px',
-    marginTop: '16px',
-  }
-
-  const rightGroupStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
     gap: '8px',
-    alignItems: 'center',
+    marginTop: '12px',
   }
 
   const ghostButtonStyle: React.CSSProperties = {
@@ -251,23 +359,526 @@ export function InitialsDrawModal() {
     outline: 'none',
   }
 
-  const accentButtonStyle: React.CSSProperties = {
-    display: 'inline-flex',
+  const saveForReuseRowStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'var(--color-accent)',
-    color: '#FFFFFF',
-    fontSize: '14px',
-    fontWeight: 400,
-    padding: '8px 16px',
-    borderRadius: '6px',
-    border: 'none',
-    fontFamily: 'inherit',
+    gap: '8px',
+    marginTop: '12px',
     minHeight: '44px',
-    minWidth: '44px',
-    cursor: hasStrokes ? 'pointer' : 'default',
-    opacity: hasStrokes ? 1 : 0.45,
   }
+
+  const tabBarStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'row',
+    borderBottom: '1px solid var(--color-border)',
+    marginBottom: '16px',
+  }
+
+  const tabOrder: TabId[] = ['saved', 'draw', 'type']
+  const tabLabels: Record<TabId, string> = { saved: 'Saved', draw: 'Draw', type: 'Type' }
+
+  function getTabStyle(tab: TabId): React.CSSProperties {
+    const isActive = activeTab === tab
+    return {
+      background: 'none',
+      border: 'none',
+      borderBottom: isActive ? '2px solid var(--color-accent)' : '2px solid transparent',
+      color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+      fontSize: '14px',
+      fontWeight: 400,
+      padding: '8px 16px',
+      minHeight: '44px',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      outline: 'none',
+    }
+  }
+
+  function getAccentButtonStyle(enabled: boolean): React.CSSProperties {
+    return {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--color-accent)',
+      color: '#FFFFFF',
+      fontSize: '14px',
+      fontWeight: 400,
+      padding: '8px 16px',
+      borderRadius: '6px',
+      border: 'none',
+      fontFamily: 'inherit',
+      minHeight: '44px',
+      minWidth: '44px',
+      cursor: enabled ? 'pointer' : 'default',
+      opacity: enabled ? 1 : 0.45,
+      outline: 'none',
+    }
+  }
+
+  // ── Save for reuse row (shared between Draw and Type panels) ──────────────
+
+  const saveForReuseRow = (
+    <div style={saveForReuseRowStyle}>
+      <input
+        id="ini-save-for-reuse"
+        type="checkbox"
+        checked={saveForReuse}
+        onChange={(e) => setSaveForReuse(e.target.checked)}
+      />
+      <label
+        htmlFor="ini-save-for-reuse"
+        style={{
+          fontSize: '14px',
+          fontWeight: 400,
+          color: 'var(--color-text-primary)',
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}
+      >
+        Save for reuse
+      </label>
+    </div>
+  )
+
+  // ── Panels ────────────────────────────────────────────────────────────────
+
+  // Draw panel
+  const drawPanel = (
+    <div
+      role="tabpanel"
+      id="ini-panel-draw"
+      aria-labelledby="ini-tab-draw"
+      hidden={activeTab !== 'draw'}
+    >
+      {/* Canvas area — 2:1 ratio for initials */}
+      <div style={canvasContainerStyle}>
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label="Initials drawing canvas"
+          tabIndex={0}
+          style={canvasStyle}
+        />
+        {/* "Draw here" hint — visible only when canvas is empty */}
+        {!hasStrokes && <div style={hintStyle}>Draw here</div>}
+      </div>
+
+      {saveForReuseRow}
+
+      {/* Controls */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '16px',
+          marginTop: '12px',
+        }}
+      >
+        {/* Left: Clear canvas */}
+        <button
+          type="button"
+          onClick={handleClear}
+          style={ghostButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-primary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-secondary)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          Clear canvas
+        </button>
+
+        {/* Right: Discard + Use initials */}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={handleDiscard}
+            style={ghostButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--color-text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--color-text-secondary)'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = '2px solid var(--color-accent)'
+              e.currentTarget.style.outlineOffset = '2px'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none'
+            }}
+          >
+            Discard
+          </button>
+
+          <button
+            type="button"
+            onClick={handleUseInitialsFromDraw}
+            aria-disabled={!hasStrokes ? 'true' : undefined}
+            aria-label={
+              !hasStrokes
+                ? 'Use initials — draw initials first'
+                : 'Use initials'
+            }
+            style={getAccentButtonStyle(hasStrokes)}
+            onMouseEnter={(e) => {
+              if (hasStrokes) {
+                e.currentTarget.style.backgroundColor = '#1D4ED8'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.outline = '2px solid var(--color-accent)'
+              e.currentTarget.style.outlineOffset = '2px'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.outline = 'none'
+              e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+            }}
+          >
+            Use initials
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Type panel
+  const typePanel = (
+    <div
+      role="tabpanel"
+      id="ini-panel-type"
+      aria-labelledby="ini-tab-type"
+      hidden={activeTab !== 'type'}
+    >
+      {/* Initials input */}
+      <input
+        type="text"
+        aria-label="Your initials for signature"
+        placeholder="Your initials"
+        maxLength={100}
+        value={typedText}
+        onChange={(e) => setTypedText(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '8px 12px',
+          fontSize: '16px',
+          fontWeight: 400,
+          fontFamily: 'inherit',
+          color: 'var(--color-text-primary)',
+          background: 'var(--color-surface-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '6px',
+          outline: 'none',
+          boxSizing: 'border-box',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-accent)'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-border)'
+        }}
+      />
+
+      {/* Font picker */}
+      <div
+        role="radiogroup"
+        aria-label="Choose script font"
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '8px',
+          flexWrap: 'wrap',
+          marginTop: '12px',
+        }}
+      >
+        {FONTS.map((font) => {
+          const isActive = selectedFont === font
+          return (
+            <div
+              key={font}
+              role="radio"
+              aria-checked={isActive}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setSelectedFont(font)}
+              onKeyDown={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault()
+                  setSelectedFont(font)
+                }
+              }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                padding: '8px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                minHeight: '44px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                background: 'var(--color-surface-elevated)',
+                border: isActive ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.3)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = 'var(--color-border)'
+                }
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.outline = '2px solid var(--color-accent)'
+                e.currentTarget.style.outlineOffset = '2px'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.outline = 'none'
+                e.currentTarget.style.outlineOffset = '0'
+              }}
+            >
+              {/* Font name in script font */}
+              <span style={{ fontFamily: font, fontSize: '20px', color: 'var(--color-text-primary)' }}>
+                {font}
+              </span>
+              {/* System-ui label below */}
+              <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)', fontFamily: 'inherit' }}>
+                {font}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Live preview */}
+      <div
+        aria-label="Signature preview"
+        aria-live="polite"
+        style={{
+          marginTop: '12px',
+          padding: '12px 16px',
+          background: 'var(--color-surface)',
+          borderRadius: '6px',
+          minHeight: '72px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: selectedFont,
+            fontSize: 'clamp(24px, 8vw, 56px)',
+            color: typedText ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+            opacity: typedText ? 1 : 0.6,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%',
+          }}
+        >
+          {typedText || 'Your initials'}
+        </span>
+      </div>
+
+      {saveForReuseRow}
+
+      {/* Save error message (non-blocking, per UI-SPEC) */}
+      {saveError && (
+        <div
+          role="alert"
+          style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '8px' }}
+        >
+          Couldn't save this for reuse, but it's ready to place now.
+        </div>
+      )}
+
+      {/* Controls */}
+      <div style={controlsRowStyle}>
+        <button
+          type="button"
+          onClick={handleDiscard}
+          style={ghostButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-primary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-secondary)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          Discard
+        </button>
+
+        <button
+          type="button"
+          onClick={handleUseInitialsFromType}
+          aria-disabled={!typedText ? 'true' : undefined}
+          aria-label={
+            !typedText
+              ? 'Use initials — type your initials first'
+              : 'Use initials'
+          }
+          style={getAccentButtonStyle(!!typedText)}
+          onMouseEnter={(e) => {
+            if (typedText) {
+              e.currentTarget.style.backgroundColor = '#1D4ED8'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+            e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+          }}
+        >
+          Use initials
+        </button>
+      </div>
+    </div>
+  )
+
+  // Saved panel
+  const savedPanel = (
+    <div
+      role="tabpanel"
+      id="ini-panel-saved"
+      aria-labelledby="ini-tab-saved"
+      hidden={activeTab !== 'saved'}
+    >
+      {initialsItems.length === 0 ? (
+        // Empty state
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '120px',
+            textAlign: 'center',
+            gap: '8px',
+          }}
+        >
+          <div
+            style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-text-primary)' }}
+          >
+            No saved initials yet
+          </div>
+          <div style={{ fontSize: '16px', color: 'var(--color-text-secondary)' }}>
+            Create a signature in the Draw or Type tab, check 'Save for reuse', and it will
+            appear here.
+          </div>
+        </div>
+      ) : (
+        // Saved items grid
+        <div
+          role="radiogroup"
+          aria-label="Saved initials"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+            gap: '8px',
+          }}
+        >
+          {initialsItems.map((item) => (
+            <SavedItemCard
+              key={item.id}
+              item={item}
+              isSelected={selectedSavedId === item.id}
+              onSelect={setSelectedSavedId}
+              onDelete={deleteSavedItem}
+              deleteAriaLabel="Delete saved initials"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Controls */}
+      <div style={{ ...controlsRowStyle, marginTop: '16px' }}>
+        <button
+          type="button"
+          onClick={handleDiscard}
+          style={ghostButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-primary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-secondary)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          Discard
+        </button>
+
+        <button
+          type="button"
+          onClick={handleUseInitialsFromSaved}
+          aria-disabled={!selectedSavedId ? 'true' : undefined}
+          aria-label={
+            !selectedSavedId
+              ? 'Use initials — select a saved initials first'
+              : 'Use initials'
+          }
+          style={getAccentButtonStyle(!!selectedSavedId)}
+          onMouseEnter={(e) => {
+            if (selectedSavedId) {
+              e.currentTarget.style.backgroundColor = '#1D4ED8'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+            e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+          }}
+        >
+          Use initials
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div style={scrimStyle} aria-hidden="false">
@@ -281,92 +892,32 @@ export function InitialsDrawModal() {
         tabIndex={-1}
       >
         <h2 id="initials-modal-title" style={titleStyle}>
-          Draw your initials
+          Create initials
         </h2>
 
-        {/* Canvas area — 2:1 ratio for initials */}
-        <div style={canvasContainerStyle}>
-          <canvas
-            ref={canvasRef}
-            role="img"
-            aria-label="Initials drawing canvas"
-            tabIndex={0}
-            style={canvasStyle}
-          />
-          {/* "Draw here" hint — visible only when canvas is empty */}
-          {!hasStrokes && <div style={hintStyle}>Draw here</div>}
-        </div>
-
-        {/* Controls */}
-        <div style={controlsRowStyle}>
-          {/* Left: Clear canvas */}
-          <button
-            type="button"
-            onClick={handleClear}
-            style={ghostButtonStyle}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-text-primary)'
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-text-secondary)'
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.outline = '2px solid var(--color-accent)'
-              e.currentTarget.style.outlineOffset = '2px'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.outline = 'none'
-            }}
-          >
-            Clear canvas
-          </button>
-
-          {/* Right: Discard + Add initials */}
-          <div style={rightGroupStyle}>
+        {/* Tab bar */}
+        <div role="tablist" aria-label="Initials creation methods" style={tabBarStyle}>
+          {tabOrder.map((tab, idx) => (
             <button
-              type="button"
-              onClick={handleDiscard}
-              style={ghostButtonStyle}
+              key={tab}
+              ref={(el) => { tabRefs.current[idx] = el }}
+              role="tab"
+              id={`ini-tab-${tab}`}
+              aria-controls={`ini-panel-${tab}`}
+              aria-selected={activeTab === tab}
+              tabIndex={activeTab === tab ? 0 : -1}
+              onClick={() => setActiveTab(tab)}
+              onKeyDown={(e) => handleTabKeyDown(e, idx)}
+              style={getTabStyle(tab)}
               onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.color =
-                  'var(--color-text-primary)'
-              }}
-              onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.color =
-                  'var(--color-text-secondary)'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.outline = '2px solid var(--color-accent)'
-                e.currentTarget.style.outlineOffset = '2px'
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.outline = 'none'
-              }}
-            >
-              Discard
-            </button>
-
-            <button
-              type="button"
-              onClick={handleAddInitials}
-              aria-disabled={!hasStrokes ? 'true' : undefined}
-              aria-label={
-                !hasStrokes
-                  ? 'Add initials — draw initials first'
-                  : 'Add initials'
-              }
-              style={accentButtonStyle}
-              onMouseEnter={(e) => {
-                if (hasStrokes) {
-                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                    '#1D4ED8'
+                if (activeTab !== tab) {
+                  e.currentTarget.style.color = 'var(--color-text-primary)'
                 }
               }}
               onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-accent)'
+                if (activeTab !== tab) {
+                  e.currentTarget.style.color = 'var(--color-text-secondary)'
+                }
               }}
               onFocus={(e) => {
                 e.currentTarget.style.outline = '2px solid var(--color-accent)'
@@ -374,13 +925,18 @@ export function InitialsDrawModal() {
               }}
               onBlur={(e) => {
                 e.currentTarget.style.outline = 'none'
-                e.currentTarget.style.backgroundColor = 'var(--color-accent)'
+                e.currentTarget.style.outlineOffset = '0'
               }}
             >
-              Add initials
+              {tabLabels[tab]}
             </button>
-          </div>
+          ))}
         </div>
+
+        {/* Panels */}
+        {drawPanel}
+        {typePanel}
+        {savedPanel}
       </div>
     </div>
   )
