@@ -162,7 +162,14 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
           aspectRatio = await new Promise<number>((resolve) => {
             const img = new Image()
             img.onload = () => {
-              resolve(img.naturalWidth / img.naturalHeight || (armedFieldType === 'signature' ? 3 : 2))
+              // Guard: use computed ratio only when both dimensions are positive.
+              // naturalHeight===0 yields Infinity (truthy), so `|| fallback` doesn't
+              // save us — an explicit guard is required (WR-05).
+              resolve(
+                img.naturalWidth > 0 && img.naturalHeight > 0
+                  ? img.naturalWidth / img.naturalHeight
+                  : armedFieldType === 'signature' ? 3 : 2,
+              )
             }
             img.onerror = () => resolve(armedFieldType === 'signature' ? 3 : 2)
             img.src = dataUrl
