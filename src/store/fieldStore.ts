@@ -296,7 +296,7 @@ export const useFieldStore = create<FieldStore>()((set) => ({
       set({ savedItems: items })
     } catch (err) {
       // Non-blocking — if IndexedDB is unavailable, start with empty list
-      console.warn('[savedItems] loadSavedItems failed:', err)
+      if (import.meta.env.DEV) console.warn('[savedItems] loadSavedItems failed:', err)
       set({ savedItems: [] })
     }
   },
@@ -313,7 +313,7 @@ export const useFieldStore = create<FieldStore>()((set) => ({
     } catch (err) {
       // Persist failed — do NOT roll back the in-memory state; the item is usable
       // for the current session even if it won't survive a reload.
-      console.warn('[savedItems] addSavedItem persist failed:', err)
+      if (import.meta.env.DEV) console.warn('[savedItems] addSavedItem persist failed:', err)
     }
   },
 
@@ -327,7 +327,7 @@ export const useFieldStore = create<FieldStore>()((set) => ({
     try {
       await deleteItem(id)
     } catch (err) {
-      console.warn('[savedItems] deleteSavedItem persist failed:', err)
+      if (import.meta.env.DEV) console.warn('[savedItems] deleteSavedItem persist failed:', err)
     }
   },
 }))
