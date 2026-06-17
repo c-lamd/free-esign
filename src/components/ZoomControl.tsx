@@ -197,7 +197,7 @@ export function ZoomControl() {
           fontWeight: 400,
           color: 'var(--color-text-secondary)',
           padding: '0 6px',
-          minWidth: 'unset',
+          // minWidth inherits 44px from buttonBase — do not override (IN-02: WCAG 2.5.5 touch target)
         }}
         onFocus={(e) => {
           e.currentTarget.style.outline = '2px solid var(--color-accent)'
