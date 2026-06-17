@@ -38,7 +38,7 @@ describe('validateFile — unsupported types', () => {
     )
   })
 
-  it('rejects a Word document (.docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document)', () => {
+  it('rejects a Word document (.docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document) — routes to word-doc not unsupported-type', () => {
     expect(
       validateFile(
         makeFile(
@@ -46,7 +46,7 @@ describe('validateFile — unsupported types', () => {
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ),
       ),
-    ).toBe('unsupported-type')
+    ).toBe('word-doc')
   })
 
   it('rejects a file with unknown/empty MIME type', () => {
@@ -67,6 +67,45 @@ describe('validateFile — unsupported types', () => {
     expect(validateFile(makeFile('fake.pdf', 'text/html'))).toBe(
       'unsupported-type',
     )
+  })
+})
+
+describe('validateFile — Word-doc detection (DOC-05)', () => {
+  it('returns word-doc for .docx with correct openxml MIME (not unsupported-type)', () => {
+    expect(
+      validateFile(
+        makeFile(
+          'contract.docx',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ),
+      ),
+    ).toBe('word-doc')
+  })
+
+  it('returns word-doc for .doc with application/msword MIME', () => {
+    expect(validateFile(makeFile('contract.doc', 'application/msword'))).toBe(
+      'word-doc',
+    )
+  })
+
+  it('returns word-doc for .docx by extension even when browser reports application/zip (MIME quirk)', () => {
+    // Some browsers (e.g. older Chromium on Linux) report .docx as application/zip
+    // because .docx is a ZIP archive. Extension check must catch it.
+    expect(validateFile(makeFile('report.docx', 'application/zip'))).toBe(
+      'word-doc',
+    )
+  })
+
+  it('returns word-doc for application/msword MIME even with a non-.doc filename', () => {
+    // MIME signal alone is sufficient — defense-in-depth: either MIME or extension triggers word-doc
+    expect(
+      validateFile(makeFile('renamed-file.bin', 'application/msword')),
+    ).toBe('word-doc')
+  })
+
+  it('word-doc check runs BEFORE generic unsupported-type (.doc extension with empty MIME)', () => {
+    // Empty MIME + .doc extension → word-doc (extension check fires before generic unsupported)
+    expect(validateFile(makeFile('mydoc.doc', ''))).toBe('word-doc')
   })
 })
 
