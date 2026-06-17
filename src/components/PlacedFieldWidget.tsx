@@ -162,7 +162,10 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
 
   function handleInputBlur() {
     setIsEditing(false)
-    pushHistory() // one undo entry on blur (RESEARCH Pitfall 4: not per keystroke)
+    // Only push history and persist if the value actually changed (WR-04).
+    // Blurring without editing must not create a phantom undo entry.
+    if (localValue === (field.textValue ?? '')) return
+    pushHistory() // one undo entry per committed text change (not per keystroke)
     updateField(field.id, { textValue: localValue })
   }
 
