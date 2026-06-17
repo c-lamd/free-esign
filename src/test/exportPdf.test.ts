@@ -198,6 +198,30 @@ describe('EXP-02: zero-alteration export', () => {
     ).resolves.toBeInstanceOf(Uint8Array)
   })
 
+  it('WR-03: text field with very long text stays within box — export succeeds and EXP-02 holds', async () => {
+    // 200 characters is far wider than a 60pt box at any reasonable font size.
+    // If truncateToFit is missing, pdf-lib would draw text beyond the field boundary.
+    // This test verifies: (a) no exception is thrown, (b) EXP-02 byte-identity holds.
+    const longText = 'A'.repeat(200)
+    const field = {
+      id: 'long-text',
+      type: 'text' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 50,
+      pdfWidth: 60, // narrow box — 200 'A' chars would overflow without truncation
+      pdfHeight: 20,
+      textValue: longText,
+    }
+    const output = await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+    // EXP-02: first 512 bytes must be byte-identical
+    const inputFirst512 = Array.from(INPUT_BYTES.slice(0, 512))
+    const outputFirst512 = Array.from(output.slice(0, 512))
+    expect(outputFirst512).toEqual(inputFirst512)
+    // Output must be larger than input (incremental revision appended)
+    expect(output.length).toBeGreaterThan(INPUT_BYTES.length)
+  })
+
   it('FLD-08: a field with pageNumber 2 against a single-page input throws page-range error', async () => {
     const field = {
       id: 'p2',

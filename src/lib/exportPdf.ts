@@ -31,7 +31,34 @@ import type { PlacedField } from '../store/fieldStore'
 const PNG_DATA_URL_PREFIX = 'data:image/png;base64,'
 
 /**
+ * Truncates text so that it fits within maxWidth points at the given font size.
+ * Returns the original string if it already fits.
+ *
+ * Uses binary search over character count so the result is O(log n) glyph-width
+ * queries rather than O(n).
+ *
+ * @param text - The string to potentially truncate.
+ * @param font - An embedded PDFFont used to measure glyph widths.
+ * @param size - Font size in points.
+ * @param maxWidth - Maximum allowed width in PDF user-space points.
+ * @returns The longest prefix of `text` whose rendered width ≤ maxWidth.
+ */
+function truncateToFit(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text
+  let lo = 0
+  let hi = text.length
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi + 1) / 2)
+    if (font.widthOfTextAtSize(text.slice(0, mid), size) <= maxWidth) lo = mid
+    else hi = mid - 1
+  }
+  return text.slice(0, lo)
+}
+
+/**
  * Draws text inside a field box, sized to 75% of box height and baseline-centered.
+ * Text is truncated (not wrapped) to fit within the field's pdfWidth so that drawn
+ * content never overflows into adjacent PDF content (overlay-only guarantee).
  * Returns immediately if text is empty (checkbox/no-value case).
  *
  * @param page - The PDF page to draw on.
@@ -45,7 +72,11 @@ function drawTextInBox(page: PDFPage, text: string, font: PDFFont, field: Placed
   const glyphH = font.heightAtSize(targetSize)
   // Pitfall 3: y is the text baseline — center it vertically in the field box
   const baselineY = field.pdfY + (field.pdfHeight - glyphH) / 2
-  page.drawText(text, {
+  // Clip text to field width (field.pdfWidth - 2pt left padding) so drawn text
+  // never escapes the field box and overwrites adjacent original PDF content.
+  const maxWidth = field.pdfWidth - 2
+  const visibleText = truncateToFit(text, font, targetSize, maxWidth)
+  page.drawText(visibleText, {
     x: field.pdfX + 2, // 2pt left padding
     y: baselineY,
     font,
