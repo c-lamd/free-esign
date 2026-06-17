@@ -14,7 +14,7 @@ export function LandingPage() {
       }}
     >
       <LandingHeader />
-      <main role="main">
+      <main>
         <HeroSection />
         <HowItWorksSection />
         <PrivacySection />
