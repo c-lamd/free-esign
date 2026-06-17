@@ -55,7 +55,14 @@ export async function loadFontBytes(fontFamily: string): Promise<Uint8Array> {
   if (!path) throw new Error(`Unknown font family: "${fontFamily}"`)
 
   // Same-origin fetch only — path is always from the static allowlist above
-  const buffer = await fetch(path).then((r) => r.arrayBuffer())
+  const response = await fetch(path)
+  if (!response.ok) {
+    // Do NOT cache failures — a retry or redeployment should get a fresh fetch.
+    throw new Error(
+      `Failed to fetch font "${fontFamily}": HTTP ${response.status}`,
+    )
+  }
+  const buffer = await response.arrayBuffer()
   const bytes = new Uint8Array(buffer)
   fontBytesCache.set(fontFamily, bytes)
   return bytes

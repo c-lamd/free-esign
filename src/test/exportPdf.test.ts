@@ -56,7 +56,10 @@ beforeAll(() => {
   // Mock fetch to return real Dancing Script TTF bytes.
   // The fontBytesCache is module-level, so this mock must resolve before any
   // typed-signature test populates the cache.
+  // WR-04: include ok:true so the response.ok check in fonts.ts passes.
   vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    ok: true,
+    status: 200,
     arrayBuffer: () => Promise.resolve(DANCING_SCRIPT_TTF.buffer as ArrayBuffer),
   } as unknown as Response)
 })
@@ -468,5 +471,29 @@ describe('SIG-02/SIG-03: typed-signature export (font-backed, not PNG)', () => {
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
       expect.stringContaining('Comic Sans'),
     )
+  })
+
+  it('WR-04: loadFontBytes throws on HTTP 404 and does NOT cache the failure', async () => {
+    // Temporarily override global fetch mock to simulate a 404 for this test
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    } as unknown as Response)
+
+    const { loadFontBytes, _clearFontBytesCache: clearCache } = await import('../lib/fonts')
+    clearCache()
+
+    await expect(loadFontBytes('Dancing Script')).rejects.toThrow(/HTTP 404/)
+
+    // Second call must re-fetch (failure was not cached)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.resolve(DANCING_SCRIPT_TTF.buffer as ArrayBuffer),
+    } as unknown as Response)
+    const bytes = await loadFontBytes('Dancing Script')
+    expect(bytes).toBeInstanceOf(Uint8Array)
+    expect(bytes.length).toBeGreaterThan(0)
   })
 })
