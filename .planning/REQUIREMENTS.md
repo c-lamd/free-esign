@@ -102,10 +102,10 @@ Which phases cover which requirements. Populated during roadmap creation.
 | EXP-03 | Phase 2 | Complete |
 | DOC-04 | Phase 3 | Pending |
 | DOC-05 | Phase 3 | Complete |
-| FLD-02 | Phase 3 | Pending |
-| FLD-03 | Phase 3 | Pending |
-| FLD-04 | Phase 3 | Pending |
-| FLD-08 | Phase 3 | Pending |
+| FLD-02 | Phase 3 | Complete |
+| FLD-03 | Phase 3 | Complete |
+| FLD-04 | Phase 3 | Complete |
+| FLD-08 | Phase 3 | Complete |
 | FLD-09 | Phase 3 | Pending |
 | SIG-02 | Phase 4 | Pending |
 | SIG-03 | Phase 4 | Pending |

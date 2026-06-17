@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Phase 3 Plan 05 complete
-last_updated: "2026-06-17T07:36:00Z"
+last_updated: "2026-06-17T07:46:17.198Z"
 last_activity: 2026-06-17 -- Phase 03 Plan 05 completed (Word-doc detection + WordDocBanner)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
   percent: 40
 ---
 
@@ -60,6 +60,7 @@ Progress: [█████░░░░░] 50% (5/5 plans in Phase 3)
 | Phase 02 P03 | 4 | 3 tasks | 6 files |
 | Phase 02 P04 | 4 | 2 tasks | 8 files |
 | Phase 03 P01 | 5 | 3 tasks | 6 files |
+| Phase 03 P02 | 5 | 3 tasks | 7 files |
 | Phase 03 P05 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -98,6 +99,14 @@ Recent decisions affecting current work:
 
 None currently.
 
+### New Decisions (03-02)
+
+- FieldPalette Signature button calls openModal() (draw-then-arm flow); Date/Text/Checkbox toggle armedFieldType directly; Initials calls openInitialsModal
+- pushHistory() called in LazyPage handleOverlayClick BEFORE addField per plan spec (addField also pushes internally)
+- onMouseDown stopPropagation + disableDragging={isEditing} on react-rnd input: belt-and-suspenders drag prevention while typing
+- placementMode fully removed from all component code; armedFieldType is the sole placement signal
+- downloadWiring.test.ts aria-label updated 'signature' → 'field': TopBar now serves all 5 field types (Rule 1 fix)
+
 ### New Decisions (03-05)
 
 - Word-doc check inserted BEFORE generic unsupported-type in validateFile; either MIME or extension alone is sufficient (defense-in-depth T-03-05)
@@ -126,6 +135,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T07:36:00Z
+Last session: 2026-06-17T07:46:17.194Z
 Stopped at: Phase 3 Plan 05 complete
 Resume file: None (all Phase 3 plans complete)
