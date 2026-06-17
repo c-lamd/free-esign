@@ -4,6 +4,7 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 import { DocumentViewer } from './components/DocumentViewer'
 import { UploadZone } from './components/UploadZone'
 import { ErrorBanner } from './components/ErrorBanner'
+import { SignatureDrawModal } from './components/SignatureDrawModal'
 
 /**
  * App — view-router wired to the Zustand state machine.
@@ -38,6 +39,8 @@ function App() {
       {view === 'loading' && <LoadingSpinner />}
       {view === 'error' && <ErrorBanner />}
       {view === 'loaded' && <DocumentViewer />}
+      {/* SignatureDrawModal mounts unconditionally — self-gates on modalOpen */}
+      <SignatureDrawModal />
     </div>
   )
 }
