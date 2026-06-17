@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 3 Plan 04 complete
+status: executing
+stopped_at: Phase 3 complete (verified, human-verify deferred) — ready for Phase 4
 last_updated: "2026-06-17T08:03:02.465Z"
 last_activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
 progress:
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Sign a PDF in your browser, for free, without your document ever leaving your device or being altered.
-**Current focus:** Phase 02 complete — ready for Phase 03
+**Current focus:** Phase 03 complete (5/5 plans, verified, code-review-fixed) — ready for Phase 04
 
 ## Current Position
 
@@ -145,6 +145,12 @@ None currently.
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | Human verify | Phase 2 end-of-phase browser verification (02-04-SUMMARY.md) | Pending | 02-04 |
+| Human verify | Phase 3 browser checks (8 items in 03-VERIFICATION.md): zoom pixel-alignment 50→200%, inline edit no-drag, undo/redo shortcut focus guard, exported field visual fidelity | Pending | 03 (autonomous) |
+| Refinement | Undo/redo: redo-after-drag/resize/text-edit does not re-apply the moved position (pushHistory stores pre-mutation only). Undo works; placement+deletion redo are correct (FLD-09 criterion met). Fix later via commit-post-mutation snapshot if desired. | Open | 03 (code review CR-01) |
+
+### Correction (03 code review)
+
+- CR-01 fix **superseded** the 03-01/03-02 decisions "History stores pre+post snapshots per addField/deleteField" and "pushHistory() in LazyPage before addField". Final model: `history` seeded `[[]]` at index 0; `addField`/`deleteField` push exactly ONE post-mutation snapshot; the redundant LazyPage pushHistory was removed. Net: N drops = N undo steps to empty, no phantom undos.
 
 ## Session Continuity
 
