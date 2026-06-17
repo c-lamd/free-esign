@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 Plan 05 complete
-last_updated: "2026-06-17T07:46:17.198Z"
-last_activity: 2026-06-17 -- Phase 03 Plan 05 completed (Word-doc detection + WordDocBanner)
+stopped_at: Phase 3 Plan 03 complete
+last_updated: "2026-06-17T01:00:00.000Z"
+last_activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
 progress:
   total_phases: 5
   completed_phases: 2
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 03 (Full Field Types + Workspace Controls) — IN PROGRESS
-Plan: 5 of 5 complete
-Status: Phase 3 Plan 05 complete; all Phase 3 plans done
-Last activity: 2026-06-17 -- Phase 03 Plan 05 completed (Word-doc detection + WordDocBanner)
+Plan: 3 of 5 complete
+Status: Phase 3 Plan 03 complete; DOC-04 zoom closed
+Last activity: 2026-06-17 -- Phase 03 Plan 03 completed (zoom + ZoomControl + effectiveScale + DOC-04 invariance tests)
 
-Progress: [█████░░░░░] 50% (5/5 plans in Phase 3)
+Progress: [███░░░░░░░] 60% (3/5 plans in Phase 3 done)
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████░░░░░] 50% (5/5 plans in Phase 3)
 | Phase 03 P01 | 5 | 3 tasks | 6 files |
 | Phase 03 P02 | 5 | 3 tasks | 7 files |
 | Phase 03 P05 | 3 | 2 tasks | 4 files |
+| Phase 03 P03 | 12 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,14 @@ None currently.
 - placementMode fully removed from all component code; armedFieldType is the sole placement signal
 - downloadWiring.test.ts aria-label updated 'signature' → 'field': TopBar now serves all 5 field types (Rule 1 fix)
 
+### New Decisions (03-03)
+
+- effectiveScale = (containerWidth / originalWidth) * zoom; dims.scale remains zoom-free fit-to-width baseline (RESEARCH A2)
+- Page width = containerWidth * zoom with no scale prop — react-pdf width×scale multiplies so omitting scale avoids double-zoom (RESEARCH Pitfall 5)
+- ZoomControl positioned at right: calc(50% + 85px) to sit left of PageNavigation pill without overlap
+- scrollIntoView guarded with typeof check for jsdom test environment compatibility (Rule 1 fix)
+- zoom-invariance tests scale CSS click coordinate proportionally with zoom to represent same physical document point
+
 ### New Decisions (03-05)
 
 - Word-doc check inserted BEFORE generic unsupported-type in validateFile; either MIME or extension alone is sufficient (defense-in-depth T-03-05)
@@ -135,6 +144,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-06-17T07:46:17.194Z
-Stopped at: Phase 3 Plan 05 complete
-Resume file: None (all Phase 3 plans complete)
+Last session: 2026-06-17T01:00:00.000Z
+Stopped at: Phase 3 Plan 03 complete
+Resume file: None (continue with 03-04-PLAN.md)
