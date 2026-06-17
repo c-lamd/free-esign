@@ -64,7 +64,7 @@ Plans:
 Plans:
 
 - [x] 02-01-PLAN.md — Export engine + field model (TDD): dep swap pdf-lib→pdf-lib-incremental-save + signature_pad + react-rnd, EXP-02 byte-identity test FIRST, exportSignedPdf/triggerDownload/signedFilename, fieldStore + originalPdfBytes (EXP-01, EXP-02, EXP-03, FLD-07)
-- [ ] 02-02-PLAN.md — Signature draw modal: signature_pad centered focus-trapped modal, transparent PNG out, TopBar "Add signature" trigger, arms placement (SIG-01)
+- [x] 02-02-PLAN.md — Signature draw modal: signature_pad centered focus-trapped modal, transparent PNG out, TopBar "Add signature" trigger, arms placement (SIG-01)
 - [ ] 02-03-PLAN.md — Placement + field overlay: makeSimpleViewport, click-to-drop, react-rnd PlacedFieldWidget (drag/resize aspect-lock/select/× + keyboard delete), PDF-space storage (FLD-01, FLD-05, FLD-06, FLD-07)
 - [ ] 02-04-PLAN.md — Download wiring: TopBar "Download PDF" (disabled at zero fields), exportSignedPdf over current bytes, {name}-signed.pdf, inline export-error banner, image-source export + end-of-phase human-verify (EXP-01, EXP-03)
 
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + PDF Viewer | 4/4 | Complete   | 2026-06-16 |
-| 2. Core Signing Loop | 1/4 | In Progress|  |
+| 2. Core Signing Loop | 2/4 | In Progress|  |
 | 3. Full Field Types + Workspace Controls | 0/TBD | Not started | - |
 | 4. Typed Signatures + Signature Persistence | 0/TBD | Not started | - |
 | 5. Landing Page + Launch | 0/TBD | Not started | - |

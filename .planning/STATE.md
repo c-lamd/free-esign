@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-06-17T06:01:37.237Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-06-17T06:15:47.116Z"
 last_activity: 2026-06-17 -- Phase 02 execution started
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
   percent: 20
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 ## Current Position
 
 Phase: 02 (Core Signing Loop) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-17 -- Phase 02 execution started
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | 8min | 2 tasks | 8 files |
 | Phase 01 P04 | 6 | 2 tasks | 4 files |
 | Phase 02 P01 | 12 | 3 tasks | 9 files |
+| Phase 02 P02 | 14 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase ?]: IntersectionObserver with 11 thresholds tracks currentPage from scroll; LazyPage stays rendered after first visibility
 - [Phase ?]: aria-disabled (not disabled) on prev/next ensures focus stays reachable at page boundaries (WCAG 2.5.5)
 - [Phase ?]: pdf-lib-incremental-save@1.17.4 confirmed viable: saveIncremental() preserves original bytes at offset 0 (EXP-02 passes)
+- [Phase ?]: aria-disabled (not HTML disabled) on Add signature button to keep focus reachable while empty (WCAG 2.5.5)
+- [Phase ?]: SignatureDrawModal: transparent PNG (rgba(0,0,0,0) bg) ensures no white box artifact on PDF overlay
+- [Phase ?]: Canvas 2d jsdom mock in setup.ts is idempotent via _gsdCanvasMocked guard on prototype
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-17T06:01:37.227Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-06-17T06:15:47.107Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
