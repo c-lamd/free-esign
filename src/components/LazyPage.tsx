@@ -51,15 +51,17 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   const zoom = useDocumentStore((s) => s.zoom)
 
   // Field store state
-  const armedFieldType    = useFieldStore((s) => s.armedFieldType)
-  const signatureDataUrl  = useFieldStore((s) => s.signatureDataUrl)
-  const initialsDataUrl   = useFieldStore((s) => s.initialsDataUrl)
-  const fields            = useFieldStore((s) => s.fields)
-  const selectedFieldId   = useFieldStore((s) => s.selectedFieldId)
-  const pageDimensions    = useFieldStore((s) => s.pageDimensions)
-  const addField          = useFieldStore((s) => s.addField)
+  const armedFieldType      = useFieldStore((s) => s.armedFieldType)
+  const armedTypedPayload   = useFieldStore((s) => s.armedTypedPayload)
+  const signatureDataUrl    = useFieldStore((s) => s.signatureDataUrl)
+  const initialsDataUrl     = useFieldStore((s) => s.initialsDataUrl)
+  const fields              = useFieldStore((s) => s.fields)
+  const selectedFieldId     = useFieldStore((s) => s.selectedFieldId)
+  const pageDimensions      = useFieldStore((s) => s.pageDimensions)
+  const addField            = useFieldStore((s) => s.addField)
   const setSelectedFieldId  = useFieldStore((s) => s.setSelectedFieldId)
   const setArmedFieldType   = useFieldStore((s) => s.setArmedFieldType)
+  const setArmedTypedPayload = useFieldStore((s) => s.setArmedTypedPayload)
   const setPageDimensions   = useFieldStore((s) => s.setPageDimensions)
 
   // Fields that belong to this page
@@ -110,9 +112,11 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   const handleOverlayClick = useCallback(
     async (e: React.MouseEvent<HTMLDivElement>) => {
       if (!armedFieldType || !dims) return
-      // Image types require their data URL to be set
-      if (armedFieldType === 'signature' && !signatureDataUrl) return
-      if (armedFieldType === 'initials' && !initialsDataUrl) return
+      // Image-backed (drawn) fields require their data URL to be set.
+      // Typed (font-backed) fields: armedTypedPayload being set is sufficient —
+      // skip the dataUrl guards for typed drops (no image to load).
+      if (armedFieldType === 'signature' && !signatureDataUrl && !armedTypedPayload) return
+      if (armedFieldType === 'initials' && !initialsDataUrl && !armedTypedPayload) return
 
       // Compute CSS click position relative to the page overlay div
       const rect = e.currentTarget.getBoundingClientRect()
@@ -127,10 +131,17 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         : dims.scale
       const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, effectiveScale)
 
-      // Default CSS sizes per type at current scale
+      // Determine if this is a typed (font-backed) field drop
+      const isTyped =
+        !!armedTypedPayload &&
+        (armedFieldType === 'signature' || armedFieldType === 'initials')
+
+      // Default CSS sizes per type at current scale.
+      // Typed signature/initials: 200×56px (UI-SPEC — no PNG aspect ratio to derive from).
+      // Drawn signature/initials: existing defaults, adjusted by PNG aspect ratio below.
       const defaults: Record<FieldType, { w: number; h: number }> = {
-        signature: { w: 180, h: 60 },  // adjusted by PNG aspect ratio below
-        initials:  { w: 80,  h: 40 },  // adjusted by PNG aspect ratio below
+        signature: isTyped ? { w: 200, h: 56 } : { w: 180, h: 60 },
+        initials:  isTyped ? { w: 200, h: 56 } : { w: 80,  h: 40 },
         date:      { w: 160, h: 28 },
         text:      { w: 160, h: 28 },
         checkbox:  { w: 32,  h: 32 },
@@ -139,8 +150,12 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       let defaultWidthPx  = defaults[armedFieldType].w
       let defaultHeightPx = defaults[armedFieldType].h
 
-      // For image types: derive height from actual PNG aspect ratio
-      if (armedFieldType === 'signature' || armedFieldType === 'initials') {
+      // For image-backed types: derive height from actual PNG aspect ratio.
+      // Skip this block for typed (font-backed) drops — no image to load.
+      if (
+        (armedFieldType === 'signature' || armedFieldType === 'initials') &&
+        !isTyped
+      ) {
         const dataUrl = armedFieldType === 'signature' ? signatureDataUrl! : initialsDataUrl!
         let aspectRatio = armedFieldType === 'signature' ? 3 : 2 // fallbacks
         try {
@@ -177,6 +192,15 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
           ? ''
           : undefined
 
+      // Build payload: typed (font-backed) OR drawn (image-backed) OR date/text/checkbox
+      const fieldPayload = isTyped
+        ? { textValue: armedTypedPayload!.text, fontFamily: armedTypedPayload!.fontFamily }
+        : armedFieldType === 'signature'
+        ? { dataUrl: signatureDataUrl! }
+        : armedFieldType === 'initials'
+        ? { dataUrl: initialsDataUrl! }
+        : {}
+
       const newField: PlacedField = {
         id: crypto.randomUUID(),
         type: armedFieldType,
@@ -185,21 +209,23 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         pdfY:     pdfBottomLeft.y,
         pdfWidth:  defaultWidthPx  / effectiveScale,
         pdfHeight: defaultHeightPx / effectiveScale,
-        // dataUrl only for image types
-        ...(armedFieldType === 'signature' ? { dataUrl: signatureDataUrl! } :
-            armedFieldType === 'initials'  ? { dataUrl: initialsDataUrl! }  : {}),
-        // textValue for date/text
-        ...(textValue !== undefined ? { textValue } : {}),
+        // Typed or drawn payload (evaluated above)
+        ...fieldPayload,
+        // textValue for date/text (not applied to typed sig — fieldPayload already sets textValue)
+        ...(textValue !== undefined && !isTyped ? { textValue } : {}),
       }
 
       // addField handles the complete pre+post history snapshot pair internally —
       // one undo step per field drop with no phantom entries.
       addField(newField)
       setSelectedFieldId(newField.id)
-      setArmedFieldType(null) // disarm after drop
+      // Disarm both states — typed fields need BOTH cleared (RESEARCH Pitfall 6)
+      setArmedTypedPayload(null)
+      setArmedFieldType(null)
     },
     [
       armedFieldType,
+      armedTypedPayload,
       dims,
       signatureDataUrl,
       initialsDataUrl,
@@ -209,6 +235,7 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       addField,
       setSelectedFieldId,
       setArmedFieldType,
+      setArmedTypedPayload,
     ],
   )
 

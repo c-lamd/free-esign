@@ -57,12 +57,27 @@ function ResizeHandle() {
 // Per-type aria strings (Copywriting Contract)
 // ---------------------------------------------------------------------------
 
+// Base aria labels for drawn (image-backed) signature/initials.
+// Font-backed (typed) fields get a runtime override — see getWrapperAriaLabel().
 const WRAPPER_ARIA_LABEL: Record<FieldType, string> = {
   signature: 'Placed signature — press Delete to remove',
   initials:  'Placed initials — press Delete to remove',
   date:      'Placed date field — press Delete to remove',
   text:      'Placed text field — press Delete to remove',
   checkbox:  'Placed checkbox mark — press Delete to remove',
+}
+
+/**
+ * Returns the correct wrapper aria-label for a placed field.
+ * Font-backed (typed) signature/initials get distinct labels (UI-SPEC).
+ */
+function getWrapperAriaLabel(field: PlacedField): string {
+  if ((field.type === 'signature' || field.type === 'initials') && !field.dataUrl && field.textValue) {
+    return field.type === 'signature'
+      ? 'Placed typed signature — press Delete to remove'
+      : 'Placed typed initials — press Delete to remove'
+  }
+  return WRAPPER_ARIA_LABEL[field.type]
 }
 
 const DELETE_ARIA_LABEL: Record<FieldType, string> = {
@@ -172,21 +187,51 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
   let content: React.ReactNode = null
 
   if (field.type === 'signature' || field.type === 'initials') {
-    // Image types — transparent-background PNG
-    content = (
-      <img
-        src={field.dataUrl}
-        alt={`Placed ${field.type}`}
-        draggable={false}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          display: 'block',
-          userSelect: 'none',
-        }}
-      />
-    )
+    if (field.dataUrl) {
+      // Image-backed (drawn) — transparent-background PNG
+      content = (
+        <img
+          src={field.dataUrl}
+          alt={`Placed ${field.type}`}
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+            userSelect: 'none',
+          }}
+        />
+      )
+    } else if (field.textValue && field.fontFamily) {
+      // Font-backed (typed) — render text in the @font-face script font (WYSIWYG with export).
+      // T-04-06: React renders field.textValue as a text node — no dangerouslySetInnerHTML (XSS-safe).
+      // Fit-to-box heuristic: fill height×0.85, capped by width heuristic (mirrors drawSignatureText).
+      const fontSize = Math.min(
+        cssHeight * 0.85,
+        cssWidth / (field.textValue.length * 0.6 + 0.5),
+      )
+      content = (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            fontFamily: field.fontFamily, // CSS @font-face name — same TTF as export (WYSIWYG)
+            fontSize,
+            color: 'var(--color-text-primary)',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          {field.textValue}
+        </div>
+      )
+    }
   } else if (field.type === 'date' || field.type === 'text') {
     // Inline editable text input
     content = (
@@ -251,8 +296,12 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
   // Per-type Rnd configuration
   // ---------------------------------------------------------------------------
 
+  // Phase 4 fix (RESEARCH Pitfall 2): lock aspect ratio only for IMAGE-backed sig/initials
+  // (drawn, dataUrl present) and checkbox. Font-backed (typed) fields have no natural pixel
+  // aspect ratio and must resize freely (lockAspectRatio={false}).
   const shouldLockAspectRatio =
-    field.type === 'signature' || field.type === 'initials' || field.type === 'checkbox'
+    ((field.type === 'signature' || field.type === 'initials') && !!field.dataUrl) ||
+    field.type === 'checkbox'
 
   const minWidth  = field.type === 'checkbox' ? 20 : 80
   const minHeight = field.type === 'checkbox' ? 20 : 24
@@ -280,7 +329,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
   return (
     <div
       role={field.type === 'checkbox' ? 'img' : undefined}
-      aria-label={WRAPPER_ARIA_LABEL[field.type]}
+      aria-label={getWrapperAriaLabel(field)}
       data-selected={isSelected ? 'true' : undefined}
       onClick={handleClick}
       style={{
