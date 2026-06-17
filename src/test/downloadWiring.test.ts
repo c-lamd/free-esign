@@ -114,7 +114,7 @@ describe('Download PDF button — zero fields (T-02-10 disabled guard)', () => {
     const btn = Array.from(container.querySelectorAll('button')).find(
       (b) => b.textContent?.includes('Download PDF'),
     )
-    expect(btn?.getAttribute('aria-label')).toContain('place at least one signature first')
+    expect(btn?.getAttribute('aria-label')).toContain('place at least one field first')
   })
 })
 

@@ -13,9 +13,11 @@
  * @see 02-03-PLAN.md Task 1
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
+import { useFieldStore } from '../store/fieldStore'
+import type { PlacedField } from '../store/fieldStore'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -177,5 +179,126 @@ describe('field placement coordinate simulation', () => {
     const recoveredCss = pageSpaceToCssPixel(pdfOrigin, viewport)
     expect(Math.abs(recoveredCss.x - fieldTopLeftCss.x)).toBeLessThan(TOLERANCE)
     expect(Math.abs(recoveredCss.y - fieldTopLeftCss.y)).toBeLessThan(TOLERANCE)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Store-level field placement tests — new types and multi-page keying
+// Tests exercise the placement contract at the store level (no DOM / drag simulation).
+// @see 03-02-PLAN.md Task 3 (FLD-02, FLD-03, FLD-04, FLD-08)
+// ---------------------------------------------------------------------------
+
+/** Helper to build a minimal PlacedField fixture */
+function makePlacedField(overrides: Partial<PlacedField> = {}): PlacedField {
+  return {
+    id: crypto.randomUUID(),
+    type: 'signature',
+    pageNumber: 1,
+    pdfX: 10,
+    pdfY: 20,
+    pdfWidth: 100,
+    pdfHeight: 30,
+    ...overrides,
+  }
+}
+
+describe('field store — new field type placement contracts', () => {
+  beforeEach(() => {
+    useFieldStore.getState().resetFields()
+  })
+
+  // FLD-02 / FLD-03: date field defaults to today (M/D/YYYY), is stored, and is selected
+  it('FLD-02/FLD-03: adding a date field stores it with today-format textValue and selects it', () => {
+    const store = useFieldStore.getState()
+    const today = new Date()
+    const expectedTextValue = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`
+
+    const dateField = makePlacedField({
+      id: 'date-1',
+      type: 'date',
+      textValue: expectedTextValue,
+    })
+
+    // Simulate LazyPage drop: pushHistory → addField → setSelectedFieldId
+    store.pushHistory()
+    store.addField(dateField)
+    store.setSelectedFieldId(dateField.id)
+
+    const state = useFieldStore.getState()
+    expect(state.fields).toHaveLength(1)
+    expect(state.fields[0].type).toBe('date')
+    expect(state.fields[0].textValue).toBe(expectedTextValue)
+    // textValue must match M/D/YYYY shape
+    expect(state.fields[0].textValue).toMatch(/^\d{1,2}\/\d{1,2}\/\d{4}$/)
+    // Field is selected after drop
+    expect(state.selectedFieldId).toBe('date-1')
+  })
+
+  // FLD-04: text field starts empty; updateField persists typed value
+  it('FLD-04: adding a text field with empty textValue then updateField persists the typed value', () => {
+    const store = useFieldStore.getState()
+
+    const textField = makePlacedField({
+      id: 'text-1',
+      type: 'text',
+      textValue: '',
+    })
+
+    store.addField(textField)
+    expect(useFieldStore.getState().fields[0].textValue).toBe('')
+
+    // Simulate inline blur commit
+    store.pushHistory()
+    store.updateField('text-1', { textValue: 'typed content' })
+    expect(useFieldStore.getState().fields[0].textValue).toBe('typed content')
+  })
+
+  // FLD-02: checkbox field stored with geometry only (no dataUrl, no textValue)
+  it('FLD-02: adding a checkbox field stores geometry only — no dataUrl, no textValue', () => {
+    const store = useFieldStore.getState()
+
+    const checkboxField = makePlacedField({
+      id: 'cb-1',
+      type: 'checkbox',
+      // no dataUrl, no textValue
+    })
+
+    store.addField(checkboxField)
+
+    const stored = useFieldStore.getState().fields[0]
+    expect(stored.type).toBe('checkbox')
+    expect(stored.dataUrl).toBeUndefined()
+    expect(stored.textValue).toBeUndefined()
+    // Geometry preserved
+    expect(stored.pdfX).toBe(10)
+    expect(stored.pdfY).toBe(20)
+    expect(stored.pdfWidth).toBe(100)
+    expect(stored.pdfHeight).toBe(30)
+  })
+
+  // FLD-08: fields are keyed by pageNumber — per-page filter works correctly
+  it('FLD-08: fields are keyed per page; filter by pageNumber returns only the matching page fields', () => {
+    const store = useFieldStore.getState()
+
+    const fieldPage1 = makePlacedField({ id: 'p1-1', pageNumber: 1, type: 'signature' })
+    const fieldPage2 = makePlacedField({ id: 'p2-1', pageNumber: 2, type: 'date', textValue: '1/1/2026' })
+    const fieldPage2b = makePlacedField({ id: 'p2-2', pageNumber: 2, type: 'text', textValue: 'hello' })
+
+    store.addField(fieldPage1)
+    store.addField(fieldPage2)
+    store.addField(fieldPage2b)
+
+    const allFields = useFieldStore.getState().fields
+    expect(allFields).toHaveLength(3)
+
+    // Simulate LazyPage per-page filter
+    const page1Fields = allFields.filter((f) => f.pageNumber === 1)
+    const page2Fields = allFields.filter((f) => f.pageNumber === 2)
+
+    expect(page1Fields).toHaveLength(1)
+    expect(page1Fields[0].id).toBe('p1-1')
+
+    expect(page2Fields).toHaveLength(2)
+    expect(page2Fields.map((f) => f.id).sort()).toEqual(['p2-1', 'p2-2'].sort())
   })
 })
