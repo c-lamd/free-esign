@@ -41,7 +41,7 @@ beforeAll(() => {
 // ---------- EXP-02: zero-alteration export ----------
 
 describe('EXP-02: zero-alteration export', () => {
-  it('first 512 bytes of output are byte-identical to input', async () => {
+  it('first 512 bytes of output are byte-identical to input (signature)', async () => {
     const field = {
       id: 'test-field-1',
       type: 'signature' as const,
@@ -83,7 +83,7 @@ describe('EXP-02: zero-alteration export', () => {
     expect(header).toBe('%PDF-')
   })
 
-  it('rejects with a tagged Error when dataUrl is not a valid PNG data URL', async () => {
+  it('rejects with a tagged Error when dataUrl is not a valid PNG data URL (signature)', async () => {
     const badField = {
       id: 'test-bad',
       type: 'signature' as const,
@@ -97,6 +97,121 @@ describe('EXP-02: zero-alteration export', () => {
     await expect(
       exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [badField]),
     ).rejects.toThrow(/Could not export/)
+  })
+
+  // ---------- New field types: EXP-02 byte-identity ----------
+
+  it('text field export: first 512 bytes byte-identical to input (EXP-02)', async () => {
+    const field = {
+      id: 'text-1',
+      type: 'text' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 50,
+      pdfWidth: 100,
+      pdfHeight: 20,
+      textValue: 'Hello World',
+    }
+    const output = await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+    const inputFirst512 = Array.from(INPUT_BYTES.slice(0, 512))
+    const outputFirst512 = Array.from(output.slice(0, 512))
+    expect(outputFirst512).toEqual(inputFirst512)
+  })
+
+  it('checkbox field export: first 512 bytes byte-identical to input (EXP-02)', async () => {
+    const field = {
+      id: 'cb-1',
+      type: 'checkbox' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 50,
+      pdfWidth: 20,
+      pdfHeight: 20,
+    }
+    const output = await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+    const inputFirst512 = Array.from(INPUT_BYTES.slice(0, 512))
+    const outputFirst512 = Array.from(output.slice(0, 512))
+    expect(outputFirst512).toEqual(inputFirst512)
+  })
+
+  it('date field export: first 512 bytes byte-identical to input (EXP-02)', async () => {
+    const field = {
+      id: 'date-1',
+      type: 'date' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 100,
+      pdfWidth: 120,
+      pdfHeight: 20,
+      textValue: '6/17/2026',
+    }
+    const output = await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+    const inputFirst512 = Array.from(INPUT_BYTES.slice(0, 512))
+    const outputFirst512 = Array.from(output.slice(0, 512))
+    expect(outputFirst512).toEqual(inputFirst512)
+  })
+
+  it('does not throw for checkbox field (no dataUrl required) (Pitfall 6)', async () => {
+    const field = {
+      id: 'cb-nodata',
+      type: 'checkbox' as const,
+      pageNumber: 1,
+      pdfX: 10,
+      pdfY: 10,
+      pdfWidth: 20,
+      pdfHeight: 20,
+    }
+    await expect(
+      exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field]),
+    ).resolves.toBeInstanceOf(Uint8Array)
+  })
+
+  it('does not throw for text field (no dataUrl required) (Pitfall 6)', async () => {
+    const field = {
+      id: 'tx-nodata',
+      type: 'text' as const,
+      pageNumber: 1,
+      pdfX: 10,
+      pdfY: 10,
+      pdfWidth: 80,
+      pdfHeight: 20,
+      textValue: 'test',
+    }
+    await expect(
+      exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field]),
+    ).resolves.toBeInstanceOf(Uint8Array)
+  })
+
+  it('does not throw for date field (no dataUrl required) (Pitfall 6)', async () => {
+    const field = {
+      id: 'dt-nodata',
+      type: 'date' as const,
+      pageNumber: 1,
+      pdfX: 10,
+      pdfY: 10,
+      pdfWidth: 100,
+      pdfHeight: 20,
+      textValue: '6/17/2026',
+    }
+    await expect(
+      exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field]),
+    ).resolves.toBeInstanceOf(Uint8Array)
+  })
+
+  it('FLD-08: a field with pageNumber 2 against a single-page input throws page-range error', async () => {
+    const field = {
+      id: 'p2',
+      type: 'signature' as const,
+      pageNumber: 2,
+      pdfX: 10,
+      pdfY: 10,
+      pdfWidth: 50,
+      pdfHeight: 20,
+      dataUrl: TRANSPARENT_1x1_PNG,
+    }
+    await expect(
+      exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field]),
+    ).rejects.toThrow(/page 2.*only has 1/)
   })
 })
 

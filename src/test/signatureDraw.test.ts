@@ -200,7 +200,7 @@ describe('SignatureDrawModal', () => {
 
     const state = useFieldStore.getState()
     expect(state.signatureDataUrl).toMatch(/^data:image\/png/)
-    expect(state.placementMode).toBe(true)
+    expect(state.armedFieldType).toBe('signature')
     expect(state.modalOpen).toBe(false)
   })
 
@@ -222,7 +222,7 @@ describe('SignatureDrawModal', () => {
 
     const state = useFieldStore.getState()
     expect(state.signatureDataUrl).toBeNull()
-    expect(state.placementMode).toBe(false)
+    expect(state.armedFieldType).toBeNull()
     // Modal should still be open
     expect(state.modalOpen).toBe(true)
   })
@@ -254,7 +254,7 @@ describe('SignatureDrawModal', () => {
     const state = useFieldStore.getState()
     expect(state.modalOpen).toBe(false)
     expect(state.signatureDataUrl).toBeNull()
-    expect(state.placementMode).toBe(false)
+    expect(state.armedFieldType).toBeNull()
   })
 
   // ── Escape key ───────────────────────────────────────────────────────────
@@ -282,7 +282,7 @@ describe('SignatureDrawModal', () => {
     const state = useFieldStore.getState()
     expect(state.modalOpen).toBe(false)
     expect(state.signatureDataUrl).toBeNull()
-    expect(state.placementMode).toBe(false)
+    expect(state.armedFieldType).toBeNull()
   })
 
   // ── Clear canvas ─────────────────────────────────────────────────────────

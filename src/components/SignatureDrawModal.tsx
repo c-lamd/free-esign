@@ -21,7 +21,7 @@ export function SignatureDrawModal() {
   const modalOpen = useFieldStore((s) => s.modalOpen)
   const closeModal = useFieldStore((s) => s.closeModal)
   const setSignatureDataUrl = useFieldStore((s) => s.setSignatureDataUrl)
-  const setPlacementMode = useFieldStore((s) => s.setPlacementMode)
+  const setArmedFieldType = useFieldStore((s) => s.setArmedFieldType)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const padRef = useRef<SignaturePad | null>(null)
@@ -128,7 +128,7 @@ export function SignatureDrawModal() {
     if (!hasStrokes || !padRef.current) return
     const dataUrl = padRef.current.toDataURL('image/png')
     setSignatureDataUrl(dataUrl)
-    setPlacementMode(true)
+    setArmedFieldType('signature')
     handleClose()
   }
 
