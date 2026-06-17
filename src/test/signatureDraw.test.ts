@@ -543,9 +543,10 @@ describe('Type tab', () => {
       fireEvent.change(input!, { target: { value: 'Jane Smith' } })
     })
 
-    // Uncheck save-for-reuse to avoid async addSavedItem
+    // Uncheck save-for-reuse to avoid async addSavedItem.
+    // WR-02 fix: checkbox id is now panel-specific (sig-save-for-reuse-type on Type panel)
     await act(async () => {
-      const checkbox = container.querySelector('#sig-save-for-reuse')
+      const checkbox = container.querySelector('#sig-save-for-reuse-type')
       if (checkbox) fireEvent.click(checkbox)
     })
 

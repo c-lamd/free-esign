@@ -420,30 +420,36 @@ export function InitialsDrawModal() {
     }
   }
 
-  // ── Save for reuse row (shared between Draw and Type panels) ──────────────
+  // ── Save for reuse row (per-panel — each panel gets a unique id) ──────────
+  // Using a render function rather than a shared JSX variable so each panel
+  // renders a distinct id (WR-02: shared JSX produced duplicate DOM ids and
+  // caused htmlFor to bind to the wrong checkbox when both panels are in DOM).
 
-  const saveForReuseRow = (
-    <div style={saveForReuseRowStyle}>
-      <input
-        id="ini-save-for-reuse"
-        type="checkbox"
-        checked={saveForReuse}
-        onChange={(e) => setSaveForReuse(e.target.checked)}
-      />
-      <label
-        htmlFor="ini-save-for-reuse"
-        style={{
-          fontSize: '14px',
-          fontWeight: 400,
-          color: 'var(--color-text-primary)',
-          cursor: 'pointer',
-          userSelect: 'none',
-        }}
-      >
-        Save for reuse
-      </label>
-    </div>
-  )
+  function renderSaveForReuseRow(panelKey: 'draw' | 'type') {
+    const id = `ini-save-for-reuse-${panelKey}`
+    return (
+      <div style={saveForReuseRowStyle}>
+        <input
+          id={id}
+          type="checkbox"
+          checked={saveForReuse}
+          onChange={(e) => setSaveForReuse(e.target.checked)}
+        />
+        <label
+          htmlFor={id}
+          style={{
+            fontSize: '14px',
+            fontWeight: 400,
+            color: 'var(--color-text-primary)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          Save for reuse
+        </label>
+      </div>
+    )
+  }
 
   // ── Panels ────────────────────────────────────────────────────────────────
 
@@ -468,7 +474,7 @@ export function InitialsDrawModal() {
         {!hasStrokes && <div style={hintStyle}>Draw here</div>}
       </div>
 
-      {saveForReuseRow}
+      {renderSaveForReuseRow('draw')}
 
       {/* Controls */}
       <div
@@ -705,7 +711,7 @@ export function InitialsDrawModal() {
         </span>
       </div>
 
-      {saveForReuseRow}
+      {renderSaveForReuseRow('type')}
 
       {/* Save error message (non-blocking, per UI-SPEC) */}
       {saveError && (
