@@ -13,6 +13,7 @@ import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { LazyPage } from './LazyPage'
 import { PageNavigation } from './PageNavigation'
+import { ZoomControl } from './ZoomControl'
 import { LoadingSpinner } from './LoadingSpinner'
 import { PlacementModeOverlay } from './PlacementModeOverlay'
 
@@ -34,6 +35,8 @@ import { PlacementModeOverlay } from './PlacementModeOverlay'
 export function DocumentViewer() {
   const docUrl = useDocumentStore((s) => s.docUrl)
   const numPages = useDocumentStore((s) => s.numPages)
+  const currentPage = useDocumentStore((s) => s.currentPage)
+  const zoom = useDocumentStore((s) => s.zoom)
   const setNumPages = useDocumentStore((s) => s.setNumPages)
   const setCurrentPage = useDocumentStore((s) => s.setCurrentPage)
   const setError = useDocumentStore((s) => s.setError)
@@ -141,6 +144,24 @@ export function DocumentViewer() {
     return () => observer.disconnect()
   }, [numPages, setCurrentPage])
 
+  // Page-anchor on zoom: after zoom changes, scroll the current page back into view.
+  // This prevents the viewport drifting away from the previously visible page.
+  // Minimal implementation: requestAnimationFrame to let React re-render the resized
+  // page before scrolling, then scrollIntoView on the current page element.
+  // Guard with typeof to avoid jsdom test failures (scrollIntoView not in jsdom).
+  useEffect(() => {
+    if (!scrollContainerRef.current || !currentPage) return
+    const container = scrollContainerRef.current
+    requestAnimationFrame(() => {
+      const pageEl = container.querySelector<HTMLElement>(
+        `[data-page-number="${currentPage}"]`,
+      )
+      if (pageEl && typeof pageEl.scrollIntoView === 'function') {
+        pageEl.scrollIntoView({ block: 'nearest' })
+      }
+    })
+  }, [zoom, currentPage])
+
   if (!docUrl) return null
 
   const pageNumbers = numPages
@@ -206,6 +227,9 @@ export function DocumentViewer() {
         {numPages !== null && numPages > 0 && (
           <PageNavigation scrollContainerRef={scrollContainerRef} />
         )}
+
+        {/* ZoomControl pill: fixed bottom, to the left of PageNavigation */}
+        <ZoomControl />
       </div>
     </>
   )

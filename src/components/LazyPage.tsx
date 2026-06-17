@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Page } from 'react-pdf'
 import { useFieldStore } from '../store/fieldStore'
 import type { PlacedField, FieldType } from '../store/fieldStore'
+import { useDocumentStore } from '../store/documentStore'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace } from '../lib/coordinateMapper'
 import { PlacedFieldWidget } from './PlacedFieldWidget'
@@ -30,6 +31,13 @@ interface LazyPageProps {
  * - Date fields default to today (M/D/YYYY format).
  * - pushHistory called BEFORE addField (one undo entry per drop).
  *
+ * Plan 03-03 zoom threading:
+ * - subscribes to zoom from documentStore.
+ * - effectiveScale = (containerWidth / dims.originalWidth) * zoom.
+ * - Page width = containerWidth * zoom (NO scale prop — RESEARCH Pitfall 5).
+ * - All viewport builds and drop-geometry division use effectiveScale.
+ * - dims.scale (stored by onLoadSuccess) remains the zoom-free fit-to-width baseline (RESEARCH A2).
+ *
  * Security: renderAnnotationLayer={false} eliminates annotation-based injection surface (T-01-03).
  * Security: overlay is pointer-events:none except during placement and on individual widgets (T-02-08).
  * Security: react-rnd bounds="parent" prevents field drag off-page (T-02-09).
@@ -38,6 +46,9 @@ interface LazyPageProps {
 export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  // Document store — zoom multiplier (0.5–2.0, default 1.0)
+  const zoom = useDocumentStore((s) => s.zoom)
 
   // Field store state
   const armedFieldType    = useFieldStore((s) => s.armedFieldType)
@@ -109,8 +120,13 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       const cssX = e.clientX - rect.left
       const cssY = e.clientY - rect.top
 
-      // NOTE: Plan 02 uses dims.scale (no zoom yet); Plan 03 swaps for effectiveScale
-      const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, dims.scale)
+      // effectiveScale = (containerWidth / originalWidth) * zoom
+      // This is the scale used for both page raster width and overlay viewport (RESEARCH A2 + Pitfall 2).
+      // dims.scale stays zoom-free (fit-to-width baseline stored by onLoadSuccess).
+      const effectiveScale = containerWidth && dims
+        ? (containerWidth / dims.originalWidth) * zoom
+        : dims.scale
+      const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, effectiveScale)
 
       // Default CSS sizes per type at current scale
       const defaults: Record<FieldType, { w: number; h: number }> = {
@@ -168,8 +184,8 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         pageNumber,
         pdfX:     pdfBottomLeft.x,
         pdfY:     pdfBottomLeft.y,
-        pdfWidth:  defaultWidthPx  / dims.scale,
-        pdfHeight: defaultHeightPx / dims.scale,
+        pdfWidth:  defaultWidthPx  / effectiveScale,
+        pdfHeight: defaultHeightPx / effectiveScale,
         // dataUrl only for image types
         ...(armedFieldType === 'signature' ? { dataUrl: signatureDataUrl! } :
             armedFieldType === 'initials'  ? { dataUrl: initialsDataUrl! }  : {}),
@@ -192,6 +208,8 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       signatureDataUrl,
       initialsDataUrl,
       pageNumber,
+      containerWidth,
+      zoom,
       pushHistory,
       addField,
       setSelectedFieldId,
@@ -233,7 +251,7 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
       {isVisible && (
         <Page
           pageNumber={pageNumber}
-          width={containerWidth}
+          width={containerWidth ? containerWidth * zoom : undefined}
           renderTextLayer={false}
           renderAnnotationLayer={false}
           onLoadSuccess={handlePageLoadSuccess}
@@ -256,10 +274,16 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
             // — individual widgets set pointer-events:auto themselves
           }}
         >
-          {/* Render a PlacedFieldWidget for each field on this page */}
+          {/* Render a PlacedFieldWidget for each field on this page.
+              Uses effectiveScale so field overlay scales with the page at any zoom level. */}
           {pageFields.map((field) => {
             if (!dims) return null
-            const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, dims.scale)
+            // effectiveScale = (containerWidth / originalWidth) * zoom
+            // Must match the effectiveScale used for the Page width above (Pitfall 2).
+            const fieldEffectiveScale = containerWidth && dims
+              ? (containerWidth / dims.originalWidth) * zoom
+              : dims.scale
+            const viewport = makeSimpleViewport(dims.originalWidth, dims.originalHeight, fieldEffectiveScale)
             return (
               <PlacedFieldWidget
                 key={field.id}
