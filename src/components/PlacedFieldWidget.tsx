@@ -1,21 +1,31 @@
 /**
  * PlacedFieldWidget.tsx
  *
- * A react-rnd controlled drag/resize widget that renders one placed signature field.
+ * A react-rnd controlled drag/resize widget that renders one placed field.
  * Position and size are derived from PDF-space coordinates and converted to CSS pixels
  * at the current render scale via the Coordinate Mapper.
  *
  * On drag/resize stop the widget converts back to PDF-space and updates the store
  * so positions are render-scale-independent.
  *
- * @see 02-03-PLAN.md Task 2
- * @see 02-UI-SPEC.md PlacedFieldWidget
+ * Phase 3 additions:
+ * - Per-type rendering: image (signature/initials), inline input (date/text), checkbox ✕
+ * - Local isEditing/localValue state for text/date inline editing
+ * - pushHistory before updateField on drag/resize/blur (one undo entry each)
+ * - disableDragging={isEditing} to prevent drag while typing
+ * - lockAspectRatio per type (true for signature/initials/checkbox; false for date/text)
+ * - Per-type aria-labels on delete button and outer wrapper
+ *
+ * @see 03-02-PLAN.md Task 2
+ * @see 03-UI-SPEC.md PlacedFieldWidget
+ * @see 03-RESEARCH.md Section 5 (Inline Text/Date Editing)
  * @see src/lib/coordinateMapper.ts (cssPixelToPageSpace / pageSpaceToCssPixel)
  * @see src/lib/pageViewport.ts (SimpleViewport)
  */
 
+import { useState, useEffect } from 'react'
 import { Rnd } from 'react-rnd'
-import type { PlacedField } from '../store/fieldStore'
+import type { PlacedField, FieldType } from '../store/fieldStore'
 import { useFieldStore } from '../store/fieldStore'
 import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
 import type { SimpleViewport } from '../lib/pageViewport'
@@ -44,6 +54,34 @@ function ResizeHandle() {
 }
 
 // ---------------------------------------------------------------------------
+// Per-type aria strings (Copywriting Contract)
+// ---------------------------------------------------------------------------
+
+const WRAPPER_ARIA_LABEL: Record<FieldType, string> = {
+  signature: 'Placed signature — press Delete to remove',
+  initials:  'Placed initials — press Delete to remove',
+  date:      'Placed date field — press Delete to remove',
+  text:      'Placed text field — press Delete to remove',
+  checkbox:  'Placed checkbox mark — press Delete to remove',
+}
+
+const DELETE_ARIA_LABEL: Record<FieldType, string> = {
+  signature: 'Delete signature',
+  initials:  'Delete initials',
+  date:      'Delete date field',
+  text:      'Delete text field',
+  checkbox:  'Delete checkbox field',
+}
+
+const DELETE_SR_ONLY: Record<FieldType, string> = {
+  signature: 'Delete signature',
+  initials:  'Delete initials',
+  date:      'Delete date field',
+  text:      'Delete text field',
+  checkbox:  'Delete checkbox field',
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -61,11 +99,21 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
   const updateField = useFieldStore((s) => s.updateField)
   const deleteField = useFieldStore((s) => s.deleteField)
   const setSelectedFieldId = useFieldStore((s) => s.setSelectedFieldId)
+  const pushHistory = useFieldStore((s) => s.pushHistory)
 
   // Convert PDF-space rect to CSS pixels for react-rnd controlled mode
   const cssPos = pageSpaceToCssPixel({ x: field.pdfX, y: field.pdfY }, viewport)
   const cssWidth  = field.pdfWidth  * viewport.scale
   const cssHeight = field.pdfHeight * viewport.scale
+
+  // ── Inline text/date editing state ────────────────────────────────────────
+  const [isEditing, setIsEditing] = useState(false)
+  const [localValue, setLocalValue] = useState(field.textValue ?? '')
+
+  // Sync local value when field.textValue changes externally (e.g., undo)
+  useEffect(() => {
+    setLocalValue(field.textValue ?? '')
+  }, [field.textValue])
 
   // ---------------------------------------------------------------------------
   // Event handlers
@@ -86,6 +134,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
     // d.x, d.y are the new CSS pixel position after drag (top-left corner)
     // No double Y-flip: cssPixelToPageSpace already handles the Y-axis inversion (Pitfall 2)
     const newPdfPos = cssPixelToPageSpace({ x: d.x, y: d.y }, viewport)
+    pushHistory() // one undo entry before position change
     updateField(field.id, { pdfX: newPdfPos.x, pdfY: newPdfPos.y })
   }
 
@@ -102,6 +151,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
     const newPdfWidth  = newCssWidth  / viewport.scale
     const newPdfHeight = newCssHeight / viewport.scale
     const newPdfPos    = cssPixelToPageSpace({ x: position.x, y: position.y }, viewport)
+    pushHistory() // one undo entry before size/position change
     updateField(field.id, {
       pdfX:      newPdfPos.x,
       pdfY:      newPdfPos.y,
@@ -109,6 +159,104 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
       pdfHeight: newPdfHeight,
     })
   }
+
+  function handleInputBlur() {
+    setIsEditing(false)
+    pushHistory() // one undo entry on blur (RESEARCH Pitfall 4: not per keystroke)
+    updateField(field.id, { textValue: localValue })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Per-type content rendered inside the Rnd
+  // ---------------------------------------------------------------------------
+
+  let content: React.ReactNode = null
+
+  if (field.type === 'signature' || field.type === 'initials') {
+    // Image types — transparent-background PNG
+    content = (
+      <img
+        src={field.dataUrl}
+        alt={`Placed ${field.type}`}
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          display: 'block',
+          userSelect: 'none',
+        }}
+      />
+    )
+  } else if (field.type === 'date' || field.type === 'text') {
+    // Inline editable text input
+    content = (
+      <input
+        type="text"
+        value={localValue}
+        placeholder={field.type === 'text' ? 'Type here' : undefined}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onFocus={(e) => {
+          setIsEditing(true)
+          e.currentTarget.style.borderColor = 'var(--color-accent)'
+        }}
+        onBlur={(e) => {
+          handleInputBlur()
+          e.currentTarget.style.borderColor = 'var(--color-border)'
+        }}
+        // Prevent drag initiation when clicking into the input (RESEARCH Section 5)
+        onMouseDown={(e) => e.stopPropagation()}
+        aria-label={field.type === 'date' ? 'Date field value' : 'Text field content'}
+        style={{
+          width: '100%',
+          height: '100%',
+          border: '1px solid var(--color-border)',
+          borderRadius: '3px',
+          padding: '0 4px',
+          fontSize: '14px',
+          fontWeight: 400,
+          fontFamily: 'inherit',
+          color: 'var(--color-text-primary)',
+          backgroundColor: 'transparent',
+          boxSizing: 'border-box',
+          outline: 'none',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+        }}
+      />
+    )
+  } else if (field.type === 'checkbox') {
+    // Bold ✕ centered (U+2715 on-screen only; PDF export uses ASCII 'X')
+    const fontSize = Math.min(cssHeight * 0.7, cssWidth * 0.7)
+    content = (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          fontSize,
+          fontWeight: 700,
+          color: 'var(--color-text-primary)',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
+      >
+        ✕
+      </div>
+    )
+  }
+
+  // ---------------------------------------------------------------------------
+  // Per-type Rnd configuration
+  // ---------------------------------------------------------------------------
+
+  const shouldLockAspectRatio =
+    field.type === 'signature' || field.type === 'initials' || field.type === 'checkbox'
+
+  const minWidth  = field.type === 'checkbox' ? 20 : 80
+  const minHeight = field.type === 'checkbox' ? 20 : 24
 
   // ---------------------------------------------------------------------------
   // Resize handle component map (only shown when selected, but Rnd always needs them)
@@ -132,8 +280,8 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
 
   return (
     <div
-      role="img"
-      aria-label="Placed signature — press Delete to remove"
+      role={field.type === 'checkbox' ? 'img' : undefined}
+      aria-label={WRAPPER_ARIA_LABEL[field.type]}
       aria-selected={isSelected}
       onClick={handleClick}
       style={{
@@ -147,10 +295,10 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
         position={{ x: cssPos.x, y: cssPos.y }}
         size={{ width: cssWidth, height: cssHeight }}
         bounds="parent"
-        lockAspectRatio={true}
-        minWidth={80}
-        minHeight={24}
-        disableDragging={false}
+        lockAspectRatio={shouldLockAspectRatio}
+        minWidth={minWidth}
+        minHeight={minHeight}
+        disableDragging={isEditing}
         enableResizing={true}
         resizeHandleComponent={handleComponents}
         onDragStop={handleDragStop}
@@ -160,28 +308,15 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
             ? '2px solid var(--color-accent)'
             : '1px solid rgba(0,0,0,0.15)',
           boxSizing: 'border-box',
-          // cursor: move is react-rnd default for draggable; will shift to grabbing during drag
         }}
       >
-        {/* Signature image — fills the widget */}
-        <img
-          src={field.dataUrl}
-          alt="Placed signature"
-          draggable={false}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            display: 'block',
-            userSelect: 'none',
-          }}
-        />
+        {content}
 
         {/* Delete control — shown only when selected (UI-SPEC: × button top-right) */}
         {isSelected && (
           <button
             onClick={handleDeleteClick}
-            aria-label="Delete signature"
+            aria-label={DELETE_ARIA_LABEL[field.type]}
             style={{
               // Position: top-right corner of the widget, overlapping the border
               position: 'absolute',
@@ -241,7 +376,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
                 border: 0,
               }}
             >
-              Delete signature
+              {DELETE_SR_ONLY[field.type]}
             </span>
           </button>
         )}
