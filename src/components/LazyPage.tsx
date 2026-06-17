@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Page } from 'react-pdf'
 import { useFieldStore } from '../store/fieldStore'
-import type { PageDimensions, PlacedField } from '../store/fieldStore'
+import type { PlacedField } from '../store/fieldStore'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace } from '../lib/coordinateMapper'
 import { PlacedFieldWidget } from './PlacedFieldWidget'

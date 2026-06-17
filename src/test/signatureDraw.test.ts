@@ -46,9 +46,9 @@ vi.mock('signature_pad', () => {
     _mockToDataURL = vi.fn(() => 'data:image/png;base64,AAAA')
 
     this.isEmpty = () => _mockIsEmpty
-    this.clear = _mockClear
-    this.off = _mockPadOff
-    this.toDataURL = _mockToDataURL
+    this.clear = _mockClear as unknown as () => void
+    this.off = _mockPadOff as unknown as () => void
+    this.toDataURL = _mockToDataURL as unknown as (type?: string) => string
     this.addEventListener = (event: string, cb: () => void) => {
       if (!_mockListeners[event]) _mockListeners[event] = []
       _mockListeners[event].push(cb)

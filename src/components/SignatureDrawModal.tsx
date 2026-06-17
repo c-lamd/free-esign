@@ -91,10 +91,6 @@ export function SignatureDrawModal() {
         const dialog = dialogRef.current
         if (!dialog) return
 
-        // Collect focusable elements in tab order
-        const focusable = dialog.querySelectorAll<HTMLElement>(
-          'button:not([aria-disabled="true"]):not([tabindex="-1"]), canvas[tabindex="0"]',
-        )
         // Include ALL buttons plus canvas (aria-disabled buttons must still be focusable per UI-SPEC)
         const allFocusable = dialog.querySelectorAll<HTMLElement>(
           'button, canvas[tabindex="0"]',

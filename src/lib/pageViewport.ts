@@ -34,7 +34,9 @@
  *                       compatible with coordinateMapper.ts.
  */
 export function makeSimpleViewport(
-  originalWidth: number,
+  // originalWidth is part of the positional API (callers pass page.originalWidth)
+  // but the rotation=0 affine only needs height + scale; prefix to satisfy noUnusedParameters.
+  _originalWidth: number,
   originalHeight: number,
   scale: number,
 ) {

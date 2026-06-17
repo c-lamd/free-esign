@@ -16,7 +16,10 @@ if (
   })
 
   // Stub getContext — returns a minimal 2d-context-like object
-  HTMLCanvasElement.prototype.getContext = function (contextId: string) {
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    contextId: string,
+  ) {
     if (contextId !== '2d') return null
     return {
       scale: () => {},
