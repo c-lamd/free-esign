@@ -6,6 +6,7 @@ import { UploadZone } from './components/UploadZone'
 import { ErrorBanner } from './components/ErrorBanner'
 import { ExportErrorBanner } from './components/ExportErrorBanner'
 import { SignatureDrawModal } from './components/SignatureDrawModal'
+import { InitialsDrawModal } from './components/InitialsDrawModal'
 
 /**
  * App — view-router wired to the Zustand state machine.
@@ -47,6 +48,8 @@ function App() {
       {view === 'loaded' && <DocumentViewer />}
       {/* SignatureDrawModal mounts unconditionally — self-gates on modalOpen */}
       <SignatureDrawModal />
+      {/* InitialsDrawModal mounts unconditionally — self-gates on initialsModalOpen */}
+      <InitialsDrawModal />
     </div>
   )
 }
