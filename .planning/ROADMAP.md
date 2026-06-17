@@ -14,7 +14,7 @@ FreeESign ships as five vertical slices, each delivering an observable end-to-en
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + PDF Viewer** - Scaffold the Vite/React/TS app, build and test the Coordinate Mapper, ingest PDFs and images, and render all pages — nothing leaves the browser (completed 2026-06-16)
-- [ ] **Phase 2: Core Signing Loop** - Place a drawn signature on any page, drag/resize/delete it, and download a zero-alteration signed PDF
+- [x] **Phase 2: Core Signing Loop** - Place a drawn signature on any page, drag/resize/delete it, and download a zero-alteration signed PDF (completed 2026-06-17)
 - [x] **Phase 3: Full Field Types + Workspace Controls** - Add initials, date, text, and checkbox fields; zoom with correct field scaling; multi-page placement; undo/redo; Word doc prompt (completed 2026-06-17)
 - [ ] **Phase 4: Typed Signatures + Signature Persistence** - Type a signature in script fonts; save and reuse signatures and initials across sessions via IndexedDB
 - [ ] **Phase 5: Landing Page + Launch** - Publish the personal hero landing page, pass the privacy audit, deploy to Vercel at free-esign.com
