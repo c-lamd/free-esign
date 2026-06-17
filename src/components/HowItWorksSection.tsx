@@ -24,7 +24,7 @@ export function HowItWorksSection() {
       aria-labelledby="how-it-works-heading"
       style={{
         backgroundColor: 'var(--color-surface-elevated)',
-        padding: '48px 16px',
+        padding: 'clamp(32px, 6vw, 48px) 16px',
       }}
     >
       <div
@@ -90,7 +90,7 @@ export function HowItWorksSection() {
                 {step.number}
               </div>
               <div style={{ flex: 1 }}>
-                <p
+                <h3
                   style={{
                     fontSize: '20px',
                     fontWeight: 600,
@@ -102,7 +102,7 @@ export function HowItWorksSection() {
                   }}
                 >
                   {step.title}
-                </p>
+                </h3>
                 <p
                   style={{
                     fontSize: '16px',

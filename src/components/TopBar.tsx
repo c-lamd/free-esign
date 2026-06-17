@@ -63,6 +63,7 @@ export function TopBar() {
       }}
     >
       <button
+        type="button"
         onClick={() => {
           // Reset placed fields before navigating away so they never leak
           // onto a subsequently loaded document (WR-01 field-leak fix).

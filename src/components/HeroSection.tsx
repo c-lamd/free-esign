@@ -8,7 +8,7 @@ export function HeroSection() {
       aria-labelledby="hero-heading"
       style={{
         backgroundColor: 'var(--color-surface)',
-        padding: '64px 16px',
+        padding: 'clamp(48px, 8vw, 64px) 16px',
         textAlign: 'center',
       }}
     >

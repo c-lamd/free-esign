@@ -14,7 +14,7 @@ export function PrivacySection() {
       aria-labelledby="privacy-heading"
       style={{
         backgroundColor: 'var(--color-surface)',
-        padding: '48px 16px',
+        padding: 'clamp(32px, 6vw, 48px) 16px',
       }}
     >
       <div
