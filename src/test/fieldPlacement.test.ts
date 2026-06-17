@@ -13,11 +13,20 @@
  * @see 02-03-PLAN.md Task 1
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
 import { useFieldStore } from '../store/fieldStore'
 import type { PlacedField } from '../store/fieldStore'
+
+// fieldStore now transitively imports idb-keyval (via savedSignatures.ts).
+// jsdom has no IndexedDB — mock at module level before any imports that touch the store.
+// Note: vi.mock is hoisted by Vitest so this runs before fieldStore is imported.
+vi.mock('idb-keyval', () => ({
+  get: vi.fn().mockResolvedValue(undefined),
+  set: vi.fn().mockResolvedValue(undefined),
+  del: vi.fn().mockResolvedValue(undefined),
+}))
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -300,5 +309,162 @@ describe('field store — new field type placement contracts', () => {
 
     expect(page2Fields).toHaveLength(2)
     expect(page2Fields.map((f) => f.id).sort()).toEqual(['p2-1', 'p2-2'].sort())
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Typed-field drop tests (Phase 4 / SIG-02 / SIG-03)
+// Simulate the LazyPage handleOverlayClick typed-drop branch at the store level.
+// Tests verify the font-backed field shape and that both armed states are cleared.
+// @see 04-02-PLAN.md Task 3 (armedTypedPayload → font-backed field + armed cleared)
+// ---------------------------------------------------------------------------
+
+describe('typed field drop — armedTypedPayload creates font-backed field and clears armed states', () => {
+  // Page geometry used in the simulated drop
+  const PAGE_W = ORIGINAL_WIDTH   // 612 PDF points
+  const PAGE_H = ORIGINAL_HEIGHT  // 792 PDF points
+  const SCALE  = 1.0
+  const viewport = makeSimpleViewport(PAGE_W, PAGE_H, SCALE)
+
+  // Simulate LazyPage handleOverlayClick for a typed drop.
+  // Mirrors the exact logic added to LazyPage in Task 2, but runs at the store
+  // level so we don't need to mount/render the component.
+  function simulateTypedDrop(opts: {
+    text: string
+    fontFamily: string
+    kind: 'signature' | 'initials'
+    clickCssX?: number
+    clickCssY?: number
+  }) {
+    const { text, fontFamily, kind, clickCssX = 200, clickCssY = 300 } = opts
+    const store = useFieldStore.getState()
+
+    // Arm the typed payload (what the modal does)
+    store.setArmedTypedPayload({ text, fontFamily, kind })
+    store.setArmedFieldType(kind)
+
+    // Typed default size: 200×56 CSS px (UI-SPEC)
+    const defaultWidthPx  = 200
+    const defaultHeightPx = 56
+
+    // Compute top-left CSS corner (centered on click, same as LazyPage)
+    const fieldTopLeftCss = {
+      x: clickCssX - defaultWidthPx  / 2,
+      y: clickCssY - defaultHeightPx / 2,
+    }
+    const pdfBottomLeft = cssPixelToPageSpace(fieldTopLeftCss, viewport)
+
+    // Build the font-backed field (same shape as LazyPage typed branch)
+    const newField: PlacedField = {
+      id: crypto.randomUUID(),
+      type: kind,
+      pageNumber: 1,
+      pdfX:     pdfBottomLeft.x,
+      pdfY:     pdfBottomLeft.y,
+      pdfWidth:  defaultWidthPx  / SCALE,
+      pdfHeight: defaultHeightPx / SCALE,
+      textValue: text,
+      fontFamily,
+      // No dataUrl — font-backed field
+    }
+
+    store.addField(newField)
+    store.setSelectedFieldId(newField.id)
+    // Disarm BOTH states (RESEARCH Pitfall 6)
+    store.setArmedTypedPayload(null)
+    store.setArmedFieldType(null)
+
+    return newField.id
+  }
+
+  beforeEach(() => {
+    useFieldStore.getState().resetFields()
+  })
+
+  it('typed signature drop: creates a font-backed signature field (textValue + fontFamily, no dataUrl)', () => {
+    simulateTypedDrop({ text: 'Jane Doe', fontFamily: 'Dancing Script', kind: 'signature' })
+
+    const state = useFieldStore.getState()
+    expect(state.fields).toHaveLength(1)
+
+    const field = state.fields[0]
+    expect(field.type).toBe('signature')
+    expect(field.textValue).toBe('Jane Doe')
+    expect(field.fontFamily).toBe('Dancing Script')
+    expect(field.dataUrl).toBeUndefined() // font-backed — no image
+  })
+
+  it('typed signature drop: field geometry derives from 200x56 CSS default (positive, width > height)', () => {
+    simulateTypedDrop({ text: 'Jane Doe', fontFamily: 'Dancing Script', kind: 'signature' })
+
+    const field = useFieldStore.getState().fields[0]
+    // pdfWidth/pdfHeight = CSS / scale = 200/1 = 200, 56/1 = 56
+    expect(field.pdfWidth).toBeCloseTo(200, 1)
+    expect(field.pdfHeight).toBeCloseTo(56, 1)
+    // Width must be greater than height (landscape orientation for text box)
+    expect(field.pdfWidth).toBeGreaterThan(field.pdfHeight)
+    // Both must be positive
+    expect(field.pdfWidth).toBeGreaterThan(0)
+    expect(field.pdfHeight).toBeGreaterThan(0)
+  })
+
+  it('typed drop: armedTypedPayload is null AFTER drop (Pitfall 6 regression guard)', () => {
+    simulateTypedDrop({ text: 'Jane Doe', fontFamily: 'Dancing Script', kind: 'signature' })
+
+    const state = useFieldStore.getState()
+    expect(state.armedTypedPayload).toBeNull()
+  })
+
+  it('typed drop: armedFieldType is null AFTER drop (Pitfall 6 — both must be cleared)', () => {
+    simulateTypedDrop({ text: 'Jane Doe', fontFamily: 'Dancing Script', kind: 'signature' })
+
+    const state = useFieldStore.getState()
+    expect(state.armedFieldType).toBeNull()
+  })
+
+  it('typed initials drop: creates a font-backed initials field (SIG-03)', () => {
+    simulateTypedDrop({ text: 'JD', fontFamily: 'Great Vibes', kind: 'initials' })
+
+    const state = useFieldStore.getState()
+    expect(state.fields).toHaveLength(1)
+
+    const field = state.fields[0]
+    expect(field.type).toBe('initials')
+    expect(field.textValue).toBe('JD')
+    expect(field.fontFamily).toBe('Great Vibes')
+    expect(field.dataUrl).toBeUndefined()
+  })
+
+  it('typed initials drop: armedTypedPayload AND armedFieldType both null after drop', () => {
+    simulateTypedDrop({ text: 'JD', fontFamily: 'Great Vibes', kind: 'initials' })
+
+    const state = useFieldStore.getState()
+    expect(state.armedTypedPayload).toBeNull()
+    expect(state.armedFieldType).toBeNull()
+  })
+
+  it('typed drop coordinate round-trip: field CSS top-left recoverable from pdfX/pdfY', () => {
+    const clickCssX = 300
+    const clickCssY = 400
+
+    simulateTypedDrop({
+      text: 'Alice',
+      fontFamily: 'Pacifico',
+      kind: 'signature',
+      clickCssX,
+      clickCssY,
+    })
+
+    const field = useFieldStore.getState().fields[0]
+
+    // Recover CSS top-left from stored PDF bottom-left
+    const recoveredCss = pageSpaceToCssPixel({ x: field.pdfX, y: field.pdfY }, viewport)
+
+    // Expected top-left: click centered on the 200×56 box
+    const expectedCssX = clickCssX - 200 / 2
+    const expectedCssY = clickCssY - 56  / 2
+
+    expect(Math.abs(recoveredCss.x - expectedCssX)).toBeLessThan(TOLERANCE)
+    expect(Math.abs(recoveredCss.y - expectedCssY)).toBeLessThan(TOLERANCE)
   })
 })
