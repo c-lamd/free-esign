@@ -61,7 +61,10 @@ const ASSET_LOADING_PATTERNS: Array<{ name: string; re: RegExp }> = [
   { name: 'img src external', re: /<img[^>]+src=["']https?:\/\//i },
   { name: 'iframe src external', re: /<iframe[^>]+src=["']https?:\/\//i },
   { name: 'font-face external url', re: /url\(\s*["']?https?:\/\//i },
-  { name: 'fetch external', re: /fetch\s*\(\s*["']https?:\/\//i },
+  // Matches fetch("https://..."), fetch('https://...'), and fetch(`https://...`).
+  // Variable-based URLs (e.g. fetch(url)) require a separate manual review step
+  // and cannot be caught reliably with a simple regex.
+  { name: 'fetch external', re: /fetch\s*\(\s*["'`]https?:\/\//i },
 ]
 
 describe('PRV-03: zero third-party asset-loading requests', () => {
