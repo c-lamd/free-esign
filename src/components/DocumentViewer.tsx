@@ -41,9 +41,11 @@ export function DocumentViewer() {
   const setCurrentPage = useDocumentStore((s) => s.setCurrentPage)
   const setError = useDocumentStore((s) => s.setError)
 
-  // Field store subscriptions for keyboard delete (FLD-07)
+  // Field store subscriptions for keyboard delete (FLD-07) and undo/redo (FLD-09)
   const selectedFieldId = useFieldStore((s) => s.selectedFieldId)
   const deleteField     = useFieldStore((s) => s.deleteField)
+  const undo            = useFieldStore((s) => s.undo)
+  const redo            = useFieldStore((s) => s.redo)
 
   // Revoke the previous Blob URL after DocumentViewer unmounts or docUrl changes,
   // ensuring revocation happens after react-pdf has released its internal reference.
@@ -55,24 +57,53 @@ export function DocumentViewer() {
     }
   }, [docUrl])
 
-  // FLD-07: Keyboard delete handler — Delete/Backspace removes the selected field.
-  // Security (T-02-07): only fires when:
-  //   1. A field is selected (selectedFieldId !== null)
-  //   2. The event target is NOT an <input>, <textarea>, or contentEditable element
-  //      (guards against deleting a field while typing in a text control)
-  // preventDefault on Backspace prevents browser back-navigation.
+  // Single keydown handler — hosts both Delete/Backspace field deletion (FLD-07)
+  // and Cmd/Ctrl+Z / Shift+Z / Ctrl+Y undo/redo shortcuts (FLD-09).
+  //
+  // Security (T-02-07 / T-03-11): the INPUT/TEXTAREA/contentEditable guard fires FIRST.
+  // All undo/redo branches are placed AFTER this guard so they are never triggered
+  // while a text/date field input is focused.
+  //
+  // Pitfall: the Delete/Backspace branch returns early when !selectedFieldId, but
+  // undo/redo must NOT be blocked by that check — they are positioned before the
+  // Delete/Backspace selection gate so they always run when the guard passes.
+  //
+  // RESEARCH Section 4: extend this handler rather than adding a second
+  // addEventListener, to avoid double-binding and event ordering issues.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
-      if (!selectedFieldId) return
-
-      // T-02-07 guard: do not intercept keystrokes in text input contexts
+      // T-02-07 / T-03-11 guard: do not intercept keystrokes in text input contexts.
+      // This guard is SHARED by both undo/redo and Delete/Backspace branches.
       const target = e.target as HTMLElement | null
       if (target) {
         const tag = target.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA') return
         if (target.isContentEditable) return
       }
+
+      // FLD-09: Undo/Redo keyboard shortcuts.
+      // Placed BEFORE the selectedFieldId check so they work regardless of selection.
+      const isMod = e.metaKey || e.ctrlKey
+      if (isMod && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault()
+        redo()
+        return
+      }
+      if (isMod && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault()
+        undo()
+        return
+      }
+      if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault()
+        redo()
+        return
+      }
+
+      // FLD-07: Delete/Backspace removes the selected field.
+      // Only fires when a field is selected — checked AFTER undo/redo branches.
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (!selectedFieldId) return
 
       // Prevent Backspace from triggering browser back-navigation
       e.preventDefault()
@@ -81,7 +112,7 @@ export function DocumentViewer() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedFieldId, deleteField])
+  }, [selectedFieldId, deleteField, undo, redo])
 
   // Width of the inner constrained container — passed to each LazyPage
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined)

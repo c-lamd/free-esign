@@ -2,6 +2,7 @@ import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
 import { FieldPalette } from './FieldPalette'
+import { UndoRedoControls } from './UndoRedoControls'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -71,6 +72,21 @@ export function TopBar() {
 
       {view === 'loaded' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* UndoRedoControls — leftmost in the loaded group per UI-SPEC order */}
+          <UndoRedoControls />
+
+          {/* Visual separator between undo/redo and field palette */}
+          <div
+            aria-hidden="true"
+            style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: 'var(--color-border)',
+              margin: '0 4px',
+              flexShrink: 0,
+            }}
+          />
+
           {/* FieldPalette — five field type buttons (Signature, Initials, Date, Text, Checkbox) */}
           <FieldPalette />
 
