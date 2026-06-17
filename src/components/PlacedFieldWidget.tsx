@@ -73,13 +73,9 @@ const DELETE_ARIA_LABEL: Record<FieldType, string> = {
   checkbox:  'Delete checkbox field',
 }
 
-const DELETE_SR_ONLY: Record<FieldType, string> = {
-  signature: 'Delete signature',
-  initials:  'Delete initials',
-  date:      'Delete date field',
-  text:      'Delete text field',
-  checkbox:  'Delete checkbox field',
-}
+// DELETE_SR_ONLY was removed (IN-01): the inner sr-only span duplicated the
+// aria-label, causing double announcement ("Delete signature Delete signature").
+// The aria-label on the button is sufficient for screen readers.
 
 // ---------------------------------------------------------------------------
 // Props
@@ -363,24 +359,8 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
               e.currentTarget.style.backgroundColor = 'var(--color-destructive)'
             }}
           >
-            {/* Visible × character */}
+            {/* Visible × character — aria-label on the button provides the accessible name */}
             ×
-            {/* Screen-reader text (sr-only) */}
-            <span
-              style={{
-                position: 'absolute',
-                width: '1px',
-                height: '1px',
-                padding: 0,
-                margin: '-1px',
-                overflow: 'hidden',
-                clip: 'rect(0,0,0,0)',
-                whiteSpace: 'nowrap',
-                border: 0,
-              }}
-            >
-              {DELETE_SR_ONLY[field.type]}
-            </span>
           </button>
         )}
       </Rnd>
