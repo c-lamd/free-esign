@@ -72,7 +72,12 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   setOriginalPdfBytes: (originalPdfBytes) => set({ originalPdfBytes }),
   setFileName: (fileName) => set({ fileName }),
   setExportError: (exportError) => set({ exportError }),
-  setZoom: (zoom) => set({ zoom }),
+  setZoom: (zoom) => {
+    // Guard: ignore values not in ZOOM_STEPS to prevent stuck zoom buttons
+    // when zoom holds an out-of-range value (indexOf returns -1 in ZoomControl).
+    if (!ZOOM_STEPS.includes(zoom as ZoomStep)) return
+    set({ zoom })
+  },
   reset: () =>
     set({
       view: 'empty',

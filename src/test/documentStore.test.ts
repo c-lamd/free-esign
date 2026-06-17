@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useDocumentStore, ZOOM_STEPS } from '../store/documentStore'
+import { useDocumentStore, ZOOM_STEPS, type ZoomStep } from '../store/documentStore'
 
 describe('documentStore', () => {
   beforeEach(() => {
@@ -99,6 +99,15 @@ describe('documentStore', () => {
     const store = useDocumentStore.getState()
     store.setZoom(1.5)
     expect(useDocumentStore.getState().zoom).toBe(1.5)
+  })
+
+  it('WR-01: setZoom ignores values not in ZOOM_STEPS (out-of-range guard)', () => {
+    const store = useDocumentStore.getState()
+    store.setZoom(1.0) // valid baseline
+    // Cast through unknown to bypass TypeScript's type guard — tests the runtime guard
+    store.setZoom(0.6 as unknown as ZoomStep)
+    // 0.6 is not in ZOOM_STEPS — zoom must remain 1.0
+    expect(useDocumentStore.getState().zoom).toBe(1.0)
   })
 
   it('ZOOM_STEPS equals [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]', () => {
