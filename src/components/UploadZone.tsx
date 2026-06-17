@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useDocumentStore } from '../store/documentStore'
 import { validateFile } from '../lib/fileValidation'
 import { wrapImageAsPdfWithBytes } from '../lib/imageWrapper'
+import { WordDocBanner } from './WordDocBanner'
 
 /**
  * UploadZone — full-screen drag-and-drop + Browse empty state.
@@ -26,6 +27,7 @@ export function UploadZone() {
   const setFileName = useDocumentStore((s) => s.setFileName)
 
   const [isDragOver, setIsDragOver] = useState(false)
+  const [wordDocMode, setWordDocMode] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   /**
@@ -40,7 +42,19 @@ export function UploadZone() {
    */
   const handleFile = useCallback(
     async (file: File) => {
+      // Reset word-doc mode at the start of any new file pick — ensures that
+      // a subsequent valid file clears the banner without needing the "Choose a
+      // PDF instead" button.
+      setWordDocMode(false)
+
       const validationError = validateFile(file)
+
+      // Word-doc detected — show friendly guidance banner, never a generic error
+      // and never attempt a silent conversion (DOC-05, T-03-05).
+      if (validationError === 'word-doc') {
+        setWordDocMode(true)
+        return
+      }
 
       if (validationError === 'unsupported-type') {
         setError(
@@ -199,6 +213,11 @@ export function UploadZone() {
       style={zoneStyle}
     >
       <div style={contentColumnStyle}>
+        {/* Word-doc guidance banner — swaps out upload content (DOC-05) */}
+        {wordDocMode ? (
+          <WordDocBanner onChoosePdf={() => setWordDocMode(false)} />
+        ) : (
+          <>
         {/* Upload icon — 48×48, secondary color (UI-SPEC) */}
         <svg
           width="48"
@@ -313,6 +332,8 @@ export function UploadZone() {
         >
           Your files never leave your browser.
         </p>
+          </>
+        )}
       </div>
     </div>
   )
