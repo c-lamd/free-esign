@@ -130,7 +130,12 @@ Plans:
   3. A DevTools Network audit of the full signing workflow (open PDF, place fields, download) shows zero requests to analytics, tracking, or error-reporting third parties
   4. The app is live and accessible at free-esign.com served from the Vercel deployment
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+
+- [ ] 05-01-PLAN.md — Landing slice (Wave 1): 'landing' ViewState as initial view + goToLanding()/startSigning(), src/config.ts BMC constant, LandingPage + Header/Hero/HowItWorks/Privacy/Footer, App.tsx + TopBar wiring, favicon fix + meta, landingPage.test.tsx + documentStore.test.ts update (LND-01, LND-02, LND-03)
+- [ ] 05-02-PLAN.md — Privacy posture + deploy-readiness (Wave 2): privacyGuard.test.ts source-scan (PRV-03) + vercel.json analytics-key assertion, vercel.json catch-all SPA rewrite, build verification, README deploy runbook, human-verify checkpoint for deferred live deploy/DNS/audit (PRV-03, LND-04)
+
 **UI hint**: yes
 
 ## Progress
@@ -144,4 +149,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Core Signing Loop | 4/4 | Complete   | 2026-06-17 |
 | 3. Full Field Types + Workspace Controls | 5/5 | Complete   | 2026-06-17 |
 | 4. Typed Signatures + Signature Persistence | 3/3 | Complete   | 2026-06-17 |
-| 5. Landing Page + Launch | 0/TBD | Not started | - |
+| 5. Landing Page + Launch | 0/2 | Planned | - |
