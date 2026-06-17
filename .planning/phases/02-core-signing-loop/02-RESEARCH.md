@@ -904,7 +904,7 @@ function handlePageClick(
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **pdf-lib-incremental-save API stability**
    - What we know: The library is a fork of pdf-lib 1.17.x, version 1.17.4, published Jan 2024, 5330 weekly downloads, 11 stars
