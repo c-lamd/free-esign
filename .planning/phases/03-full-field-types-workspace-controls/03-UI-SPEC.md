@@ -1,10 +1,11 @@
 ---
 phase: 3
 slug: full-field-types-workspace-controls
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-17
+reviewed_at: 2026-06-17
 ---
 
 # Phase 3 — UI Design Contract
@@ -99,8 +100,9 @@ All tokens are already declared in `src/index.css`. Phase 3 adds no new CSS cust
 9. Focus rings on all interactive elements (Phase 2 pattern — unchanged)
 10. **Active/armed field-palette button background** — the currently armed field type button gets accent background to signal which type is armed
 11. **Undo/redo buttons** — focus ring only (same 2px outline pattern); no accent fill; ghost style matching TopBar ghost buttons
+12. **Zoom +/− button hover icon** — on hover (enabled), the zoom-out/zoom-in glyph adopts `--color-accent` to signal affordance (icon color only; the pill background/fill stays neutral)
 
-Accent is NOT used for: the word-doc banner background, unselected palette buttons, zoom control fills, date/text field input borders, placement banner background.
+Accent is NOT used for: the word-doc banner background, unselected palette buttons, zoom control fills (background), date/text field input borders, placement banner background.
 
 **Active palette button:** Armed state uses accent background (#2563EB) with white text (14px/400). Unarmed state is ghost (no background, `--color-text-secondary` label, same style as "Add signature" trigger in Phase 2 TopBar). On hover (unarmed): label color shifts to `--color-text-primary`.
 
@@ -189,7 +191,7 @@ Phase 2 PlacedFieldWidget is extended to render four additional field types. The
 
 **Date field:**
 - Content: a single-line `<input type="text">` filling the widget bounds.
-- Input style: `width: 100%; height: 100%; border: 1px solid var(--color-border); border-radius: 3px; padding: 2px 4px; font-size: 14px; font-weight: 400; font-family: inherit; color: var(--color-text-primary); background: transparent; box-sizing: border-box; outline: none`
+- Input style: `width: 100%; height: 100%; border: 1px solid var(--color-border); border-radius: 3px; padding: 0 4px; font-size: 14px; font-weight: 400; font-family: inherit; color: var(--color-text-primary); background: transparent; box-sizing: border-box; outline: none`
 - Focus state: `border-color: var(--color-accent)` (via onFocus/onBlur handlers, same inline-style pattern)
 - Default value: today's date in `M/D/YYYY` format (e.g., "6/17/2026"), computed at field creation via `new Date()`. The user may edit the literal string freely.
 - `lockAspectRatio={false}` — date fields can be resized freely in both dimensions.
