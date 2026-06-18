@@ -4,6 +4,7 @@ import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportP
 import { FieldPalette } from './FieldPalette'
 import { UndoRedoControls } from './UndoRedoControls'
 import { Wordmark } from './Wordmark'
+import { HardwareKey } from './ui/HardwareKey'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -193,40 +194,12 @@ export function TopBar() {
             Download PDF
           </button>
 
-          <button
+          <HardwareKey
             onClick={handleOpenAnother}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 400,
-              color: 'var(--color-text-secondary)',
-              padding: '8px',
-              minHeight: '44px',
-              minWidth: '44px',
-              borderRadius: '4px',
-              outline: 'none',
-            }}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-accent)'
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.color =
-                'var(--color-text-secondary)'
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.outline = '2px solid var(--color-accent)'
-              e.currentTarget.style.outlineOffset = '2px'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.outline = 'none'
-            }}
             aria-label="Open another document"
           >
             Open another
-          </button>
+          </HardwareKey>
         </div>
       )}
     </header>
