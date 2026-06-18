@@ -6,6 +6,7 @@ import { useDocumentStore } from '../store/documentStore'
 import { makeSimpleViewport } from '../lib/pageViewport'
 import { cssPixelToPageSpace } from '../lib/coordinateMapper'
 import { PlacedFieldWidget } from './PlacedFieldWidget'
+import { RegistrationMarks } from './RegistrationMarks'
 
 interface LazyPageProps {
   pageNumber: number
@@ -277,6 +278,12 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         width: containerWidth ?? '100%',
       }}
     >
+      {/* EDT-04: Registration/crop marks at page corners — absolute sibling, pointer-events:none.
+          Must NOT be a wrapper around <Page> — that would create a new containing block and
+          shift the inset:0 overlay origin (PAR-03 / 07-RESEARCH Pattern 1 critical constraint).
+          Rendered as a SIBLING of <Page> and the overlay div so layout is unaffected. */}
+      {isVisible && <RegistrationMarks />}
+
       {isVisible && (
         <Page
           pageNumber={pageNumber}

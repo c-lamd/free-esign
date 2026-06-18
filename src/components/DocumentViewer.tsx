@@ -210,7 +210,13 @@ export function DocumentViewer() {
       <div
         ref={scrollContainerRef}
         style={{
-          backgroundColor: 'var(--color-canvas)',
+          // EDT-04: warm bone worktable background (same visual value as --color-canvas).
+          // backgroundImage adds the dotted grid — background-image has NO layout effect.
+          // Do NOT add padding/border here (PAR-03: scroll container box model untouched).
+          backgroundColor: 'var(--color-bg)',
+          backgroundImage: 'radial-gradient(var(--color-line-strong) 1px, transparent 1px)',
+          backgroundSize: '16px 16px',
+          backgroundPosition: '-1px -1px',
           minHeight: 'calc(100dvh - 56px)',
           overflowY: 'auto',
           paddingTop: '24px',
