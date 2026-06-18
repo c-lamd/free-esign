@@ -13,8 +13,8 @@
  * - The .wm-mark span is aria-hidden (decorative mark).
  * - The ::after pseudo-element is delivered via a component-local <style> block
  *   (React inline styles cannot set pseudo-elements).
- * - Style injection is guarded by a module-level boolean to avoid accumulating
- *   duplicate <style> tags across multiple Wordmark instances (06-RESEARCH Pitfall 5).
+ * - Style injection is guarded by a data-attribute sentinel (matches HardwareKey
+ *   pattern) to survive jsdom DOM replacement between test files (06-RESEARCH Pitfall 5).
  * - Typography: 2-weight system — middot is weight 600 (semibold), NOT 700;
  *   the sketch's 700 is collapsed to 600 per 06-UI-SPEC (negligible at 15px).
  * - Tokens consumed: var(--color-ink), var(--color-accent), var(--font-sans)
@@ -27,9 +27,10 @@ import React from 'react'
 
 // ── Component-local CSS for .wm-mark::after (cannot be set via inline styles) ─
 // Ported verbatim from visual-foundation.md § Key CSS.
-// Guard prevents duplicate <style> injection across multiple instances.
+// Guard uses a data-attribute sentinel (matches HardwareKey pattern) so it
+// survives jsdom DOM replacement between test files (06-RESEARCH Pitfall 5).
 
-let styleInjected = false
+const WM_STYLE_ATTR = 'data-wm-css'
 
 const WM_CSS = `
 .wm-mark {
@@ -46,6 +47,10 @@ const WM_CSS = `
   inset: 2px;
   background: linear-gradient(135deg, var(--color-accent) 0 45%, transparent 45%);
 }
+.wm-dot {
+  color: var(--color-accent);
+  font-weight: 600;
+}
 `
 
 // ── Wordmark component ────────────────────────────────────────────────────────
@@ -55,12 +60,14 @@ interface WordmarkProps {
 }
 
 export function Wordmark({ className }: WordmarkProps) {
-  // Inject the <style> block once per document (module-level guard).
-  if (!styleInjected && typeof document !== 'undefined') {
+  // Inject the <style> block once per document (data-attribute sentinel guard).
+  // Using document.head.querySelector instead of a module-level boolean ensures
+  // the guard survives jsdom DOM replacement between test files.
+  if (typeof document !== 'undefined' && !document.head.querySelector(`[${WM_STYLE_ATTR}]`)) {
     const el = document.createElement('style')
+    el.setAttribute(WM_STYLE_ATTR, '1')
     el.textContent = WM_CSS
     document.head.appendChild(el)
-    styleInjected = true
   }
 
   return (
@@ -92,15 +99,8 @@ export function Wordmark({ className }: WordmarkProps) {
       >
         free
         {/* Middot: U+00B7, accent-colored, weight 600 (2-weight system — not 700) */}
-        <span
-          className="wm-dot"
-          style={{
-            color: 'var(--color-accent)',
-            fontWeight: 600,
-          }}
-        >
-          ·
-        </span>
+        {/* Styled via .wm-dot rule in WM_CSS — inline style removed (WR-02) */}
+        <span className="wm-dot">·</span>
         esign
       </span>
     </span>
