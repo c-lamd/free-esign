@@ -186,7 +186,7 @@ export function ZoomKnob() {
     // toward the face edge; bottom half anchors at center, top half points outward
     transformOrigin: 'center bottom',
     transform: `rotate(${-135 + deg}deg)`,
-    top: '7px', // position from top of face, pivot at bottom = center of 64px face (7px + half)
+    top: '10px', // position from top of face, pivot at bottom = center of 64px face (10px + 22px = 32px ✓)
     left: 'calc(50% - 1px)',
     zIndex: 3,
   }
