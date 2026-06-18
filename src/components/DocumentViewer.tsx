@@ -13,7 +13,7 @@ import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { LazyPage } from './LazyPage'
 import { PageNavigation } from './PageNavigation'
-import { ZoomControl } from './ZoomControl'
+import { ZoomKnob } from './ZoomKnob'
 import { LoadingSpinner } from './LoadingSpinner'
 import { PlacementModeOverlay } from './PlacementModeOverlay'
 
@@ -265,8 +265,8 @@ export function DocumentViewer() {
           <PageNavigation scrollContainerRef={scrollContainerRef} />
         )}
 
-        {/* ZoomControl pill: fixed bottom, to the left of PageNavigation */}
-        <ZoomControl />
+        {/* ZoomKnob: rotary zoom control, fixed bottom — replaces ZoomControl pill (EDT-05) */}
+        <ZoomKnob />
       </div>
     </>
   )
