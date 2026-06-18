@@ -79,10 +79,16 @@ function injectStyles() {
   border-bottom-color: var(--color-accent-press);
 }
 
+.hw-key.hw-key--armed:hover {
+  border-color: var(--color-accent);         /* keep accent border on armed hover */
+  border-bottom-color: var(--color-accent-press);
+}
+
 .hw-key[aria-disabled="true"] {
   opacity: 0.5;
   pointer-events: none;
-  cursor: not-allowed;
+  /* cursor: not-allowed is omitted — pointer-events:none prevents the cursor
+     from being shown, making that rule dead CSS (WR-01). */
 }
 `
   document.head.appendChild(style)
