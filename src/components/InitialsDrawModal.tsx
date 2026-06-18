@@ -544,7 +544,7 @@ export function InitialsDrawModal() {
             style={getAccentButtonStyle(hasStrokes)}
             onMouseEnter={(e) => {
               if (hasStrokes) {
-                e.currentTarget.style.backgroundColor = '#1D4ED8'
+                e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)'
               }
             }}
             onMouseLeave={(e) => {
@@ -776,7 +776,7 @@ export function InitialsDrawModal() {
           style={getAccentButtonStyle(!!typedText)}
           onMouseEnter={(e) => {
             if (typedText) {
-              e.currentTarget.style.backgroundColor = '#1D4ED8'
+              e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)'
             }
           }}
           onMouseLeave={(e) => {
@@ -887,7 +887,7 @@ export function InitialsDrawModal() {
           style={getAccentButtonStyle(!!selectedSavedId)}
           onMouseEnter={(e) => {
             if (selectedSavedId) {
-              e.currentTarget.style.backgroundColor = '#1D4ED8'
+              e.currentTarget.style.backgroundColor = 'var(--color-accent-hover)'
             }
           }}
           onMouseLeave={(e) => {

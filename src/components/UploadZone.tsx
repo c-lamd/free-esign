@@ -281,7 +281,7 @@ export function UploadZone() {
           onKeyDown={handleBrowseKeyDown}
           onMouseEnter={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              '#1D4ED8'
+              'var(--color-accent-hover)'
           }}
           onMouseLeave={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =

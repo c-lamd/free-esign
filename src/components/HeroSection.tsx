@@ -97,17 +97,20 @@ export function HeroSection() {
             outline: 'none',
           }}
           onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1D4ED8'
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-accent-hover)'
           }}
           onMouseLeave={(e) => {
             ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
               'var(--color-accent)'
           }}
           onMouseDown={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1E40AF'
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-accent-press)'
           }}
           onMouseUp={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1D4ED8'
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'var(--color-accent-hover)'
           }}
           onFocus={(e) => {
             e.currentTarget.style.outline = '2px solid var(--color-accent)'

@@ -92,7 +92,7 @@ export function FieldPalette() {
             onMouseEnter={(e) => {
               const btn = e.currentTarget as HTMLButtonElement
               if (isArmed) {
-                btn.style.backgroundColor = '#1D4ED8'
+                btn.style.backgroundColor = 'var(--color-accent-hover)'
               } else {
                 btn.style.color = 'var(--color-text-primary)'
               }

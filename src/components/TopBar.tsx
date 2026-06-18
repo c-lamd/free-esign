@@ -163,7 +163,7 @@ export function TopBar() {
             onMouseEnter={(e) => {
               if (!isDownloadDisabled) {
                 ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  '#1D4ED8'
+                  'var(--color-accent-hover)'
               }
             }}
             onMouseLeave={(e) => {
@@ -173,13 +173,13 @@ export function TopBar() {
             onMouseDown={(e) => {
               if (!isDownloadDisabled) {
                 ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  '#1E40AF'
+                  'var(--color-accent-press)'
               }
             }}
             onMouseUp={(e) => {
               if (!isDownloadDisabled) {
                 ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  '#1D4ED8'
+                  'var(--color-accent-hover)'
               }
             }}
             onFocus={(e) => {
