@@ -3,6 +3,7 @@ import { useDocumentStore } from '../store/documentStore'
 import { validateFile } from '../lib/fileValidation'
 import { wrapImageAsPdfWithBytes } from '../lib/imageWrapper'
 import { WordDocBanner } from './WordDocBanner'
+import { HardwareKey } from './ui/HardwareKey'
 
 /**
  * UploadZone — full-screen drag-and-drop + Browse empty state.
@@ -159,7 +160,7 @@ export function UploadZone() {
   const zoneStyle: React.CSSProperties = {
     minHeight: 'calc(100dvh - 56px)',
     backgroundColor: isDragOver
-      ? 'rgba(255, 255, 255, 0.4)'
+      ? 'var(--color-accent-soft)'
       : 'var(--color-surface)',
     display: 'flex',
     alignItems: 'center',
@@ -174,34 +175,6 @@ export function UploadZone() {
     userSelect: 'none',
   }
 
-  const contentColumnStyle: React.CSSProperties = {
-    maxWidth: '480px',
-    width: '100%',
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0',
-  }
-
-  const browseButtonStyle: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'var(--color-accent)',
-    color: '#FFFFFF',
-    fontSize: '14px',
-    fontWeight: 400,
-    padding: '8px 16px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    minHeight: '44px',
-    minWidth: '44px',
-    border: 'none',
-    fontFamily: 'inherit',
-    // Focus ring applied via onFocus/onBlur handlers for IE11-safe focus management
-  }
-
   return (
     <div
       role="region"
@@ -212,126 +185,109 @@ export function UploadZone() {
       onDrop={handleDrop}
       style={zoneStyle}
     >
-      <div style={contentColumnStyle}>
+      <div
+        style={{
+          maxWidth: '480px',
+          width: '100%',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0',
+        }}
+      >
         {/* Word-doc guidance banner — swaps out upload content (DOC-05) */}
         {wordDocMode ? (
           <WordDocBanner onChoosePdf={() => setWordDocMode(false)} />
         ) : (
           <>
-        {/* Upload icon — 48×48, secondary color (UI-SPEC) */}
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            display: 'inline-block',
-            marginBottom: '16px',
-            color: 'var(--color-text-secondary)',
-          }}
-          aria-hidden="true"
-        >
-          <path
-            d="M24 8L24 32M24 8L16 16M24 8L32 16"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M8 36V40H40V36"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+            {/* Drop bay — dashed instrument-panel "insert document" frame (LND-06) */}
+            <div
+              style={{
+                border: isDragOver
+                  ? '2px dashed var(--color-accent)'
+                  : '2px dashed var(--color-border)',
+                borderRadius: '8px',
+                padding: '32px 24px',
+                width: '100%',
+                maxWidth: '400px',
+                background: 'var(--color-canvas)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '16px',
+              }}
+            >
+              {/* Primary label — mono chrome label (UI-SPEC § Surface 2) */}
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                  letterSpacing: '0.1em',
+                  margin: 0,
+                }}
+              >
+                ▼ INSERT DOCUMENT
+              </p>
 
-        {/* Heading — "Drop your document here" (copy contract) */}
-        <h1
-          style={{
-            fontSize: '20px',
-            fontWeight: 600,
-            lineHeight: 1.2,
-            color: 'var(--color-text-primary)',
-            margin: '0 0 8px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          }}
-        >
-          Drop your document here
-        </h1>
+              {/* Browse trigger — HardwareKey (replaces ad-hoc button) */}
+              <HardwareKey
+                onClick={handleBrowseClick}
+                aria-label="Browse files to open"
+              >
+                ⏏ BROWSE FILES
+              </HardwareKey>
 
-        {/* Secondary prompt — "or" (copy contract) */}
-        <p
-          style={{
-            fontSize: '16px',
-            fontWeight: 400,
-            color: 'var(--color-text-secondary)',
-            margin: '0 0 12px',
-          }}
-        >
-          or
-        </p>
+              {/* Status line — static privacy architecture display (aria-hidden) */}
+              <p
+                aria-hidden="true"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: 400,
+                  color: 'var(--color-ink-faint)',
+                  letterSpacing: '0.08em',
+                  margin: 0,
+                }}
+              >
+                FILE — none · ENGINE — client-side · NET — 0 requests
+              </p>
+            </div>
 
-        {/* Browse files button — min 44×44 touch target (UI-SPEC accessibility) */}
-        <button
-          type="button"
-          onClick={handleBrowseClick}
-          onKeyDown={handleBrowseKeyDown}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              'var(--color-accent-hover)'
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              'var(--color-accent)'
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid var(--color-accent)'
-            e.currentTarget.style.outlineOffset = '2px'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.outline = 'none'
-            e.currentTarget.style.backgroundColor = 'var(--color-accent)'
-          }}
-          style={browseButtonStyle}
-          aria-label="Browse files to open"
-        >
-          Browse files
-        </button>
+            {/* Visually-hidden file input — activated by Browse key (accept list unchanged) */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileInputChange}
+              aria-hidden="true"
+              tabIndex={-1}
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                border: '0',
+              }}
+            />
 
-        {/* Visually-hidden file input — activated by Browse button */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={handleFileInputChange}
-          aria-hidden="true"
-          tabIndex={-1}
-          style={{
-            position: 'absolute',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-            clip: 'rect(0, 0, 0, 0)',
-            whiteSpace: 'nowrap',
-            border: '0',
-          }}
-        />
-
-        {/* Privacy line — "Your files never leave your browser." (copy contract) */}
-        <p
-          style={{
-            fontSize: '16px',
-            fontWeight: 400,
-            color: 'var(--color-text-secondary)',
-            marginTop: '24px',
-            marginBottom: 0,
-          }}
-        >
-          Your files never leave your browser.
-        </p>
+            {/* Privacy line — below the drop bay (copy contract: verbatim) */}
+            <p
+              style={{
+                fontFamily: 'system-ui',
+                fontSize: '14px',
+                fontWeight: 400,
+                color: 'var(--color-text-secondary)',
+                marginTop: '16px',
+                marginBottom: 0,
+              }}
+            >
+              Your files never leave your browser.
+            </p>
           </>
         )}
       </div>
