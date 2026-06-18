@@ -61,10 +61,9 @@ describe('LandingPage', () => {
     expect(bmcLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  // TODO (IN-03): Before shipping, replace BUY_ME_A_COFFEE_URL = 'https://www.buymeacoffee.com/PLACEHOLDER'
-  // in src/config.ts with the real handle. The test below is intentionally skipped while
-  // the placeholder is in place during development. Un-skip it (change it.skip → it) before launch.
-  it.skip('BUY_ME_A_COFFEE_URL does not contain PLACEHOLDER (un-skip before launch)', async () => {
+  // IN-03: Real BMC handle is set in src/config.ts for launch (was PLACEHOLDER during
+  // development). This guard stays active to catch any accidental regression to a placeholder.
+  it('BUY_ME_A_COFFEE_URL does not contain PLACEHOLDER (un-skip before launch)', async () => {
     const { BUY_ME_A_COFFEE_URL } = await import('../config')
     expect(BUY_ME_A_COFFEE_URL).not.toMatch(/PLACEHOLDER/)
   })
