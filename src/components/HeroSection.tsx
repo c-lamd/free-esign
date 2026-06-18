@@ -112,7 +112,7 @@ export function HeroSection() {
         </div>
 
         {/* ── L3 Device illustration (aria-hidden decorative CSS art) ── */}
-        <div aria-hidden="true" data-testid="l3-device" style={{ flexShrink: 0 }}>
+        <div aria-hidden="true" data-testid="l3-device" style={{ flexShrink: 0, pointerEvents: 'none' }}>
           <L3Device />
         </div>
       </div>
