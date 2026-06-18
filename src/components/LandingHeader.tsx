@@ -1,5 +1,6 @@
 import { useDocumentStore } from '../store/documentStore'
 import { Wordmark } from './Wordmark'
+import { HardwareKey } from './ui/HardwareKey'
 
 export function LandingHeader() {
   const startSigning = useDocumentStore((s) => s.startSigning)
@@ -30,39 +31,13 @@ export function LandingHeader() {
           <Wordmark />
         </span>
 
-        <button
-          type="button"
+        {/* Secondary CTA — resting key (no armed prop); HardwareKey manages own press/focus */}
+        <HardwareKey
           onClick={startSigning}
           aria-label="Sign a document — opens the document uploader"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 400,
-            color: 'var(--color-accent)',
-            padding: '12px 0',
-            minHeight: '44px',
-            fontFamily: 'inherit',
-            outline: 'none',
-            textDecoration: 'none',
-          }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.textDecoration = 'underline'
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.textDecoration = 'none'
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid var(--color-accent)'
-            e.currentTarget.style.outlineOffset = '2px'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.outline = 'none'
-          }}
         >
-          Sign a document
-        </button>
+          SIGN ▶
+        </HardwareKey>
       </div>
     </header>
   )
