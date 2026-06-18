@@ -116,13 +116,15 @@ describe('LcdReadout — live status with document loaded', () => {
     const { useDocumentStore } = await getStores()
     const { LcdReadout } = await import('../components/LcdReadout')
 
-    // Render and then update zoom reactively
-    let statusEl: Element | null = null
+    // Render and capture the container (not just the element reference)
+    let container!: HTMLElement
     await act(async () => {
       const result = render(React.createElement(LcdReadout))
-      statusEl = result.container.querySelector('[role="status"]')
+      container = result.container
     })
 
+    const statusEl = container.querySelector('[role="status"]')
+    expect(statusEl).not.toBeNull()
     expect(statusEl!.textContent).toContain('ZM 100')
 
     // Update zoom to 1.5 via the store
@@ -130,7 +132,7 @@ describe('LcdReadout — live status with document loaded', () => {
       useDocumentStore.getState().setZoom(1.5)
     })
 
-    // Re-query after update
-    expect(statusEl!.textContent).toContain('ZM 150')
+    // Re-query from the same container — React has updated the DOM in place
+    expect(container.querySelector('[role="status"]')!.textContent).toContain('ZM 150')
   })
 })
