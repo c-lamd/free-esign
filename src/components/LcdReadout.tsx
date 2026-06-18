@@ -71,8 +71,8 @@ export function LcdReadout() {
         {'● ORIG.BYTES OK'}
       </div>
 
-      {/* Live status line — polite, atomic for screen readers */}
-      <div role="status" aria-live="polite" aria-atomic="true" style={rowStyle}>
+      {/* Live status line — role="status" implies aria-live="polite" + aria-atomic="true" per ARIA spec */}
+      <div role="status" style={rowStyle}>
         {`${pgStr} · ${zmStr} · ${fldStr}`}
       </div>
 
