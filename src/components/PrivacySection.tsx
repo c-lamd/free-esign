@@ -136,7 +136,7 @@ export function PrivacySection() {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'var(--color-accent)',
-              color: '#FFFFFF',
+              color: 'var(--color-on-accent)',
               fontSize: '16px',
               fontWeight: 600,
               padding: '12px 32px',
