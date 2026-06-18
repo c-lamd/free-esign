@@ -28,6 +28,7 @@
   --color-on-accent:        #FFFFFF;  /* text color on accent background */
   --color-accent-soft:      #FFE7DC;  /* accent tint background (field highlights in Phase 7) */
   --color-accent-line:      #FF4D00;  /* accent-colored borders, outlines */
+  --color-lcd-bg:           #15120E;  /* LCD readout display background (07-RESEARCH "New token to add") */
 
   /* === Typography — system stacks, no @font-face, no external request (FND-02 / PAR-02) === */
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;

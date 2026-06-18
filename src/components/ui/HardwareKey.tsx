@@ -20,6 +20,7 @@ export interface HardwareKeyProps {
   onClick?: () => void
   type?: 'button' | 'submit'
   'aria-label'?: string
+  'aria-pressed'?: boolean | 'true' | 'false'
   disabled?: boolean
   className?: string
 }
@@ -102,6 +103,7 @@ export function HardwareKey({
   onClick,
   type = 'button',
   'aria-label': ariaLabel,
+  'aria-pressed': ariaPressed,
   disabled = false,
   className,
 }: HardwareKeyProps) {
@@ -123,6 +125,7 @@ export function HardwareKey({
       type={type}
       className={classes}
       aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
       aria-disabled={disabled ? 'true' : undefined}
       // Click guard: never fire onClick when disabled
       onClick={disabled ? undefined : onClick}
