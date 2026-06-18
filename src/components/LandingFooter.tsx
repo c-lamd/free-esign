@@ -24,14 +24,15 @@ export function LandingFooter() {
 
         <p
           style={{
-            fontSize: '14px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
             fontWeight: 400,
-            color: 'var(--color-text-secondary)',
-            marginBottom: '24px',
-            margin: '0 0 24px',
+            color: 'var(--color-ink-faint)',
+            letterSpacing: '0.1em',
+            margin: '8px 0 24px',
           }}
         >
-          Sign your documents privately, in your browser.
+          SIGN · PRIVATELY · IN YOUR BROWSER
         </p>
 
         <a
