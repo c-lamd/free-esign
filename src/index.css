@@ -1,14 +1,41 @@
 @import "tailwindcss";
 
+/* Source: docs/design/themes/default.css (locked design contract — Phase 6 retheme) */
 :root {
-  --color-surface: #F9FAFB;
-  --color-surface-elevated: #FFFFFF;
-  --color-canvas: #E5E7EB;
-  --color-accent: #2563EB;
-  --color-destructive: #DC2626;
-  --color-text-primary: #111827;
-  --color-text-secondary: #6B7280;
-  --color-border: #D1D5DB;
+  /* === Existing tokens — names preserved, values remapped to warm bone / Signal Orange === */
+  --color-surface:          #F5F2EA;  /* control panels, component backgrounds */
+  --color-surface-elevated: #FCFBF7;  /* document page surface (paper white) */
+  --color-canvas:           #E4DFD3;  /* worktable backdrop */
+  --color-accent:           #FF4D00;  /* Signal Orange — primary interactive accent */
+  --color-destructive:      #DC2626;  /* unchanged — red is correct for destructive actions */
+  --color-text-primary:     #1A1714;  /* near-black ink for primary text */
+  --color-text-secondary:   #726A5D;  /* warm muted for secondary labels */
+  --color-border:           #D0C8B7;  /* hairline rules, subtle separators */
+
+  /* === New tokens for Wordmark, HardwareKey, and Phase 7/8 components === */
+  --color-bg:               #E4DFD3;  /* worktable backdrop (canonical name, same value as --color-canvas) */
+  --color-bg-2:             #D9D3C4;  /* deeper grooves, recessed areas */
+  --color-surface-2:        #ECE7DB;  /* recessed panels, inset areas */
+  --color-ink:              #1A1714;  /* direct CSS properties (same value as --color-text-primary) */
+  --color-ink-muted:        #726A5D;  /* canonical name for CSS usage (same as --color-text-secondary) */
+  --color-ink-faint:        #A89F8E;  /* hairline micro-labels, placeholder text */
+  --color-line:             #D0C8B7;  /* hairlines (same value as --color-border) */
+  --color-line-strong:      #B4AB99;  /* stronger rules, key borders, active separators */
+  --color-key:              #F0ECE1;  /* hardware key face (button resting background) */
+  --color-key-edge:         #C6BEAD;  /* key physical bottom border (press depth visual) */
+  --color-accent-hover:     #E64500;  /* Signal Orange hover state */
+  --color-accent-press:     #C23A00;  /* Signal Orange pressed state */
+  --color-on-accent:        #FFFFFF;  /* text color on accent background */
+  --color-accent-soft:      #FFE7DC;  /* accent tint background (field highlights in Phase 7) */
+  --color-accent-line:      #FF4D00;  /* accent-colored borders, outlines */
+
+  /* === Typography — system stacks, no @font-face, no external request (FND-02 / PAR-02) === */
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
+
+  /* === Shape === */
+  --radius:     3px;  /* tight hardware radius for panels, chips */
+  --radius-key: 5px;  /* hardware key border radius */
 }
 
 @font-face {
