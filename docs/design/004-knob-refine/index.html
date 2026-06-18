@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>free·esign — knob refine</title>
+<link rel="stylesheet" href="../themes/default.css" id="theme-css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); color: var(--color-ink); background: var(--color-bg);
+    -webkit-font-smoothing: antialiased; padding-top: 44px; user-select: none; }
+  .mono { font-family: var(--font-mono); }
+
+  #sketch-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 9998; height: 44px; display: flex;
+    align-items: center; gap: 16px; padding: 0 14px; background: #161310; color: #E9E4D8;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; border-bottom: 1px solid #000; }
+  #sketch-bar .lbl { color: #8C8475; text-transform: uppercase; }
+  .seg { display: inline-flex; border: 1px solid #3A352D; border-radius: 4px; overflow: hidden; }
+  .seg button { font-family: var(--font-mono); font-size: 11px; background: transparent; color: #B8B1A2; border: none; padding: 5px 10px; cursor: pointer; transition: all .12s; }
+  .seg button.active { background: #E9E4D8; color: #161310; }
+  .seg button:hover:not(.active) { color: #fff; background: #262019; }
+  .acc-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:-1px; }
+  .spacer { flex: 1; }
+
+  .intro { max-width: 860px; margin: 22px auto 0; padding: 0 20px; }
+  .intro h1 { font-size: 20px; letter-spacing: -.01em; margin-bottom: 6px; }
+  .intro p { color: var(--color-ink-muted); font-size: 14px; line-height: 1.5; max-width: 66ch; }
+  .intro .hint { font-family: var(--font-mono); font-size: 11px; color: var(--color-accent); letter-spacing: .04em; margin-top: 8px; }
+
+  .kdeck { max-width: 860px; margin: 22px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .kcell { background: linear-gradient(180deg, #f2ede2, #e7e1d4); border: 1px solid var(--color-line-strong); border-radius: 12px;
+    padding: 20px 16px 16px; position: relative; box-shadow: inset 0 1px 0 #fff, 0 14px 30px -22px rgba(40,32,20,.5);
+    display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .kcell .cap { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-ink-faint); }
+  .kcell .cap b { color: var(--color-ink); }
+  .kcell .desc { font-family: var(--font-mono); font-size: 10px; color: var(--color-ink-muted); letter-spacing: .03em; text-align: center; }
+  .kcell .val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--color-ink); }
+  .rec { position: absolute; top: -9px; right: 12px; background: var(--color-accent); color: var(--color-on-accent);
+    font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .1em; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; }
+
+  /* ── the knob (002 silhouette: tick ring + pointer, moderate shadow) ── */
+  .knob-stack { width: 76px; height: 76px; position: relative; cursor: ns-resize; }
+  /* tick ring spans ONLY the knob's 270° travel (225°→135°), blank at the bottom dead-zone */
+  .knob-ring { position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-conic-gradient(from 225deg, var(--color-line-strong) 0 1.3deg, transparent 1.3deg 30deg);
+    -webkit-mask:
+      radial-gradient(circle, transparent 32px, #000 33px 35px, transparent 36px),
+      conic-gradient(from 225deg, #000 0 272deg, transparent 272deg);
+    -webkit-mask-composite: source-in;
+    mask:
+      radial-gradient(circle, transparent 32px, #000 33px 35px, transparent 36px),
+      conic-gradient(from 225deg, #000 0 272deg, transparent 272deg);
+    mask-composite: intersect; }
+  .knob-arc { position: absolute; inset: 0; border-radius: 50%; display: none;
+    -webkit-mask: radial-gradient(circle, transparent 33px, #000 34px 35.5px, transparent 36px);
+            mask: radial-gradient(circle, transparent 33px, #000 34px 35.5px, transparent 36px); }
+  .knob-face { position: absolute; left: 10px; top: 10px; width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 33%, #fcfaf4, #ece6d9 52%, #ccc3b1 100%);
+    border: 1px solid var(--color-line-strong);
+    box-shadow: 0 3px 6px rgba(40,32,20,.22), inset 0 1px 0 #fff, inset 0 -2px 4px rgba(0,0,0,.13); }
+  .rotor { position: absolute; inset: 0; }
+  .rotor .ptr { position: absolute; left: 50%; top: 13px; width: 2.5px; height: 13px; transform: translateX(-50%);
+    background: var(--color-accent); border-radius: 2px; }
+  .rotor .marker { position: absolute; left: 50%; top: -1px; width: 6px; height: 6px; border-radius: 50%; transform: translateX(-50%);
+    background: var(--color-accent); box-shadow: 0 0 5px color-mix(in srgb, var(--color-accent) 70%, transparent); display: none; }
+
+  /* live viewport */
+  .vp-wrap { max-width: 860px; margin: 0 auto 60px; padding: 0 20px; }
+  .vp-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-muted); letter-spacing: .05em; margin-bottom: 8px; }
+  .vp-head b { color: var(--color-ink); }
+  .led { width:7px; height:7px; border-radius:50%; background: var(--color-accent); display:inline-block; }
+  .viewport { position: relative; height: 320px; overflow: auto; border: 1px solid var(--color-line-strong); border-radius: 10px;
+    background: var(--color-bg-2); background-image: radial-gradient(var(--color-line-strong) 1px, transparent 1px); background-size: 16px 16px;
+    box-shadow: inset 0 3px 10px rgba(0,0,0,.16); display: flex; justify-content: center; padding: 24px; }
+  .zpagewrap { transform-origin: top center; transition: transform .12s ease; }
+  .page { position: relative; background: var(--color-paper); aspect-ratio: 612/792; width: 280px;
+    border: 1px solid var(--color-line); box-shadow: 0 20px 40px -24px rgba(40,32,20,.5); padding: 26px 24px; }
+  .page .doc-h { height: 9px; width: 46%; background: #E3DDCE; border-radius: 2px; margin-bottom: 13px; }
+  .page .pline { height: 5px; border-radius: 2px; background: #ECE7DA; margin-bottom: 7px; }
+  .field { position: absolute; border: 1.5px solid var(--color-accent); background: color-mix(in srgb, var(--color-accent-soft) 60%, transparent); border-radius: 2px; }
+  .field .tag { position: absolute; top: -14px; left: -1px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em;
+    background: var(--color-accent); color: var(--color-on-accent); padding: 1px 5px; border-radius: 2px 2px 0 0; white-space: nowrap; }
+  .sig { font-family: var(--font-script); font-size: 19px; color: var(--color-ink); }
+  .date { font-family: var(--font-mono); font-size: 10px; color: var(--color-ink); }
+  .field .content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  @media (max-width: 720px) { .kdeck { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="sketch-bar">
+  <span style="color:#E9E4D8;font-weight:600;">free·esign</span>
+  <span class="lbl">knob refine · 004</span>
+  <span class="spacer"></span>
+  <span class="lbl">accent ▸</span>
+  <span class="seg" aria-label="accent">
+    <button id="acc-orange" class="active" onclick="setAccent('default')"><span class="acc-dot" style="background:#FF4D00"></span>ORANGE</button>
+    <button id="acc-ink" onclick="setAccent('ink')"><span class="acc-dot" style="background:#13293D"></span>INK</button>
+  </span>
+</div>
+
+<div class="intro">
+  <h1>Knob — the mix</h1>
+  <p>Back to the <strong>002 silhouette you liked</strong> — clean tick ring, pointer, moderate (not heavy) shadow —
+     but now <strong>genuinely functional</strong> (drag any knob ↕ and the document scales). The three differ only
+     in <em>how much position indication</em> they carry, from purest to a whisper of the 003 arc. Same zoom state,
+     so they all move together.</p>
+  <p class="hint">▸ drag any knob up / down · they share one zoom</p>
+</div>
+
+<div class="kdeck">
+  <!-- A — purest -->
+  <div class="kcell">
+    <span class="cap"><b>A</b> · pure</span>
+    <div class="knob-stack" data-knob="a">
+      <div class="knob-ring"></div>
+      <div class="knob-face"></div>
+      <div class="rotor"><span class="ptr"></span></div>
+    </div>
+    <span class="val">100%</span>
+    <span class="desc">pointer + tick ring only<br>the cleanest — like 002</span>
+  </div>
+
+  <!-- B — the mix -->
+  <div class="kcell">
+    <span class="cap"><b>B</b> · pure + marker</span>
+    <div class="knob-stack" data-knob="b">
+      <div class="knob-ring"></div>
+      <div class="knob-face"></div>
+      <div class="rotor"><span class="marker" style="display:block"></span><span class="ptr"></span></div>
+    </div>
+    <span class="val">100%</span>
+    <span class="desc">+ one accent dot rides the ring<br>indicative, still calm</span>
+  </div>
+
+  <!-- C — whisper of the arc -->
+  <div class="kcell">
+    <span class="rec">★ your pick</span>
+    <span class="cap"><b>C</b> · pure + hairline arc</span>
+    <div class="knob-stack" data-knob="c">
+      <div class="knob-ring"></div>
+      <div class="knob-arc" id="arc-c" style="display:block"></div>
+      <div class="knob-face"></div>
+      <div class="rotor"><span class="ptr"></span></div>
+    </div>
+    <span class="val">100%</span>
+    <span class="desc">+ a thin accent arc (2px)<br>003 dialed way back</span>
+  </div>
+</div>
+
+<div class="vp-wrap">
+  <div class="vp-head"><span class="led"></span> LIVE — <b>contract.pdf</b> · ZOOM <b id="top-z">100</b>% <span style="color:var(--color-line-strong)">│</span> drag any knob</div>
+  <div class="viewport">
+    <div class="zpagewrap" id="zpagewrap">
+      <div class="page">
+        <div class="doc-h"></div>
+        <div class="pline" style="width:96%"></div><div class="pline" style="width:90%"></div>
+        <div class="pline" style="width:93%"></div><div class="pline" style="width:60%"></div>
+        <div class="pline" style="width:0;margin:11px 0;"></div>
+        <div class="pline" style="width:88%"></div><div class="pline" style="width:92%"></div>
+        <div class="pline" style="width:74%"></div>
+        <div class="field" style="left:22px;bottom:60px;width:104px;height:32px;">
+          <span class="tag">SIG</span><div class="content"><span class="sig">Connor</span></div>
+        </div>
+        <div class="field" style="right:22px;bottom:60px;width:78px;height:20px;">
+          <span class="tag">DATE</span><div class="content"><span class="date">2026·06·18</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var ZMIN = 25, ZMAX = 200, zoom = 100;
+  function pct() { return (zoom - ZMIN) / (ZMAX - ZMIN); }
+  function setZoom(z) { zoom = Math.max(ZMIN, Math.min(ZMAX, Math.round(z))); render(); }
+
+  function render() {
+    var p = pct(), ang = -135 + p * 270, deg = p * 270;
+    document.getElementById('zpagewrap').style.transform = 'scale(' + (zoom / 100) + ')';
+    document.getElementById('top-z').textContent = zoom;
+    document.querySelectorAll('.val').forEach(function (e) { e.textContent = zoom + '%'; });
+    document.querySelectorAll('.rotor').forEach(function (r) { r.style.transform = 'rotate(' + ang + 'deg)'; });
+    document.getElementById('arc-c').style.background =
+      'conic-gradient(from 225deg, var(--color-accent) ' + deg + 'deg, transparent ' + deg + 'deg)';
+  }
+
+  function setAccent(name) {
+    document.getElementById('theme-css').href = '../themes/' + name + '.css';
+    document.getElementById('acc-orange').classList.toggle('active', name === 'default');
+    document.getElementById('acc-ink').classList.toggle('active', name === 'ink');
+  }
+
+  // shared vertical-drag across all three knobs
+  var kdrag = false, kStartY = 0, kStartZoom = 100;
+  document.querySelectorAll('.knob-stack').forEach(function (st) {
+    st.addEventListener('mousedown', function (e) { kdrag = true; kStartY = e.clientY; kStartZoom = zoom; e.preventDefault(); });
+  });
+  window.addEventListener('mousemove', function (e) { if (kdrag) setZoom(kStartZoom + (kStartY - e.clientY) * 0.7); });
+  window.addEventListener('mouseup', function () { kdrag = false; });
+
+  render();
+</script>
+</body>
+</html>

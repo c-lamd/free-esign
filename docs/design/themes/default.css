@@ -1,0 +1,40 @@
+/* ============================================================
+   free·esign — INSTRUMENT PANEL theme
+   Accent: SIGNAL ORANGE  (energetic / friendly — pure TE)
+   Base: warm bone + aluminum, near-black ink
+   ============================================================ */
+:root {
+  /* === BASE: warm bone / aluminum worktable === */
+  --color-bg:          #E4DFD3;  /* worktable backdrop */
+  --color-bg-2:        #D9D3C4;  /* deeper grooves */
+  --color-surface:     #F5F2EA;  /* control panels */
+  --color-surface-2:   #ECE7DB;  /* recessed panels */
+  --color-paper:       #FCFBF7;  /* document page */
+  --color-key:         #F0ECE1;  /* hardware key face */
+  --color-key-edge:    #C6BEAD;  /* key physical bottom edge */
+
+  --color-ink:         #1A1714;  /* primary text */
+  --color-ink-muted:   #726A5D;  /* labels / secondary */
+  --color-ink-faint:   #A89F8E;  /* hairline micro-labels */
+
+  --color-line:        #D0C8B7;  /* hairlines */
+  --color-line-strong: #B4AB99;  /* stronger rules / key borders */
+
+  /* === ACCENT: SIGNAL ORANGE === */
+  --color-accent:       #FF4D00;
+  --color-accent-hover: #E64500;
+  --color-accent-press: #C23A00;
+  --color-on-accent:    #FFFFFF;
+  --color-accent-soft:  #FFE7DC;  /* field highlight tint */
+  --color-accent-line:  #FF4D00;
+  --accent-name:        "SIGNAL ORANGE";
+
+  /* === TYPE === */
+  --font-mono:   ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-sans:   system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
+  --font-script: "Snell Roundhand", "Brush Script MT", "Segoe Script", cursive;
+
+  /* === SHAPE === */
+  --radius:     3px;   /* tight, hardware-ish */
+  --radius-key: 5px;
+}

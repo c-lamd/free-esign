@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>free·esign — hardware chassis sketch</title>
+<link rel="stylesheet" href="../themes/default.css" id="theme-css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); color: var(--color-ink); background: var(--color-bg-2);
+    -webkit-font-smoothing: antialiased; padding-top: 44px; }
+  .mono { font-family: var(--font-mono); }
+
+  /* ─── SKETCH CHROME ──────────────────────────────────────── */
+  #sketch-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 9998; height: 44px;
+    display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #161310; color: #E9E4D8;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; border-bottom: 1px solid #000; }
+  #sketch-bar .lbl { color: #8C8475; text-transform: uppercase; }
+  .seg { display: inline-flex; border: 1px solid #3A352D; border-radius: 4px; overflow: hidden; }
+  .seg button { font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; background: transparent;
+    color: #B8B1A2; border: none; padding: 5px 10px; cursor: pointer; transition: all .12s ease; }
+  .seg button:not(:last-child) { border-right: 1px solid #3A352D; }
+  .seg button.active { background: #E9E4D8; color: #161310; }
+  .seg button:hover:not(.active) { color: #fff; background: #262019; }
+  .acc-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:-1px; }
+  .spacer { flex: 1; }
+  #app { transition: max-width .2s ease; }
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ─── SHARED HARDWARE PARTS ──────────────────────────────── */
+  .wordmark { font-family: var(--font-sans); font-weight: 600; font-size: 18px; letter-spacing: -.02em;
+    color: var(--color-ink); display: inline-flex; align-items: center; gap: 8px; user-select: none; line-height: 1; }
+  .wm-mark { width: 15px; height: 15px; border: 1.5px solid var(--color-ink); border-radius: 2px; position: relative; flex: none; }
+  .wm-mark::after { content: ""; position: absolute; inset: 2px; background: linear-gradient(135deg, var(--color-accent) 0 45%, transparent 45%); }
+  .wm-dot { color: var(--color-accent); font-weight: 700; }
+
+  .screw { width: 13px; height: 13px; border-radius: 50%; position: absolute; z-index: 4;
+    background: radial-gradient(circle at 38% 34%, #fff, #ddd5c4 45%, #b3aa98 78%, #9a917e);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.7), inset 0 -1px 2px rgba(0,0,0,.28), 0 1px 1px rgba(0,0,0,.15); }
+  .screw::before, .screw::after { content: ""; position: absolute; inset: 0; margin: auto; width: 8px; height: 1.6px;
+    background: rgba(60,52,40,.5); border-radius: 1px; }
+  .screw::before { transform: rotate(42deg); } .screw::after { transform: rotate(-48deg); }
+
+  .lcd { background: #15120E; border-radius: 5px; padding: 9px 14px; position: relative; overflow: hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.65), inset 0 0 0 1px #000, 0 1px 0 rgba(255,255,255,.55);
+    font-family: var(--font-mono); }
+  .lcd .row { color: var(--color-accent); font-size: 13px; letter-spacing: .12em; display: flex; gap: 16px;
+    text-shadow: 0 0 7px color-mix(in srgb, var(--color-accent) 65%, transparent); white-space: nowrap; }
+  .lcd .row b { font-weight: 700; }
+  .lcd .dim { color: color-mix(in srgb, var(--color-accent) 24%, #15120E); text-shadow: none; }
+  .lcd::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px); }
+
+  .knob-wrap { text-align: center; flex: none; }
+  .knob-wrap .cap { font-family: var(--font-mono); font-size: 9px; letter-spacing: .16em; color: var(--color-ink-faint); }
+  .knob-ring { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; margin: 3px auto 1px;
+    background: repeating-conic-gradient(var(--color-line-strong) 0 1.4deg, transparent 1.4deg 30deg);
+    -webkit-mask: radial-gradient(circle, transparent 31px, #000 32px 34px, transparent 35px);
+            mask: radial-gradient(circle, transparent 31px, #000 32px 34px, transparent 35px); }
+  .knob { width: 56px; height: 56px; border-radius: 50%; position: relative; cursor: grab;
+    background: radial-gradient(circle at 40% 32%, #fcfaf4, #ece6d9 52%, #cfc6b4 100%);
+    border: 1px solid var(--color-line-strong);
+    box-shadow: 0 2px 5px rgba(0,0,0,.2), inset 0 1px 0 #fff, inset 0 -3px 5px rgba(0,0,0,.16);
+    transition: transform .2s ease; }
+  .knob:hover { transform: rotate(18deg); } .knob:active { cursor: grabbing; }
+  .knob .ptr { position: absolute; left: 50%; top: 6px; width: 2.5px; height: 15px; background: var(--color-accent);
+    transform: translateX(-50%); border-radius: 2px; box-shadow: 0 0 5px color-mix(in srgb, var(--color-accent) 60%, transparent); }
+  .knob-wrap .val { font-family: var(--font-mono); font-size: 11px; color: var(--color-ink); font-weight: 600; }
+
+  .keypad { display: inline-flex; gap: 7px; }
+  .hwkey { font-family: var(--font-mono); background: var(--color-key); border: 1px solid var(--color-line-strong);
+    border-bottom: 3px solid var(--color-key-edge); border-radius: var(--radius-key); padding: 7px 9px 5px;
+    cursor: pointer; user-select: none; text-align: center; min-width: 46px; position: relative;
+    transition: transform .07s ease, background .12s, border-color .12s, color .12s; }
+  .hwkey:hover { transform: translateY(-1px); border-color: var(--color-ink-muted); }
+  .hwkey:active { transform: translateY(2px); border-bottom-width: 1px; }
+  .hwkey.armed { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); border-bottom-color: var(--color-accent-press); }
+  .hwkey .num { position: absolute; top: 2px; left: 4px; font-size: 7px; color: var(--color-ink-faint); letter-spacing: .05em; }
+  .hwkey.armed .num { color: color-mix(in srgb, var(--color-on-accent) 70%, transparent); }
+  .hwkey .lab { font-size: 12px; letter-spacing: .05em; font-weight: 600; display: block; margin-top: 4px; }
+  .hwkey .silk { font-size: 7.5px; letter-spacing: .12em; color: var(--color-ink-faint); display: block; margin-top: 2px; text-transform: uppercase; }
+  .hwkey.armed .silk { color: color-mix(in srgb, var(--color-on-accent) 75%, transparent); }
+
+  .utilrow { display: inline-flex; gap: 5px; }
+  .ukey { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .04em; background: var(--color-surface-2);
+    border: 1px solid var(--color-line); border-bottom-width: 2px; border-bottom-color: var(--color-key-edge);
+    border-radius: 4px; padding: 6px 8px; cursor: pointer; color: var(--color-ink-muted); text-transform: uppercase;
+    transition: all .1s ease; }
+  .ukey:hover { color: var(--color-ink); border-color: var(--color-ink-muted); transform: translateY(-1px); }
+  .ukey:active { transform: translateY(1px); }
+
+  .leds { display: flex; flex-direction: column; gap: 6px; }
+  .leds .l { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .12em; color: var(--color-ink-faint);
+    display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
+  .leds .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .dot.pwr { background: #37B24D; box-shadow: 0 0 6px #37B24D99; }
+  .dot.rdy { background: var(--color-accent); box-shadow: 0 0 6px color-mix(in srgb, var(--color-accent) 70%, transparent); }
+  .dot.off { background: var(--color-surface-2); box-shadow: inset 0 0 0 1px var(--color-line-strong); }
+
+  .grille { width: 56px; height: 34px; border-radius: 4px; flex: none;
+    background-image: radial-gradient(var(--color-line-strong) 1.4px, transparent 1.6px);
+    background-size: 7px 7px; opacity: .85; box-shadow: inset 0 1px 3px rgba(0,0,0,.12); }
+
+  .badge { font-family: var(--font-mono); font-size: 9px; letter-spacing: .16em; color: var(--color-ink-faint); text-transform: uppercase; }
+  .btn-export { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase;
+    background: var(--color-accent); color: var(--color-on-accent); border: 1px solid var(--color-accent);
+    border-bottom: 3px solid var(--color-accent-press); border-radius: var(--radius-key); padding: 9px 16px; cursor: pointer;
+    transition: transform .07s ease, background .12s; }
+  .btn-export:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
+  .btn-export:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+  /* ─── DOCUMENT / WORKTABLE ───────────────────────────────── */
+  .reg { position: absolute; width: 14px; height: 14px; pointer-events: none; z-index: 3; }
+  .reg::before, .reg::after { content: ""; position: absolute; background: var(--color-ink-faint); }
+  .reg::before { width: 14px; height: 1px; top: 0; left: 0; } .reg::after { width: 1px; height: 14px; top: 0; left: 0; }
+  .reg.tr { right: 0; transform: scaleX(-1); } .reg.bl { bottom: 0; transform: scaleY(-1); } .reg.br { right: 0; bottom: 0; transform: scale(-1); }
+
+  .page { position: relative; background: var(--color-paper); aspect-ratio: 612/792; width: 420px; max-width: 100%;
+    margin: 0 auto; border: 1px solid var(--color-line); box-shadow: 0 24px 50px -28px rgba(40,32,20,.5); padding: 40px 38px; }
+  .page .doc-h { height: 11px; width: 46%; background: #E3DDCE; border-radius: 2px; margin-bottom: 18px; }
+  .page .pline { height: 6px; border-radius: 2px; background: #ECE7DA; margin-bottom: 9px; }
+  .field { position: absolute; border: 1.5px solid var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent-soft) 60%, transparent); border-radius: 2px; cursor: move; }
+  .field .tag { position: absolute; top: -18px; left: -1px; font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: .1em; background: var(--color-accent); color: var(--color-on-accent); padding: 2px 6px; border-radius: 2px 2px 0 0; white-space: nowrap; }
+  .field .h { position: absolute; width: 7px; height: 7px; background: var(--color-paper); border: 1.5px solid var(--color-accent); border-radius: 1px; }
+  .field .h.tl { top: -4px; left: -4px; } .field .h.tr { top: -4px; right: -4px; } .field .h.bl { bottom: -4px; left: -4px; } .field .h.br { bottom: -4px; right: -4px; }
+  .field .content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .sig { font-family: var(--font-script); color: var(--color-ink); }
+  .field .sig { font-size: 26px; } .field .date { font-family: var(--font-mono); font-size: 12px; color: var(--color-ink); }
+
+  /* ─── L1 MINIMAL (reference baseline) ────────────────────── */
+  .l1-header { height: 54px; display: flex; align-items: center; gap: 14px; padding: 0 16px;
+    background: var(--color-surface); border-bottom: 1px solid var(--color-line-strong); flex-wrap: wrap; }
+  .l1-key { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase;
+    background: var(--color-key); border: 1px solid var(--color-line-strong); border-bottom: 3px solid var(--color-key-edge);
+    border-radius: var(--radius-key); padding: 8px 11px; cursor: pointer; }
+  .l1-status { height: 30px; background: var(--color-surface-2); border-bottom: 1px solid var(--color-line);
+    display: flex; align-items: center; gap: 12px; padding: 0 16px; font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-muted); }
+  .l1-status b { color: var(--color-ink); }
+  .stage { position: relative; min-height: calc(100vh - 168px); padding: 36px 20px 50px; background: var(--color-bg);
+    background-image: radial-gradient(var(--color-line-strong) 1px, transparent 1px); background-size: 16px 16px; }
+
+  /* ─── L2 CONSOLE ─────────────────────────────────────────── */
+  .console { padding: 18px; }
+  .chassis { background: linear-gradient(180deg, #f1ece1, #e6e0d3); border: 1px solid var(--color-line-strong);
+    border-radius: 14px; position: relative; box-shadow: inset 0 1px 0 #fff, 0 30px 60px -34px rgba(40,32,20,.55); }
+  .deck { display: flex; align-items: center; gap: 18px; padding: 16px 22px; flex-wrap: wrap; border-bottom: 1px solid var(--color-line); }
+  .deck .grp { display: flex; align-items: center; gap: 12px; }
+  .deck .deck-cap { font-family: var(--font-mono); font-size: 8px; letter-spacing: .16em; color: var(--color-ink-faint);
+    text-transform: uppercase; margin-bottom: 6px; }
+  .deck .col { display: flex; flex-direction: column; }
+  .viewport { position: relative; border-radius: 0 0 13px 13px; overflow: auto; max-height: calc(100vh - 240px);
+    background: var(--color-bg); background-image: radial-gradient(var(--color-line-strong) 1px, transparent 1px);
+    background-size: 16px 16px; box-shadow: inset 0 3px 10px rgba(0,0,0,.16); padding: 40px 20px; }
+
+  /* ─── L3 FULL UNIT (product shot) ────────────────────────── */
+  .desk { position: relative; min-height: calc(100vh - 44px); padding: 30px 20px 60px; background: var(--color-bg);
+    background-image: radial-gradient(var(--color-line-strong) 1px, transparent 1px); background-size: 18px 18px; }
+  .unit-full { position: relative; max-width: 760px; margin: 8px auto; padding: 22px; border-radius: 30px;
+    background: linear-gradient(180deg, #f2ede2, #e4ded0); border: 1px solid var(--color-line-strong);
+    box-shadow: inset 0 2px 0 #fff, inset 0 -3px 8px rgba(0,0,0,.08), 0 50px 90px -40px rgba(40,32,20,.6); }
+  .unit-full .deck { border-bottom: none; padding: 6px 14px 18px; }
+  .unit-full .viewport { border-radius: 16px; background: var(--color-paper); background-image: none;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,.18), inset 0 0 0 1px var(--color-line); padding: 30px 18px; max-height: none; }
+  .strap { position: absolute; right: -10px; top: 44%; width: 26px; height: 76px; border: 7px solid #d8d1c2;
+    border-left: none; border-radius: 0 16px 16px 0; box-shadow: inset 0 1px 3px rgba(0,0,0,.25); }
+  .foot { position: absolute; bottom: -8px; width: 60px; height: 8px; border-radius: 0 0 6px 6px; background: #2a241d; opacity: .85; }
+  .foot.lf { left: 80px; } .foot.rf { right: 80px; }
+  .unit-full .deck-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 2px; }
+
+  /* ─── TOAST + TOOLBAR ────────────────────────────────────── */
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--color-ink);
+    color: var(--color-bg); font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; padding: 10px 16px;
+    border-radius: 5px; opacity: 0; pointer-events: none; transition: all .2s ease; z-index: 9990; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #sketch-tools { position: fixed; bottom: 12px; right: 12px; z-index: 9999; font-family: var(--font-mono); font-size: 11px;
+    background: rgba(22,19,16,.82); color: #fff; padding: 8px 10px; border-radius: 8px; opacity: .4; transition: opacity .2s; display: flex; gap: 8px; align-items: center; }
+  #sketch-tools:hover { opacity: 1; }
+  #sketch-tools .vp { background: #2A241D; color: #CFC8B8; border: none; border-radius: 4px; padding: 4px 7px; cursor: pointer; font-family: var(--font-mono); font-size: 11px; }
+  #sketch-tools .vp:hover { background: #3A332A; color: #fff; }
+  @media (max-width: 720px) { .deck { gap: 12px; } .knob-wrap, .grille { display: none; } }
+</style>
+</head>
+<body>
+
+<div id="sketch-bar">
+  <span style="color:#E9E4D8;font-weight:600;">free·esign</span>
+  <span class="lbl">hardware chassis · 002</span>
+  <span class="seg" aria-label="hardware level">
+    <button class="vtab" data-v="l1" onclick="showVariant('l1')">L1 MINIMAL</button>
+    <button class="vtab active" data-v="l2" onclick="showVariant('l2')">L2 CONSOLE ★ EDITOR</button>
+    <button class="vtab" data-v="l3" onclick="showVariant('l3')">L3 FULL UNIT ★ LANDING</button>
+  </span>
+  <span class="spacer"></span>
+  <span class="lbl">accent ▸</span>
+  <span class="seg" aria-label="accent">
+    <button id="acc-orange" class="active" onclick="setAccent('default')"><span class="acc-dot" style="background:#FF4D00"></span>ORANGE</button>
+    <button id="acc-ink" onclick="setAccent('ink')"><span class="acc-dot" style="background:#13293D"></span>INK</button>
+  </span>
+</div>
+
+<div id="app">
+
+  <!-- ══ L1 — MINIMAL (the level you already saw) ═══════════ -->
+  <section id="v-l1" class="variant">
+    <div class="l1-header">
+      <span class="wordmark"><span class="wm-mark"></span>free<span class="wm-dot">·</span>esign</span>
+      <span class="mono" style="font-size:11px;color:var(--color-ink-muted);">FILE — <b style="color:var(--color-ink)">contract.pdf</b></span>
+      <span class="spacer"></span>
+      <span class="keypad">
+        <button class="l1-key" onclick="toast('SIG armed')">SIG</button>
+        <button class="l1-key" onclick="toast('INI armed')">INI</button>
+        <button class="l1-key" onclick="toast('DATE armed')">DATE</button>
+        <button class="l1-key" onclick="toast('TXT armed')">TXT</button>
+        <button class="l1-key" onclick="toast('CHK armed')">☑</button>
+      </span>
+      <button class="btn-export" onclick="toast('EXPORTED ▸ contract-signed.pdf')">↧ EXPORT</button>
+    </div>
+    <div class="l1-status">
+      <span>PG <b>1</b>/3</span><span>·</span><span>ZOOM <b>100%</b></span><span>·</span><span>FIELDS <b>2</b></span>
+      <span>·</span><span><span class="dot rdy" style="width:7px;height:7px;border-radius:50%;display:inline-block;"></span> ORIGINAL BYTES PRESERVED</span>
+    </div>
+    <div class="stage"><div id="doc-l1"></div></div>
+  </section>
+
+  <!-- ══ L2 — CONSOLE (more hardware, still practical) ══════ -->
+  <section id="v-l2" class="variant active">
+    <div class="console">
+      <div class="chassis">
+        <span class="screw" style="top:9px;left:9px;"></span><span class="screw" style="top:9px;right:9px;"></span>
+        <span class="screw" style="bottom:9px;left:9px;"></span><span class="screw" style="bottom:9px;right:9px;"></span>
+
+        <div class="deck">
+          <div class="col">
+            <span class="deck-cap">unit</span>
+            <span class="wordmark"><span class="wm-mark"></span>free<span class="wm-dot">·</span>esign</span>
+          </div>
+
+          <div class="col" style="flex:1;min-width:230px;">
+            <span class="deck-cap">display</span>
+            <div class="lcd"><div class="row">
+              <span>PG <b>01</b><span class="dim">/03</span></span>
+              <span>ZM <b>100</b></span>
+              <span>FLD <b>02</b></span>
+              <span>● ORIG.BYTES <b>OK</b></span>
+            </div></div>
+          </div>
+
+          <div class="col">
+            <span class="deck-cap">field keys</span>
+            <div class="keypad">
+              <button class="hwkey" onclick="armKey(this,'SIGNATURE')"><span class="num">01</span><span class="lab">SIG</span><span class="silk">sign</span></button>
+              <button class="hwkey" onclick="armKey(this,'INITIALS')"><span class="num">02</span><span class="lab">INI</span><span class="silk">init</span></button>
+              <button class="hwkey" onclick="armKey(this,'DATE')"><span class="num">03</span><span class="lab">DATE</span><span class="silk">date</span></button>
+              <button class="hwkey" onclick="armKey(this,'TEXT')"><span class="num">04</span><span class="lab">TXT</span><span class="silk">text</span></button>
+              <button class="hwkey" onclick="armKey(this,'CHECK')"><span class="num">05</span><span class="lab">☑</span><span class="silk">check</span></button>
+            </div>
+          </div>
+
+          <div class="knob-wrap">
+            <span class="cap">ZOOM</span>
+            <div class="knob-ring"><div class="knob" title="rotate"><span class="ptr"></span></div></div>
+            <span class="val">100%</span>
+          </div>
+
+          <div class="leds">
+            <span class="l"><span class="dot pwr"></span> PWR</span>
+            <span class="l"><span class="dot rdy"></span> READY</span>
+            <span class="l"><span class="dot off"></span> SAVED</span>
+          </div>
+
+          <div class="col">
+            <span class="deck-cap">&nbsp;</span>
+            <button class="btn-export" onclick="toast('EXPORTED ▸ contract-signed.pdf')">↧ EXPORT</button>
+          </div>
+        </div>
+
+        <div class="deck" style="padding-top:12px;padding-bottom:12px;">
+          <span class="deck-cap" style="margin:0 6px 0 0;">page</span>
+          <div class="utilrow">
+            <button class="ukey" onclick="toast('◀ prev page')">◀ PG</button>
+            <button class="ukey" onclick="toast('next page ▶')">PG ▶</button>
+            <button class="ukey" onclick="toast('fit to width')">FIT</button>
+            <button class="ukey" onclick="toast('zoom 1:1')">1:1</button>
+            <button class="ukey" onclick="toast('rotate 90°')">ROT</button>
+            <button class="ukey" onclick="toast('grid toggled')">GRID</button>
+          </div>
+          <span class="spacer"></span>
+          <div class="utilrow">
+            <button class="ukey" onclick="toast('UNDO')">⟲ UNDO</button>
+            <button class="ukey" onclick="toast('REDO')">⟳ REDO</button>
+          </div>
+          <div class="grille"></div>
+        </div>
+
+        <div class="viewport"><div id="doc-l2"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ L3 — FULL UNIT (product shot; brand/landing energy) ═ -->
+  <section id="v-l3" class="variant">
+    <div class="desk">
+      <div class="unit-full">
+        <span class="strap"></span>
+        <span class="screw" style="top:16px;left:16px;"></span><span class="screw" style="top:16px;right:16px;"></span>
+        <span class="screw" style="bottom:16px;left:16px;"></span><span class="screw" style="bottom:16px;right:16px;"></span>
+        <span class="foot lf"></span><span class="foot rf"></span>
+
+        <div class="deck">
+          <div class="col">
+            <span class="deck-cap">unit</span>
+            <span class="wordmark" style="font-size:20px;"><span class="wm-mark" style="width:17px;height:17px;"></span>free<span class="wm-dot">·</span>esign</span>
+          </div>
+          <div class="col" style="flex:1;min-width:200px;">
+            <span class="deck-cap">display</span>
+            <div class="lcd"><div class="row">
+              <span>PG <b>01</b><span class="dim">/03</span></span><span>ZM <b>100</b></span>
+              <span>FLD <b>02</b></span><span>● BYTES <b>OK</b></span>
+            </div></div>
+          </div>
+          <div class="knob-wrap">
+            <span class="cap">ZOOM</span>
+            <div class="knob-ring"><div class="knob"><span class="ptr"></span></div></div>
+            <span class="val">100%</span>
+          </div>
+          <div class="leds">
+            <span class="l"><span class="dot pwr"></span> PWR</span>
+            <span class="l"><span class="dot rdy"></span> READY</span>
+          </div>
+        </div>
+
+        <div class="deck" style="padding-top:0;padding-bottom:16px;">
+          <div class="col">
+            <span class="deck-cap">field keys</span>
+            <div class="keypad">
+              <button class="hwkey" onclick="armKey(this,'SIGNATURE')"><span class="num">01</span><span class="lab">SIG</span><span class="silk">sign</span></button>
+              <button class="hwkey" onclick="armKey(this,'INITIALS')"><span class="num">02</span><span class="lab">INI</span><span class="silk">init</span></button>
+              <button class="hwkey" onclick="armKey(this,'DATE')"><span class="num">03</span><span class="lab">DATE</span><span class="silk">date</span></button>
+              <button class="hwkey" onclick="armKey(this,'TEXT')"><span class="num">04</span><span class="lab">TXT</span><span class="silk">text</span></button>
+              <button class="hwkey" onclick="armKey(this,'CHECK')"><span class="num">05</span><span class="lab">☑</span><span class="silk">check</span></button>
+            </div>
+          </div>
+          <span class="spacer"></span>
+          <div class="utilrow">
+            <button class="ukey" onclick="toast('◀ prev')">◀ PG</button>
+            <button class="ukey" onclick="toast('next ▶')">PG ▶</button>
+            <button class="ukey" onclick="toast('UNDO')">⟲</button>
+            <button class="ukey" onclick="toast('REDO')">⟳</button>
+          </div>
+          <div class="grille"></div>
+          <button class="btn-export" onclick="toast('EXPORTED ▸ contract-signed.pdf')">↧ EXPORT</button>
+        </div>
+
+        <div class="viewport"><div id="doc-l3"></div></div>
+
+        <div class="deck-foot">
+          <span class="badge">free·esign — model ES·1 · rev.A</span>
+          <span class="badge">● client-side · 0 network requests</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast"></div>
+<div id="sketch-tools">
+  <span style="opacity:.6">VIEW</span>
+  <button class="vp" onclick="setVp(420)">▯ 420</button>
+  <button class="vp" onclick="setVp(900)">▭ 900</button>
+  <button class="vp" onclick="setVp('full')">▢ full</button>
+</div>
+
+<script>
+  // shared document markup injected into each level's viewport
+  var DOC = '\
+    <div style="position:relative;width:420px;max-width:100%;margin:0 auto;">\
+      <span class="reg tl"></span><span class="reg tr"></span><span class="reg bl"></span><span class="reg br"></span>\
+      <div class="page">\
+        <div class="doc-h"></div>\
+        <div class="pline" style="width:96%"></div><div class="pline" style="width:90%"></div>\
+        <div class="pline" style="width:93%"></div><div class="pline" style="width:62%"></div>\
+        <div class="pline" style="width:0;margin:16px 0;"></div>\
+        <div class="pline" style="width:88%"></div><div class="pline" style="width:92%"></div>\
+        <div class="pline" style="width:75%"></div><div class="pline" style="width:90%"></div>\
+        <div class="field" style="left:34px;bottom:96px;width:150px;height:48px;">\
+          <span class="tag">SIG · signature</span>\
+          <span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span>\
+          <div class="content"><span class="sig">Connor</span></div>\
+        </div>\
+        <div class="field" style="right:34px;bottom:96px;width:112px;height:30px;">\
+          <span class="tag">DATE</span>\
+          <span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span>\
+          <div class="content"><span class="date">2026·06·18</span></div>\
+        </div>\
+      </div>\
+    </div>';
+  ['doc-l1','doc-l2','doc-l3'].forEach(function(id){ document.getElementById(id).innerHTML = DOC; });
+
+  function showVariant(v) {
+    document.querySelectorAll('.variant').forEach(s => s.classList.remove('active'));
+    document.getElementById('v-' + v).classList.add('active');
+    document.querySelectorAll('.vtab').forEach(t => t.classList.toggle('active', t.dataset.v === v));
+    window.scrollTo(0, 0);
+  }
+  function setAccent(name) {
+    document.getElementById('theme-css').href = '../themes/' + name + '.css';
+    document.getElementById('acc-orange').classList.toggle('active', name === 'default');
+    document.getElementById('acc-ink').classList.toggle('active', name === 'ink');
+  }
+  function armKey(btn, label) {
+    var was = btn.classList.contains('armed');
+    btn.closest('.keypad').querySelectorAll('.hwkey').forEach(k => k.classList.remove('armed'));
+    if (!was) { btn.classList.add('armed'); toast(label + ' armed — click the page to place'); }
+  }
+  var toastT;
+  function toast(msg) {
+    var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('show'); }, 1700);
+  }
+  function setVp(w) {
+    var app = document.getElementById('app');
+    app.style.maxWidth = w === 'full' ? 'none' : w + 'px';
+    app.style.margin = w === 'full' ? '0' : '0 auto';
+  }
+</script>
+</body>
+</html>

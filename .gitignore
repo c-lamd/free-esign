@@ -26,8 +26,10 @@ dist-ssr/
 # TypeScript build info
 *.tsbuildinfo
 
-# Research cache
-.planning/research/.cache/
+# GSD planning + agent tooling — kept local; not part of the open-source repo.
+# (Internal process docs and scratch; the curated design lives in docs/design/.)
+.planning/
+.claude/
 
 # Self-hosted pdf.js assets — generated into public/ by scripts/copy-pdf-assets.mjs
 # (prepare/predev/prebuild). Never commit; they must stay in sync with the installed

@@ -57,8 +57,7 @@ All assets are same-origin. No external resources are loaded at runtime.
 
 ## Deploy
 
-> These steps require your Vercel account and ownership of free-esign.com.
-> All automation is done; the steps below are the human's responsibility.
+> These steps require a Vercel account and a domain you own.
 
 ### Step-by-step checklist
 
@@ -67,9 +66,9 @@ All assets are same-origin. No external resources are loaded at runtime.
   - The `vercel` CLI installed globally: `npm i -g vercel`
   - Ownership of `free-esign.com` at a domain registrar
 
-- [ ] **2. Replace the BMC placeholder**
+- [ ] **2. (Optional) Set your own support link**
 
-  Edit `src/config.ts` and replace `PLACEHOLDER` with your actual Buy Me a Coffee handle:
+  If you're forking FreeESign, point the footer "Buy me a coffee" link at your own handle in `src/config.ts`:
 
   ```typescript
   // src/config.ts
@@ -158,4 +157,4 @@ FreeESign is designed with privacy as a hard constraint:
 
 ## License
 
-See [LICENSE](./LICENSE) for details.
+FreeESign is released under the [MIT License](./LICENSE) — free to use, fork, and build on.
