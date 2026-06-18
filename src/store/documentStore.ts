@@ -69,7 +69,15 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   goToLanding: () => set({ view: 'landing' }),
   startSigning: () => set({ view: 'empty' }),
   setView: (view) => set({ view }),
-  loadDocument: (url) => set({ docUrl: url, view: 'loading', errorMessage: null }),
+  // Go straight to 'loaded' so <DocumentViewer> mounts immediately. DocumentViewer
+  // owns the react-pdf <Document>, and <Document>'s onLoadSuccess is the ONLY thing
+  // that transitions into 'loaded' (via setNumPages). Routing through a standalone
+  // top-level 'loading' view here gates DocumentViewer OUT of the tree, so <Document>
+  // never mounts, onLoadSuccess never fires, and the spinner hangs forever (the
+  // perpetual-loading deadlock). Parse-time spinner is handled internally by
+  // <Document loading={<LoadingSpinner/>}>. The top-level 'loading' view is used
+  // ONLY for the async image-wrap gap (UploadZone sets it via setView before docUrl exists).
+  loadDocument: (url) => set({ docUrl: url, view: 'loaded', errorMessage: null }),
   setNumPages: (numPages) => set({ numPages, view: 'loaded' }),
   setCurrentPage: (currentPage) => set({ currentPage }),
   setError: (errorMessage) => set({ errorMessage, view: 'error' }),

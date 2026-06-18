@@ -42,12 +42,15 @@ describe('documentStore', () => {
     expect(useDocumentStore.getState().view).toBe('empty')
   })
 
-  it('loadDocument sets docUrl and transitions to loading', () => {
+  it('loadDocument sets docUrl and transitions to loaded (mounts DocumentViewer)', () => {
+    // Regression guard: loadDocument MUST go to 'loaded', not 'loading'. Only
+    // DocumentViewer's <Document onLoadSuccess> can reach 'loaded', and it mounts
+    // only when view === 'loaded'. Setting 'loading' here deadlocks the spinner.
     const store = useDocumentStore.getState()
     store.loadDocument('blob:test-url')
     const state = useDocumentStore.getState()
     expect(state.docUrl).toBe('blob:test-url')
-    expect(state.view).toBe('loading')
+    expect(state.view).toBe('loaded')
     expect(state.errorMessage).toBeNull()
   })
 
