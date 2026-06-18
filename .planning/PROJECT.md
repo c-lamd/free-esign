@@ -10,6 +10,12 @@ It's built for anyone who just needs to sign a document and is tired of "free" P
 
 **Sign a PDF in your browser, for free, without your document ever leaving your device or being altered.** If everything else fails, this one flow — upload → place signature → download an unaltered signed file — must work flawlessly.
 
+## Current State
+
+**v1.0 — Private In-Browser PDF Signing (MVP) — code-complete & shipped to the repo on 2026-06-18.** All 5 phases delivered (18 plans, 36 tasks); 545 tests pass, TypeScript clean, build self-contained with zero external origins. The full promise works end-to-end: upload PDF/image → place drawn or typed signatures + initials/date/text/checkbox → download a byte-identical signed PDF (EXP-02 proven across every field type), with saved-signature persistence and a privacy-first landing page. Archive: `milestones/v1.0-*`.
+
+**Pending the human to go live (LND-04):** `vercel --prod` + free-esign.com DNS, set the real Buy Me a Coffee handle, and the live DevTools zero-third-party network audit. The repo is fully deploy-ready — see `README.md` §Deploy. (The automated privacy guard already enforces the source/build posture.)
+
 ## Requirements
 
 ### Validated

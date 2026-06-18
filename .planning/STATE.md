@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: All 5 phases complete — ready for milestone audit → complete → cleanup
-last_updated: "2026-06-17T20:59:05.458Z"
-last_activity: 2026-06-17 -- Phase 05 Plan 01 complete (landing page, 305 tests green, build clean)
+status: Awaiting next milestone
+stopped_at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
+last_updated: "2026-06-18T05:53:10.010Z"
+last_activity: 2026-06-18 — Milestone v1.0 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -25,12 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 05 (Landing Page + Launch) — COMPLETE
-Plan: 2 of 2 complete
-Status: ALL 5 PHASES COMPLETE — 545 tests pass + 1 pre-launch skip, tsc clean, build clean, privacy guard sound. Live deploy + DNS + live audit + real BMC handle deferred to human (README §Deploy). Ready for milestone audit.
-Last activity: 2026-06-17 -- Phase 05 complete (landing + privacy guard + deploy-ready; verified 7/8, UI 19/24, 7 review fixes)
-
-Progress: [██████████] 100% (18/18 plans complete; 5/5 phases)
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-18 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -198,3 +196,7 @@ None currently.
 Last session: 2026-06-17T20:59:05.453Z
 Stopped at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
