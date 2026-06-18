@@ -1,4 +1,5 @@
 import { useDocumentStore } from '../store/documentStore'
+import { Wordmark } from './Wordmark'
 
 export function LandingHeader() {
   const startSigning = useDocumentStore((s) => s.startSigning)
@@ -25,16 +26,8 @@ export function LandingHeader() {
           justifyContent: 'space-between',
         }}
       >
-        <span
-          style={{
-            fontSize: '24px',
-            fontWeight: 600,
-            lineHeight: 1.1,
-            color: 'var(--color-text-primary)',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          }}
-        >
-          FreeESign
+        <span>
+          <Wordmark />
         </span>
 
         <button

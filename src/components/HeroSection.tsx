@@ -1,4 +1,5 @@
 import { useDocumentStore } from '../store/documentStore'
+import { Wordmark } from './Wordmark'
 
 export function HeroSection() {
   const startSigning = useDocumentStore((s) => s.startSigning)
@@ -18,21 +19,16 @@ export function HeroSection() {
           margin: '0 auto',
         }}
       >
-        {/* Decorative script flourish — aria-hidden, not in accessible tree */}
+        {/* Decorative brand display — aria-hidden, not in accessible tree */}
         <span
           aria-hidden="true"
           style={{
-            fontFamily: '"Dancing Script", cursive',
-            fontSize: '28px',
-            fontWeight: 400,
-            color: 'var(--color-accent)',
-            lineHeight: 1.2,
             display: 'block',
             marginBottom: '8px',
             userSelect: 'none',
           }}
         >
-          FreeESign
+          <Wordmark />
         </span>
 
         <h1

@@ -1,4 +1,5 @@
 import { BUY_ME_A_COFFEE_URL } from '../config'
+import { Wordmark } from './Wordmark'
 
 export function LandingFooter() {
   return (
@@ -17,18 +18,8 @@ export function LandingFooter() {
           margin: '0 auto',
         }}
       >
-        <p
-          style={{
-            fontSize: '24px',
-            fontWeight: 600,
-            lineHeight: 1.1,
-            color: 'var(--color-text-primary)',
-            marginBottom: '8px',
-            margin: '0 0 8px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          }}
-        >
-          FreeESign
+        <p style={{ margin: '0 0 8px' }}>
+          <Wordmark />
         </p>
 
         <p

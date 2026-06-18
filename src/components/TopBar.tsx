@@ -3,6 +3,7 @@ import { useFieldStore } from '../store/fieldStore'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
 import { FieldPalette } from './FieldPalette'
 import { UndoRedoControls } from './UndoRedoControls'
+import { Wordmark } from './Wordmark'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -70,7 +71,7 @@ export function TopBar() {
           useFieldStore.getState().resetFields()
           goToLanding()
         }}
-        aria-label="FreeESign — return to home"
+        aria-label="free·esign — return to home"
         style={{
           background: 'none',
           border: 'none',
@@ -97,7 +98,7 @@ export function TopBar() {
           e.currentTarget.style.outline = 'none'
         }}
       >
-        FreeESign
+        <Wordmark />
       </button>
 
       {view === 'loaded' && (
