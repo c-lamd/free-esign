@@ -5,7 +5,7 @@ milestone_name: milestone
 status: Awaiting next milestone
 stopped_at: Phase 5 Plan 02 complete — all automatable tasks done; deploy checkpoint deferred to human
 last_updated: "2026-06-18T16:08:04.706Z"
-last_activity: 2026-06-18 — Quick task 260618-coq: set real Buy Me a Coffee handle for launch
+last_activity: 2026-06-18 — Quick task 260618-d3j: fixed critical perpetual-loading deadlock (core signing loop)
 progress:
   total_phases: 5
   completed_phases: 5
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 Phase: Milestone v1.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-18 — Quick task 260618-coq: set real Buy Me a Coffee handle (clamd24e) for launch
+Last activity: 2026-06-18 — Quick task 260618-d3j: fixed critical perpetual-loading deadlock; signing loop verified in-browser
 
 ## Performance Metrics
 
@@ -122,7 +122,10 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Human verify Phase 2 signing loop (see 02-04-SUMMARY.md deferred checkpoint section)
+- ✅ RESOLVED 2026-06-18 (260618-d3j): "Human verify Phase 2 signing loop" — this was
+  NEVER done during the milestone, which is why a perpetual-loading deadlock shipped in
+  v1.0. Now fixed and verified end-to-end in a real browser (PDF renders to canvas);
+  guarded permanently by src/test/uploadFlow.test.tsx.
 
 ### Blockers/Concerns
 
@@ -133,6 +136,7 @@ None currently.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260618-coq | Set real Buy Me a Coffee handle for launch | 2026-06-18 | 81d39be | [260618-coq-set-real-buy-me-a-coffee-handle-for-laun](./quick/260618-coq-set-real-buy-me-a-coffee-handle-for-laun/) |
+| 260618-d3j | Fix perpetual-loading deadlock (core signing loop) — CRITICAL | 2026-06-18 | 25831d2 | [260618-d3j-fix-perpetual-loading-deadlock-loaddocum](./quick/260618-d3j-fix-perpetual-loading-deadlock-loaddocum/) |
 
 ### New Decisions (03-02)
 
@@ -182,7 +186,7 @@ None currently.
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Human verify | Phase 2 end-of-phase browser verification (02-04-SUMMARY.md) | Pending | 02-04 |
+| Human verify | Phase 2 end-of-phase browser verification (02-04-SUMMARY.md) | ✅ Done 2026-06-18 via 260618-d3j (real-browser smoke; surfaced + fixed the perpetual-loading deadlock) | 02-04 |
 | Human verify | Phase 3 browser checks (8 items in 03-VERIFICATION.md): zoom pixel-alignment 50→200%, inline edit no-drag, undo/redo shortcut focus guard, exported field visual fidelity | Pending | 03 (autonomous) |
 | Refinement | Undo/redo: redo-after-drag/resize/text-edit does not re-apply the moved position (pushHistory stores pre-mutation only). Undo works; placement+deletion redo are correct (FLD-09 criterion met). Fix later via commit-post-mutation snapshot if desired. | Open | 03 (code review CR-01) |
 | Human verify | Phase 4 browser checks (6 items in 04-VERIFICATION.md): typed-sig WYSIWYG vs PDF glyphs, cross-session IndexedDB persist + delete, PDF vector-text crispness at zoom, zero third-party requests on font load/export, Saved-tab kind filtering | Pending | 04 (autonomous) |
