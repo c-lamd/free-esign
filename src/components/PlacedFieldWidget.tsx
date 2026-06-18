@@ -80,6 +80,18 @@ function getWrapperAriaLabel(field: PlacedField): string {
   return WRAPPER_ARIA_LABEL[field.type]
 }
 
+// ---------------------------------------------------------------------------
+// EDT-06: Mono tag label map — short uppercase label shown above selected field
+// ---------------------------------------------------------------------------
+
+const FIELD_SHORT_LABEL: Record<FieldType, string> = {
+  signature: 'SIG',
+  initials:  'INI',
+  date:      'DATE',
+  text:      'TXT',
+  checkbox:  '☑',
+}
+
 const DELETE_ARIA_LABEL: Record<FieldType, string> = {
   signature: 'Delete signature',
   initials:  'Delete initials',
@@ -356,12 +368,39 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
         style={{
+          // EDT-06: accent outline — 1px semi-transparent when unselected, 2px solid when selected
           border: isSelected
-            ? '2px solid var(--color-accent)'
-            : '1px solid rgba(0,0,0,0.15)',
+            ? '2px solid var(--color-accent-line)'
+            : '1px solid rgba(255, 77, 0, 0.35)',
+          // EDT-06: translucent accent fill behind field content (PAR-03 safe: style only)
+          backgroundColor: 'color-mix(in srgb, var(--color-accent-soft) 40%, transparent)',
           boxSizing: 'border-box',
         }}
       >
+        {/* EDT-06: mono tag label — absolutely-positioned above the field, shown only when selected.
+            aria-hidden: accessible name is already on the outer wrapper div. */}
+        {isSelected && (
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '-20px',
+              left: 0,
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'var(--color-accent)',
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+            }}
+          >
+            {FIELD_SHORT_LABEL[field.type]}
+          </span>
+        )}
+
         {content}
 
         {/* Delete control — shown only when selected (UI-SPEC: × button top-right) */}
