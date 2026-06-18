@@ -128,7 +128,6 @@ export function LandingFooter() {
             fontSize: '14px',
             fontWeight: 400,
             color: 'var(--color-text-secondary)',
-            marginTop: '16px',
             margin: '16px 0 0',
           }}
         >

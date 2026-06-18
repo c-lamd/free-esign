@@ -41,7 +41,6 @@ export function HowItWorksSection() {
             lineHeight: 1.2,
             color: 'var(--color-text-primary)',
             textAlign: 'center',
-            marginBottom: '32px',
             margin: '0 0 32px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           }}

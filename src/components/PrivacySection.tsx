@@ -67,7 +67,6 @@ export function PrivacySection() {
               fontWeight: 600,
               lineHeight: 1.2,
               color: 'var(--color-text-primary)',
-              marginBottom: '16px',
               margin: '0 0 16px',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
             }}
