@@ -41,14 +41,14 @@ describe('FND-04: HardwareKey primitive', () => {
   it('armed={true} adds the .hw-key--armed class', async () => {
     const { HardwareKey } = await import('../components/ui/HardwareKey')
     const { container } = render(
-      React.createElement(HardwareKey, { armed: true }, 'EXPORT'),
+      React.createElement(HardwareKey, { armed: true, children: 'EXPORT' }),
     )
     expect(container.querySelector('.hw-key--armed')).toBeTruthy()
   })
 
   it('disabled={true} sets aria-disabled="true" (NOT HTML disabled) — WCAG 2.5.5', async () => {
     const { HardwareKey } = await import('../components/ui/HardwareKey')
-    render(React.createElement(HardwareKey, { disabled: true }, 'EXPORT'))
+    render(React.createElement(HardwareKey, { disabled: true, children: 'EXPORT' }))
     const btn = screen.getByRole('button', { name: 'EXPORT' })
     // Must have aria-disabled for AT
     expect(btn).toHaveAttribute('aria-disabled', 'true')
@@ -60,7 +60,7 @@ describe('FND-04: HardwareKey primitive', () => {
     const { HardwareKey } = await import('../components/ui/HardwareKey')
     const spy = vi.fn()
     render(
-      React.createElement(HardwareKey, { disabled: true, onClick: spy }, 'EXPORT'),
+      React.createElement(HardwareKey, { disabled: true, onClick: spy, children: 'EXPORT' }),
     )
     const btn = screen.getByRole('button', { name: 'EXPORT' })
     fireEvent.click(btn)

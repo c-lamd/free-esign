@@ -42,10 +42,8 @@ beforeEach(async () => {
 describe('FND-03: Wordmark component', () => {
   it('renders the .wm-mark element (engraved square mark is present)', async () => {
     const { Wordmark } = await import('../components/Wordmark')
-    let container!: HTMLElement
     await act(async () => {
-      const result = render(React.createElement(Wordmark))
-      container = result.container
+      render(React.createElement(Wordmark))
     })
     expect(document.querySelector('.wm-mark')).toBeTruthy()
   })

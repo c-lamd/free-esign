@@ -23,8 +23,6 @@
  * FND-03 / Plan 06-02 Task 2.
  */
 
-import React from 'react'
-
 // ── Component-local CSS for .wm-mark::after (cannot be set via inline styles) ─
 // Ported verbatim from visual-foundation.md § Key CSS.
 // Guard uses a data-attribute sentinel (matches HardwareKey pattern) so it

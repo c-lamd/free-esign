@@ -148,13 +148,6 @@ export function UploadZone() {
     fileInputRef.current?.click()
   }
 
-  function handleBrowseKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      fileInputRef.current?.click()
-    }
-  }
-
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const zoneStyle: React.CSSProperties = {
