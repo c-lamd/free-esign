@@ -58,7 +58,7 @@ export function ZoomKnob() {
     if (!dragState.current) return
     const { startY, startZoom } = dragState.current
     const deltaY = startY - e.clientY // drag UP = positive = zoom in
-    const sensitivity = 0.007 // ~142 CSS px per full range step (0.5→2.0 = 1.5 range)
+    const sensitivity = 0.007 // 1/0.007 ≈ 143 px per 1.0 zoom unit; full range (0.5→2.0) ≈ 214 px
     const rawZoom = startZoom + deltaY * sensitivity
     const snapped = nearestZoomStep(rawZoom)
     // Only call setZoom when the snapped value actually differs — avoid no-op dispatches
