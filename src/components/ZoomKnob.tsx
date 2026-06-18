@@ -144,12 +144,12 @@ export function ZoomKnob() {
     borderRadius: '50%',
     background: `conic-gradient(from 225deg, var(--color-accent) ${deg}deg, transparent ${deg}deg)`,
     WebkitMask: [
-      'radial-gradient(circle, transparent 34px, #000 35px 37px, transparent 38px)',
+      'radial-gradient(circle, transparent 32px, #000 33px 35px, transparent 36px)', // match tick ring band (33–35px)
       'conic-gradient(from 225deg, #000 0 272deg, transparent 272deg)',
     ].join(', '),
     WebkitMaskComposite: 'source-in',
     mask: [
-      'radial-gradient(circle, transparent 34px, #000 35px 37px, transparent 38px)',
+      'radial-gradient(circle, transparent 32px, #000 33px 35px, transparent 36px)', // match tick ring band (33–35px)
       'conic-gradient(from 225deg, #000 0 272deg, transparent 272deg)',
     ].join(', '),
     maskComposite: 'intersect',
