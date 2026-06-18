@@ -84,7 +84,7 @@ export function HowItWorksSection() {
                   fontWeight: 600,
                   color: 'var(--color-text-primary)',
                   flexShrink: 0,
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  fontFamily: 'var(--font-mono)',
                 }}
               >
                 {step.number}
