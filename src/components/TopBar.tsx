@@ -5,6 +5,7 @@ import { FieldPalette } from './FieldPalette'
 import { UndoRedoControls } from './UndoRedoControls'
 import { Wordmark } from './Wordmark'
 import { HardwareKey } from './ui/HardwareKey'
+import { LcdReadout } from './LcdReadout'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -54,7 +55,7 @@ export function TopBar() {
       style={{
         height: '56px',
         backgroundColor: 'var(--color-surface-elevated)',
-        borderBottom: '1px solid var(--color-border)',
+        borderBottom: '1px solid var(--color-line-strong)',
         padding: '0 16px',
         display: 'flex',
         alignItems: 'center',
@@ -113,92 +114,61 @@ export function TopBar() {
             style={{
               width: '1px',
               height: '20px',
-              backgroundColor: 'var(--color-border)',
+              backgroundColor: 'var(--color-line-strong)',
               margin: '0 4px',
               flexShrink: 0,
             }}
           />
 
-          {/* FieldPalette — five field type buttons (Signature, Initials, Date, Text, Checkbox) */}
+          {/* FieldPalette — five numbered hardware field type keys */}
           <FieldPalette />
 
-          {/* Visual separator between palette and download group */}
+          {/* Visual separator between palette and action keys group */}
           <div
             aria-hidden="true"
             style={{
               width: '1px',
               height: '20px',
-              backgroundColor: 'var(--color-border)',
+              backgroundColor: 'var(--color-line-strong)',
               margin: '0 4px',
               flexShrink: 0,
             }}
           />
 
-          {/* "Download PDF" — primary export CTA */}
-          <button
+          {/* LCD readout — shows live session status; renders only when numPages > 0 */}
+          <LcdReadout />
+
+          {/* Visual separator between LCD and action keys */}
+          <div
+            aria-hidden="true"
+            style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: 'var(--color-line-strong)',
+              margin: '0 4px',
+              flexShrink: 0,
+            }}
+          />
+
+          {/* OPEN key — replaces "Open another" text; wiring + aria-label preserved (PAR-01) */}
+          <HardwareKey
+            onClick={handleOpenAnother}
+            aria-label="Open another document"
+          >
+            OPEN
+          </HardwareKey>
+
+          {/* EXPORT key — replaces accent Download PDF button; aria-labels preserved (PAR-01) */}
+          <HardwareKey
             onClick={() => { void handleDownload() }}
-            aria-disabled={isDownloadDisabled ? 'true' : undefined}
+            disabled={isDownloadDisabled}
             aria-label={
               isDownloadDisabled
                 ? 'Download PDF — place at least one field first'
                 : 'Download PDF'
             }
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--color-accent)',
-              color: '#FFFFFF',
-              fontSize: '14px',
-              fontWeight: 400,
-              padding: '8px 16px',
-              borderRadius: '6px',
-              minHeight: '44px',
-              border: 'none',
-              cursor: isDownloadDisabled ? 'default' : 'pointer',
-              opacity: isDownloadDisabled ? 0.45 : 1,
-              outline: 'none',
-              fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => {
-              if (!isDownloadDisabled) {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-accent-hover)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                'var(--color-accent)'
-            }}
-            onMouseDown={(e) => {
-              if (!isDownloadDisabled) {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-accent-press)'
-              }
-            }}
-            onMouseUp={(e) => {
-              if (!isDownloadDisabled) {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  'var(--color-accent-hover)'
-              }
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.outline = '2px solid var(--color-accent)'
-              e.currentTarget.style.outlineOffset = '2px'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.outline = 'none'
-              e.currentTarget.style.backgroundColor = 'var(--color-accent)'
-            }}
           >
-            Download PDF
-          </button>
-
-          <HardwareKey
-            onClick={handleOpenAnother}
-            aria-label="Open another document"
-          >
-            Open another
+            EXPORT
           </HardwareKey>
         </div>
       )}

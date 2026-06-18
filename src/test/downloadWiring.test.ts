@@ -90,7 +90,7 @@ describe('Download PDF button — zero fields (T-02-10 disabled guard)', () => {
   it('has aria-disabled="true" when zero fields are placed', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     expect(btn).not.toBeNull()
     expect(btn?.getAttribute('aria-disabled')).toBe('true')
@@ -99,7 +99,7 @@ describe('Download PDF button — zero fields (T-02-10 disabled guard)', () => {
   it('does NOT call exportSignedPdf when clicked with zero fields', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     expect(btn).not.toBeNull()
     await act(async () => {
@@ -112,7 +112,7 @@ describe('Download PDF button — zero fields (T-02-10 disabled guard)', () => {
   it('has aria-label indicating the user needs to place a signature first', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     expect(btn?.getAttribute('aria-label')).toContain('place at least one field first')
   })
@@ -146,7 +146,7 @@ describe('Download PDF button — with fields placed (EXP-01)', () => {
   it('does NOT have aria-disabled when fields are placed', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     expect(btn).not.toBeNull()
     expect(btn?.getAttribute('aria-disabled')).toBeNull()
@@ -155,7 +155,7 @@ describe('Download PDF button — with fields placed (EXP-01)', () => {
   it('calls exportSignedPdf with originalPdfBytes and fields on click', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
@@ -171,7 +171,7 @@ describe('Download PDF button — with fields placed (EXP-01)', () => {
   it('calls triggerDownload with signedFilename(fileName) — "report.pdf" → "report-signed.pdf"', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
@@ -189,7 +189,7 @@ describe('Download PDF button — with fields placed (EXP-01)', () => {
 
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
@@ -202,7 +202,7 @@ describe('Download PDF button — with fields placed (EXP-01)', () => {
   it('does NOT reset the document or fields after a successful download', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
@@ -243,7 +243,7 @@ describe('Download PDF button — export failure (T-02-02)', () => {
   it('calls setExportError with the exact UI-SPEC copy on export failure', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
@@ -258,7 +258,7 @@ describe('Download PDF button — export failure (T-02-02)', () => {
   it('does NOT call triggerDownload when export fails', async () => {
     const container = await renderTopBar()
     const btn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Download PDF'),
+      (b) => b.getAttribute('aria-label')?.includes('Download PDF'),
     )
     await act(async () => {
       fireEvent.click(btn!)
