@@ -91,4 +91,32 @@ describe('LandingPage', () => {
     fireEvent.click(cta)
     expect(useDocumentStore.getState().view).toBe('empty')
   })
+
+  // LND-07: GitHub source link must be preserved exactly in the footer
+  it('footer GitHub source link is present and well-formed', async () => {
+    const { LandingPage } = await import('../components/LandingPage')
+    await act(async () => {
+      render(React.createElement(LandingPage))
+    })
+    const githubLink = screen.getByRole('link', { name: /github/i })
+    expect((githubLink as HTMLAnchorElement).href).toBe(
+      'https://github.com/c-lamd/free-esign',
+    )
+    expect(githubLink).toHaveAttribute('target', '_blank')
+    expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  // LND-07: Footer mono tagline must carry the instrument-panel voice
+  it('footer mono tagline "SIGN · PRIVATELY · IN YOUR BROWSER" is present', async () => {
+    const { LandingPage } = await import('../components/LandingPage')
+    await act(async () => {
+      render(React.createElement(LandingPage))
+    })
+    // Match the tagline tolerating possible node-splitting on · separators
+    expect(
+      screen.getByText((content) =>
+        content.replace(/\s+/g, ' ').includes('SIGN · PRIVATELY · IN YOUR BROWSER'),
+      ),
+    ).toBeInTheDocument()
+  })
 })
