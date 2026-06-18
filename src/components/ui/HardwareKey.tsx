@@ -23,6 +23,7 @@ export interface HardwareKeyProps {
   'aria-pressed'?: boolean | 'true' | 'false'
   disabled?: boolean
   className?: string
+  style?: React.CSSProperties
 }
 
 // ── Single style injection (guard against duplicate <style> tags across instances) ──
@@ -106,6 +107,7 @@ export function HardwareKey({
   'aria-pressed': ariaPressed,
   disabled = false,
   className,
+  style: styleProp,
 }: HardwareKeyProps) {
   // Inject styles once per document
   injectStyles()
@@ -131,11 +133,12 @@ export function HardwareKey({
       onClick={disabled ? undefined : onClick}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      style={
-        focused
+      style={{
+        ...(styleProp ?? {}),
+        ...(focused
           ? { outline: '2px solid var(--color-accent)', outlineOffset: '2px' }
-          : undefined
-      }
+          : {}),
+      }}
     >
       {children}
     </button>
