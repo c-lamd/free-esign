@@ -10,6 +10,15 @@ import tailwindcss from '@tailwindcss/vite'
 // (PRV-02 — zero third-party network requests while signing).
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // react-draggable (via react-rnd) references `process.env.DRAGGABLE_DEBUG` in its
+  // log() helper. The production Rollup build strips `process.env`, but Vite's dev
+  // dep-optimizer keeps the raw reference — and `process` is undefined in the browser,
+  // so placing/dragging a field throws "process is not defined" and blanks the page.
+  // Statically replace the single offending reference (targeted, NOT a broad
+  // `process.env: {}` which would override Vite's production NODE_ENV handling).
+  define: {
+    'process.env.DRAGGABLE_DEBUG': 'false',
+  },
   test: {
     globals: true,
     environment: 'jsdom',
