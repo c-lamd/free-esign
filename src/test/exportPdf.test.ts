@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
-import { PDFDocument, StandardFonts } from 'pdf-lib-incremental-save'
+import { PDFDocument, PDFPage, StandardFonts } from 'pdf-lib-incremental-save'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
 import { _clearFontBytesCache } from '../lib/fonts'
 import { SAMPLE_PDF_BASE64 } from './fixtures/samplePdf'
@@ -496,6 +496,37 @@ describe('SIG-02/SIG-03: typed-signature export (font-backed, not PNG)', () => {
     const bytes = await loadFontBytes('Dancing Script')
     expect(bytes).toBeInstanceOf(Uint8Array)
     expect(bytes.length).toBeGreaterThan(0)
+  })
+})
+
+// ---------- 260620-l51: drawn field vertical position regression ----------
+
+describe('260620-l51: exported field drawn at box bottom (pdfY - pdfHeight)', () => {
+  it('drawImage is called with y = pdfY - pdfHeight for a drawn-signature field', async () => {
+    // Pin: a field placed at pdfY=200 with pdfHeight=50 must be drawn at y=150 (box bottom).
+    // Prior to 260620-l51 the export passed y=200 (box top), placing the image one field-height
+    // too high — matching the editor visually but wrong in PDF coordinate space.
+    const spy = vi.spyOn(PDFPage.prototype, 'drawImage')
+
+    const field = {
+      id: 'pos-regression',
+      type: 'signature' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 200,
+      pdfWidth: 100,
+      pdfHeight: 50,
+      dataUrl: TRANSPARENT_1x1_PNG,
+    }
+
+    await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+
+    expect(spy).toHaveBeenCalledOnce()
+    const callArgs = spy.mock.calls[0]
+    // callArgs[1] is the DrawImageOptions object; y must equal pdfY - pdfHeight = 150
+    expect(callArgs[1]).toMatchObject({ y: 150 })
+
+    spy.mockRestore()
   })
 })
 

@@ -81,8 +81,11 @@ function drawTextInBox(page: PDFPage, text: string, font: PDFFont, field: Placed
   if (!text) return
   const targetSize = font.sizeAtHeight(field.pdfHeight * 0.75)
   const glyphH = font.heightAtSize(targetSize)
+  // field.pdfY is the box TOP edge in PDF space (coordinate mapper flips CSS top-left → PDF Y).
+  // Box bottom = field.pdfY - field.pdfHeight. Baseline is centered within the box height.
   // Pitfall 3: y is the text baseline — center it vertically in the field box
-  const baselineY = field.pdfY + (field.pdfHeight - glyphH) / 2
+  const boxBottomY = field.pdfY - field.pdfHeight
+  const baselineY = boxBottomY + (field.pdfHeight - glyphH) / 2
   // Clip text to field width (field.pdfWidth - 2pt left padding) so drawn text
   // never escapes the field box and overwrites adjacent original PDF content.
   const maxWidth = field.pdfWidth - 2
@@ -128,7 +131,9 @@ function drawSignatureText(page: PDFPage, text: string, font: PDFFont, field: Pl
       : sizeFromHeight
   const glyphH = font.heightAtSize(finalSize)
   const xOffset = (field.pdfWidth - font.widthOfTextAtSize(text, finalSize)) / 2
-  const baselineY = field.pdfY + (field.pdfHeight - glyphH) / 2
+  // field.pdfY is the box TOP edge; box bottom = field.pdfY - field.pdfHeight.
+  const boxBottomY = field.pdfY - field.pdfHeight
+  const baselineY = boxBottomY + (field.pdfHeight - glyphH) / 2
   page.drawText(text, {
     x: field.pdfX + xOffset,
     y: baselineY,
@@ -151,7 +156,9 @@ function drawCheckboxX(page: PDFPage, fontBold: PDFFont, field: PlacedField): vo
   const dim = Math.min(field.pdfWidth, field.pdfHeight)
   const targetSize = fontBold.sizeAtHeight(dim * 0.75)
   const glyphH = fontBold.heightAtSize(targetSize)
-  const baselineY = field.pdfY + (field.pdfHeight - glyphH) / 2
+  // field.pdfY is the box TOP edge; box bottom = field.pdfY - field.pdfHeight.
+  const boxBottomY = field.pdfY - field.pdfHeight
+  const baselineY = boxBottomY + (field.pdfHeight - glyphH) / 2
   const xOffset = (field.pdfWidth - fontBold.widthOfTextAtSize('X', targetSize)) / 2
   // ASCII 'X' — never U+2715 (✕)
   page.drawText('X', {
@@ -281,11 +288,13 @@ export async function exportSignedPdf(
           const pngBytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
           const pngImage = await pdfDoc.embedPng(pngBytes)
 
-          // field.pdfY is already bottom-left PDF-space (Coordinate Mapper handles Y-flip).
-          // Do NOT additionally flip Y — that would double-invert (RESEARCH Pitfall 2).
+          // field.pdfY is the box TOP edge in PDF space (coordinate mapper stores the top,
+          // despite the old "bottom-left" comment — naming was misleading).
+          // pdf-lib drawImage(y) expects the lower-left corner → box bottom = pdfY - pdfHeight.
+          const boxBottomY = field.pdfY - field.pdfHeight
           page.drawImage(pngImage, {
             x: field.pdfX,
-            y: field.pdfY,
+            y: boxBottomY,
             width: field.pdfWidth,
             height: field.pdfHeight,
           })
