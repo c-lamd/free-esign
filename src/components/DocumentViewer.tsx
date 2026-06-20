@@ -47,16 +47,6 @@ export function DocumentViewer() {
   const undo            = useFieldStore((s) => s.undo)
   const redo            = useFieldStore((s) => s.redo)
 
-  // Revoke the previous Blob URL after DocumentViewer unmounts or docUrl changes,
-  // ensuring revocation happens after react-pdf has released its internal reference.
-  // This replaces the eager URL.revokeObjectURL() calls in TopBar and ErrorBanner (WR-01).
-  useEffect(() => {
-    const url = docUrl
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [docUrl])
-
   // Single keydown handler — hosts both Delete/Backspace field deletion (FLD-07)
   // and Cmd/Ctrl+Z / Shift+Z / Ctrl+Y undo/redo shortcuts (FLD-09).
   //

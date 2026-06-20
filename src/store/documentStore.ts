@@ -77,7 +77,7 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   // perpetual-loading deadlock). Parse-time spinner is handled internally by
   // <Document loading={<LoadingSpinner/>}>. The top-level 'loading' view is used
   // ONLY for the async image-wrap gap (UploadZone sets it via setView before docUrl exists).
-  loadDocument: (url) => set({ docUrl: url, view: 'loaded', errorMessage: null }),
+  loadDocument: (url) => set((s) => { if (s.docUrl && s.docUrl !== url) URL.revokeObjectURL(s.docUrl); return { docUrl: url, view: 'loaded', errorMessage: null } }),
   setNumPages: (numPages) => set({ numPages, view: 'loaded' }),
   setCurrentPage: (currentPage) => set({ currentPage }),
   setError: (errorMessage) => set({ errorMessage, view: 'error' }),
@@ -91,15 +91,18 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
     set({ zoom })
   },
   reset: () =>
-    set({
-      view: 'empty',
-      docUrl: null,
-      numPages: null,
-      currentPage: 1,
-      errorMessage: null,
-      originalPdfBytes: null,
-      fileName: null,
-      exportError: null,
-      zoom: 1.0,
+    set((s) => {
+      if (s.docUrl) URL.revokeObjectURL(s.docUrl)
+      return {
+        view: 'empty',
+        docUrl: null,
+        numPages: null,
+        currentPage: 1,
+        errorMessage: null,
+        originalPdfBytes: null,
+        fileName: null,
+        exportError: null,
+        zoom: 1.0,
+      }
     }),
 }))
