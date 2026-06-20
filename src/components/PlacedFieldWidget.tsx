@@ -23,12 +23,13 @@
  * @see src/lib/pageViewport.ts (SimpleViewport)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Rnd } from 'react-rnd'
 import type { PlacedField, FieldType } from '../store/fieldStore'
 import { useFieldStore } from '../store/fieldStore'
 import { cssPixelToPageSpace, pageSpaceToCssPixel } from '../lib/coordinateMapper'
 import type { SimpleViewport } from '../lib/pageViewport'
+import { FORM_FIELD_FONT_PT } from '../lib/fieldDefaults'
 
 // ---------------------------------------------------------------------------
 // Resize handle dot — 8px accent circle with white ring (UI-SPEC)
@@ -132,6 +133,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
   // ── Inline text/date editing state ────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false)
   const [localValue, setLocalValue] = useState(field.textValue ?? '')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Sync local value when field.textValue changes externally (e.g., undo)
   useEffect(() => {
@@ -245,11 +247,15 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
       )
     }
   } else if (field.type === 'date' || field.type === 'text') {
-    // Inline editable text input
+    // Inline editable text input.
+    // Dragging is handled by the outer Rnd (disableDragging={isEditing} gates it).
+    // Double-click on the outer wrapper activates editing; single click just selects.
     content = (
       <input
+        ref={inputRef}
         type="text"
         value={localValue}
+        readOnly={!isEditing}
         placeholder={field.type === 'text' ? 'Type here' : undefined}
         onChange={(e) => setLocalValue(e.target.value)}
         onFocus={(e) => {
@@ -260,8 +266,6 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
           handleInputBlur()
           e.currentTarget.style.borderColor = 'var(--color-border)'
         }}
-        // Prevent drag initiation when clicking into the input (RESEARCH Section 5)
-        onMouseDown={(e) => e.stopPropagation()}
         aria-label={field.type === 'date' ? 'Date field value' : 'Text field content'}
         style={{
           width: '100%',
@@ -269,7 +273,7 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
           border: '1px solid var(--color-border)',
           borderRadius: '3px',
           padding: '0 4px',
-          fontSize: '14px',
+          fontSize: `${FORM_FIELD_FONT_PT * viewport.scale}px`,
           fontWeight: 400,
           fontFamily: 'inherit',
           color: 'var(--color-text-primary)',
@@ -278,6 +282,8 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
           outline: 'none',
           overflow: 'hidden',
           whiteSpace: 'nowrap',
+          pointerEvents: isEditing ? 'auto' : 'none',
+          cursor: isEditing ? 'text' : 'inherit',
         }}
       />
     )
@@ -348,6 +354,12 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
       aria-label={getWrapperAriaLabel(field)}
       data-selected={isSelected ? 'true' : undefined}
       onClick={handleClick}
+      onDoubleClick={() => {
+        if (field.type === 'date' || field.type === 'text') {
+          setIsEditing(true)
+          requestAnimationFrame(() => inputRef.current?.focus())
+        }
+      }}
       style={{
         // Outer wrapper FILLS the page so react-rnd bounds="parent" clamps to the page.
         // (With display:inline-block + an absolute Rnd child this collapsed to 0×0, so

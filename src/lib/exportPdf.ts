@@ -38,6 +38,7 @@ import { PDFDocument, StandardFonts, PDFName, PDFRef } from 'pdf-lib-incremental
 import type { PDFFont, PDFPage } from 'pdf-lib-incremental-save'
 import type { PlacedField } from '../store/fieldStore'
 import { loadFontBytes } from './fonts'
+import { FORM_FIELD_FONT_PT } from './fieldDefaults'
 
 const PNG_DATA_URL_PREFIX = 'data:image/png;base64,'
 
@@ -79,7 +80,7 @@ function truncateToFit(text: string, font: PDFFont, size: number, maxWidth: numb
  */
 function drawTextInBox(page: PDFPage, text: string, font: PDFFont, field: PlacedField): void {
   if (!text) return
-  const targetSize = font.sizeAtHeight(field.pdfHeight * 0.75)
+  const targetSize = FORM_FIELD_FONT_PT
   const glyphH = font.heightAtSize(targetSize)
   // field.pdfY is the box TOP edge in PDF space (coordinate mapper flips CSS top-left → PDF Y).
   // Box bottom = field.pdfY - field.pdfHeight. Baseline is centered within the box height.

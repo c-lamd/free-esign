@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { PDFDocument, PDFPage, StandardFonts } from 'pdf-lib-incremental-save'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
 import { _clearFontBytesCache } from '../lib/fonts'
+import { FORM_FIELD_FONT_PT } from '../lib/fieldDefaults'
 import { SAMPLE_PDF_BASE64 } from './fixtures/samplePdf'
 
 /**
@@ -525,6 +526,57 @@ describe('260620-l51: exported field drawn at box bottom (pdfY - pdfHeight)', ()
     const callArgs = spy.mock.calls[0]
     // callArgs[1] is the DrawImageOptions object; y must equal pdfY - pdfHeight = 150
     expect(callArgs[1]).toMatchObject({ y: 150 })
+
+    spy.mockRestore()
+  })
+})
+
+// ---------- 260620-lkj: drawTextInBox uses fixed FORM_FIELD_FONT_PT regardless of box height ----------
+
+describe('260620-lkj: drawTextInBox font size is fixed at FORM_FIELD_FONT_PT', () => {
+  it('text field with pdfHeight=20: drawText size === FORM_FIELD_FONT_PT (10)', async () => {
+    const spy = vi.spyOn(PDFPage.prototype, 'drawText')
+
+    const field = {
+      id: 'size-test-small',
+      type: 'text' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 100,
+      pdfWidth: 120,
+      pdfHeight: 20,
+      textValue: 'Hello',
+    }
+
+    await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+
+    expect(spy).toHaveBeenCalled()
+    const callArgs = spy.mock.calls[spy.mock.calls.length - 1]
+    // callArgs[1] is the DrawTextOptions object; size must equal FORM_FIELD_FONT_PT
+    expect(callArgs[1]).toMatchObject({ size: FORM_FIELD_FONT_PT })
+
+    spy.mockRestore()
+  })
+
+  it('text field with pdfHeight=60: drawText size === FORM_FIELD_FONT_PT (10) — size is box-independent', async () => {
+    const spy = vi.spyOn(PDFPage.prototype, 'drawText')
+
+    const field = {
+      id: 'size-test-large',
+      type: 'text' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 150,
+      pdfWidth: 120,
+      pdfHeight: 60,
+      textValue: 'Hello',
+    }
+
+    await exportSignedPdf(INPUT_BYTES.buffer as ArrayBuffer, [field])
+
+    expect(spy).toHaveBeenCalled()
+    const callArgs = spy.mock.calls[spy.mock.calls.length - 1]
+    expect(callArgs[1]).toMatchObject({ size: FORM_FIELD_FONT_PT })
 
     spy.mockRestore()
   })
