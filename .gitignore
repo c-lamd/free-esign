@@ -37,3 +37,6 @@ dist-ssr/
 public/pdf.worker.min.mjs
 public/cmaps/
 public/standard_fonts/
+
+# Local test fixture for manual/browser verification (not part of the app)
+freesign-sample.pdf
