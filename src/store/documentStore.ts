@@ -2,12 +2,10 @@ import { create } from 'zustand'
 
 export type ViewState = 'landing' | 'empty' | 'loading' | 'error' | 'loaded'
 
-/**
- * Discrete zoom steps for document zoom (50–200%).
- * Shared between documentStore and ZoomControl — import from this module.
- */
-export const ZOOM_STEPS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0] as const
-export type ZoomStep = (typeof ZOOM_STEPS)[number]
+/** Continuous zoom range (10%–200%). Clamped in setZoom. */
+export const ZOOM_MIN = 0.1
+export const ZOOM_MAX = 2.0
+export const ZOOM_KEY_STEP = 0.05
 
 export interface DocumentStore {
   view: ViewState
@@ -36,7 +34,7 @@ export interface DocumentStore {
 
   /**
    * Document zoom multiplier.
-   * Default 1.0 (fit-to-width). Range 0.5–2.0 using ZOOM_STEPS.
+   * Default 1.0 (fit-to-width). Continuous range 0.1–2.0 (clamped).
    * Used to compute effectiveScale in LazyPage; stored PDF coords are never mutated on zoom.
    */
   zoom: number
@@ -84,12 +82,7 @@ export const useDocumentStore = create<DocumentStore>()((set) => ({
   setOriginalPdfBytes: (originalPdfBytes) => set({ originalPdfBytes }),
   setFileName: (fileName) => set({ fileName }),
   setExportError: (exportError) => set({ exportError }),
-  setZoom: (zoom) => {
-    // Guard: ignore values not in ZOOM_STEPS to prevent stuck zoom buttons
-    // when zoom holds an out-of-range value (indexOf returns -1 in ZoomControl).
-    if (!ZOOM_STEPS.includes(zoom as ZoomStep)) return
-    set({ zoom })
-  },
+  setZoom: (zoom) => set({ zoom: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom)) }),
   reset: () =>
     set((s) => {
       if (s.docUrl) URL.revokeObjectURL(s.docUrl)

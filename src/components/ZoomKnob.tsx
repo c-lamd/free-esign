@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useDocumentStore, ZOOM_STEPS, type ZoomStep } from '../store/documentStore'
+import { useDocumentStore, ZOOM_MIN, ZOOM_MAX, ZOOM_KEY_STEP } from '../store/documentStore'
 
 /**
  * ZoomKnob — calm rotary zoom control (EDT-05).
@@ -12,27 +12,14 @@ import { useDocumentStore, ZOOM_STEPS, type ZoomStep } from '../store/documentSt
  * - Live % readout (aria-live="polite", aria-atomic="true")
  *
  * Store contract (PAR-03):
- * - Drag delta → nearestZoomStep(rawZoom) → setZoom(snappedStep) ONLY
- * - NEVER calls setZoom(rawContinuousValue) — store guard silently ignores non-ZOOM_STEP values
- * - Visual state (pointer angle, arc) derived from documentStore.zoom (the snapped value)
+ * - Drag delta → rawZoom (1% granularity via Math.round) → setZoom(rawZoom)
+ * - Store clamps to [ZOOM_MIN, ZOOM_MAX]; no discrete snapping
+ * - Visual state (pointer angle, arc) derived from documentStore.zoom
  * - Does NOT apply any CSS transform to the document (LazyPage handles zoom via width prop)
  *
  * Position: inline in the TopBar loaded-view right group, between the LCD readout and the OPEN key.
  * The knob is visually scaled to ~40×40px via a CSS transform wrapper; internal geometry is unchanged.
  */
-
-// Mutable array copy for indexOf / nearest search
-const ZOOM_STEPS_ARR = [...ZOOM_STEPS] as ZoomStep[]
-
-/**
- * Exported for testing — snaps a continuous raw zoom value to the nearest ZOOM_STEP.
- * This is the EDT-05 snap-contract function; it is always called before setZoom.
- */
-export function nearestZoomStep(raw: number): ZoomStep {
-  return ZOOM_STEPS_ARR.reduce((prev, curr) =>
-    Math.abs(curr - raw) < Math.abs(prev - raw) ? curr : prev,
-  )
-}
 
 export function ZoomKnob() {
   const zoom = useDocumentStore((s) => s.zoom)
@@ -45,8 +32,8 @@ export function ZoomKnob() {
   // Mount guard: only render when a document is loaded
   if (!numPages || numPages < 1) return null
 
-  // ── Visual derivation (from snapped store value, NOT raw drag) ────────────────
-  const pct = (zoom - 0.5) / (2.0 - 0.5) // 0.0 at 50% → 1.0 at 200%
+  // ── Visual derivation ─────────────────────────────────────────────────────────
+  const pct = (zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)
   const deg = pct * 270
 
   // ── Drag handlers (pointer capture for cross-element tracking) ────────────────
@@ -59,13 +46,10 @@ export function ZoomKnob() {
     if (!dragState.current) return
     const { startY, startZoom } = dragState.current
     const deltaY = startY - e.clientY // drag UP = positive = zoom in
-    const sensitivity = 0.007 // 1/0.007 ≈ 143 px per 1.0 zoom unit; full range (0.5→2.0) ≈ 214 px
+    const sensitivity = 0.007 // 1/0.007 ≈ 143 px per 1.0 zoom unit; full range (0.1→2.0) ≈ 271 px
     const rawZoom = startZoom + deltaY * sensitivity
-    const snapped = nearestZoomStep(rawZoom)
-    // Only call setZoom when the snapped value actually differs — avoid no-op dispatches
-    if (snapped !== zoom) {
-      setZoom(snapped)
-    }
+    // Round to 1% granularity → clean integer % readout; store clamps to [ZOOM_MIN, ZOOM_MAX]
+    setZoom(Math.round(rawZoom * 100) / 100)
   }
 
   function handlePointerUp() {
@@ -74,21 +58,15 @@ export function ZoomKnob() {
 
   // ── Keyboard fallback (WCAG 2.1 AA) ──────────────────────────────────────────
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const idx = ZOOM_STEPS_ARR.indexOf(zoom as ZoomStep)
-
     if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
       e.preventDefault()
-      if (idx >= 0 && idx < ZOOM_STEPS_ARR.length - 1) {
-        setZoom(ZOOM_STEPS_ARR[idx + 1])
-      }
+      setZoom(zoom + ZOOM_KEY_STEP)
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
       e.preventDefault()
-      if (idx > 0) {
-        setZoom(ZOOM_STEPS_ARR[idx - 1])
-      }
+      setZoom(zoom - ZOOM_KEY_STEP)
     } else if (e.key === 'Home') {
       e.preventDefault()
-      setZoom(1.0 as ZoomStep)
+      setZoom(1.0)
     }
   }
 
@@ -221,7 +199,7 @@ export function ZoomKnob() {
         <div
           role="slider"
           aria-valuenow={Math.round(zoom * 100)}
-          aria-valuemin={50}
+          aria-valuemin={10}
           aria-valuemax={200}
           aria-label="Document zoom — drag up to zoom in, drag down to zoom out"
           tabIndex={0}

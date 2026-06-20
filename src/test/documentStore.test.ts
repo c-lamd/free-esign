@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useDocumentStore, ZOOM_STEPS, type ZoomStep } from '../store/documentStore'
+import { useDocumentStore, ZOOM_MIN, ZOOM_MAX } from '../store/documentStore'
 
 describe('documentStore', () => {
   beforeEach(() => {
@@ -126,40 +126,33 @@ describe('documentStore', () => {
     expect(useDocumentStore.getState().zoom).toBe(1.5)
   })
 
-  it('WR-01: setZoom ignores values not in ZOOM_STEPS (out-of-range guard)', () => {
+  // ── Continuous zoom clamp tests ───────────────────────────────────────────────
+  it('setZoom clamps values above ZOOM_MAX (2.0) to ZOOM_MAX', () => {
     const store = useDocumentStore.getState()
-    store.setZoom(1.0) // valid baseline
-    // Cast through unknown to bypass TypeScript's type guard — tests the runtime guard
-    store.setZoom(0.6 as unknown as ZoomStep)
-    // 0.6 is not in ZOOM_STEPS — zoom must remain 1.0
+    store.setZoom(3.0)
+    expect(useDocumentStore.getState().zoom).toBe(ZOOM_MAX)
+  })
+
+  it('setZoom clamps values below ZOOM_MIN (0.1) to ZOOM_MIN', () => {
+    const store = useDocumentStore.getState()
+    store.setZoom(0.01)
+    expect(useDocumentStore.getState().zoom).toBe(ZOOM_MIN)
+  })
+
+  it('setZoom accepts any value within [ZOOM_MIN, ZOOM_MAX] (e.g. 0.6)', () => {
+    const store = useDocumentStore.getState()
+    store.setZoom(0.6)
+    expect(useDocumentStore.getState().zoom).toBe(0.6)
+  })
+
+  it('setZoom(1.0) stays 1.0', () => {
+    const store = useDocumentStore.getState()
+    store.setZoom(1.0)
     expect(useDocumentStore.getState().zoom).toBe(1.0)
   })
 
-  it('ZOOM_STEPS equals [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]', () => {
-    expect(Array.from(ZOOM_STEPS)).toEqual([0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0])
-  })
-
-  it('stepping up from 1.0 via ZOOM_STEPS yields 1.25', () => {
-    const idx = ZOOM_STEPS.indexOf(1.0)
-    const next = idx >= 0 && idx < ZOOM_STEPS.length - 1 ? ZOOM_STEPS[idx + 1] : 1.0
-    expect(next).toBe(1.25)
-  })
-
-  it('stepping up from 2.0 (max) stays 2.0', () => {
-    const idx = ZOOM_STEPS.indexOf(2.0)
-    const next = idx >= 0 && idx < ZOOM_STEPS.length - 1 ? ZOOM_STEPS[idx + 1] : 2.0
-    expect(next).toBe(2.0)
-  })
-
-  it('stepping down from 1.0 yields 0.75', () => {
-    const idx = ZOOM_STEPS.indexOf(1.0)
-    const prev = idx > 0 ? ZOOM_STEPS[idx - 1] : 1.0
-    expect(prev).toBe(0.75)
-  })
-
-  it('stepping down from 0.5 (min) stays 0.5', () => {
-    const idx = ZOOM_STEPS.indexOf(0.5)
-    const prev = idx > 0 ? ZOOM_STEPS[idx - 1] : 0.5
-    expect(prev).toBe(0.5)
+  it('ZOOM_MIN is 0.1 and ZOOM_MAX is 2.0', () => {
+    expect(ZOOM_MIN).toBe(0.1)
+    expect(ZOOM_MAX).toBe(2.0)
   })
 })
