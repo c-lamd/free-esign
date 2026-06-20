@@ -349,10 +349,14 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
       data-selected={isSelected ? 'true' : undefined}
       onClick={handleClick}
       style={{
-        // Outer wrapper: no border or background — visual chrome is on the Rnd inner div
-        position: 'relative',
-        display: 'inline-block',
-        pointerEvents: 'auto', // Re-enable pointer events on the widget (overlay is pointer-events:none)
+        // Outer wrapper FILLS the page so react-rnd bounds="parent" clamps to the page.
+        // (With display:inline-block + an absolute Rnd child this collapsed to 0×0, so
+        // dragging snapped every field to the top-left corner.) pointer-events:none lets
+        // clicks fall through to the overlay / underlying fields; the Rnd re-enables
+        // pointer events for itself. Visual chrome lives on the Rnd inner div.
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
       }}
     >
       <Rnd
@@ -375,6 +379,8 @@ export function PlacedFieldWidget({ field, viewport, isSelected }: PlacedFieldWi
           // EDT-06: translucent accent fill behind field content (PAR-03 safe: style only)
           backgroundColor: 'color-mix(in srgb, var(--color-accent-soft) 40%, transparent)',
           boxSizing: 'border-box',
+          // Re-enable interaction: the full-page outer wrapper is pointer-events:none.
+          pointerEvents: 'auto',
         }}
       >
         {/* EDT-06: mono tag label — absolutely-positioned above the field, shown only when selected.
