@@ -34,7 +34,7 @@
  */
 
 import fontkit from '@pdf-lib/fontkit'
-import { PDFDocument, StandardFonts } from 'pdf-lib-incremental-save'
+import { PDFDocument, StandardFonts, PDFName, PDFRef } from 'pdf-lib-incremental-save'
 import type { PDFFont, PDFPage } from 'pdf-lib-incremental-save'
 import type { PlacedField } from '../store/fieldStore'
 import { loadFontBytes } from './fonts'
@@ -163,6 +163,41 @@ function drawCheckboxX(page: PDFPage, fontBold: PDFFont, field: PlacedField): vo
 }
 
 /**
+ * Marks the Catalog (Root) and the given page's full parent chain for inclusion in the
+ * incremental save revision.
+ *
+ * When the original PDF uses object streams (ObjStm — the default for pdf-lib / modern PDFs),
+ * embedPng causes pdf-lib-incremental-save to rewrite the ObjStm that contains the compressed
+ * Catalog entry. If only the page ref is marked, the new xref resolves /Root via /Prev into
+ * the clobbered ObjStm → Catalog becomes unresolvable → "Invalid Root reference" in pdfjs.
+ *
+ * Re-emitting the Catalog + page-tree parent chain as standalone objects in the incremental
+ * update ensures all cross-reference entries resolve correctly after the ObjStm is rewritten.
+ * This call is idempotent — marking a ref multiple times has no negative effect.
+ *
+ * @param pdfDoc  - The loaded PDFDocument.
+ * @param snapshot - The snapshot obtained from pdfDoc.takeSnapshot().
+ * @param page    - The PDFPage being modified.
+ */
+function markPageStructureForSave(
+  pdfDoc: PDFDocument,
+  snapshot: ReturnType<PDFDocument['takeSnapshot']>,
+  page: PDFPage,
+): void {
+  snapshot.markRefForSave(page.ref)
+  const rootRef = pdfDoc.context.trailerInfo?.Root
+  if (rootRef instanceof PDFRef) snapshot.markRefForSave(rootRef)
+  let node = page.node
+  let guard = 0
+  while (node && guard++ < 50) {
+    const parentRef = node.get(PDFName.of('Parent'))
+    if (!(parentRef instanceof PDFRef)) break
+    snapshot.markRefForSave(parentRef)
+    node = pdfDoc.context.lookup(parentRef) as typeof node
+  }
+}
+
+/**
  * Exports a signed PDF by appending an incremental revision to the original bytes.
  *
  * EXP-02 guarantee: `output.slice(0, 512)` is byte-identical to `input.slice(0, 512)`.
@@ -228,8 +263,10 @@ export async function exportSignedPdf(
         )
       }
 
-      // Mark BEFORE drawing (RESEARCH anti-pattern: marking after draw omits changes)
-      snapshot.markRefForSave(page.ref)
+      // Mark BEFORE drawing (RESEARCH anti-pattern: marking after draw omits changes).
+      // markPageStructureForSave re-emits the Catalog + page-tree parent chain so that
+      // object-stream originals remain openable after embedPng rewrites their ObjStm.
+      markPageStructureForSave(pdfDoc, snapshot, page)
 
       if (field.type === 'signature' || field.type === 'initials') {
         if (field.dataUrl) {

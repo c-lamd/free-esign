@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
+import { PDFDocument, StandardFonts } from 'pdf-lib-incremental-save'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
 import { _clearFontBytesCache } from '../lib/fonts'
 import { SAMPLE_PDF_BASE64 } from './fixtures/samplePdf'
@@ -495,5 +496,57 @@ describe('SIG-02/SIG-03: typed-signature export (font-backed, not PNG)', () => {
     const bytes = await loadFontBytes('Dancing Script')
     expect(bytes).toBeInstanceOf(Uint8Array)
     expect(bytes.length).toBeGreaterThan(0)
+  })
+})
+
+// ---------- KMW-260620: drawn signature on object-stream original ----------
+
+describe('KMW-260620: object-stream original + drawn signature — regression', () => {
+  /**
+   * Regression test for the "Invalid Root reference" bug.
+   *
+   * Root cause: pdf-lib's default save() uses object streams (ObjStm) to compress
+   * objects including the Catalog. When embedPng modifies a page, pdf-lib-incremental-save
+   * rewrites the ObjStm that contains the Catalog entry. If only page.ref is marked for
+   * save (the pre-fix behaviour), the new xref still resolves /Root via /Prev into the
+   * clobbered ObjStm → Catalog becomes unresolvable → pdfjs throws "Invalid Root reference".
+   *
+   * The fix (markPageStructureForSave) re-emits the Catalog + page-tree parent chain as
+   * standalone objects, so the new xref can resolve /Root directly.
+   */
+  it('object-stream original + drawn signature: result re-parses and byte-prefix is preserved (EXP-02)', async () => {
+    // Build an object-stream original using pdf-lib's default save() (uses ObjStm).
+    const d = await PDFDocument.create()
+    const p = d.addPage([400, 400])
+    const f = await d.embedFont(StandardFonts.Helvetica)
+    p.drawText('orig', { x: 40, y: 200, size: 16, font: f })
+    const orig = await d.save() // default save uses object streams
+
+    // Minimal 1×1 transparent PNG — same as TRANSPARENT_1x1_PNG above.
+    const drawnSigField = {
+      id: 'kmw-drawn',
+      type: 'signature' as const,
+      pageNumber: 1,
+      pdfX: 50,
+      pdfY: 50,
+      pdfWidth: 120,
+      pdfHeight: 40,
+      dataUrl:
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    }
+
+    const result = await exportSignedPdf(orig.buffer as ArrayBuffer, [drawnSigField])
+
+    // 1. EXP-02: the first orig.length bytes of result must byte-equal orig.
+    //    (The incremental revision is appended after, never before, the original bytes.)
+    const resultPrefix = Array.from(result.slice(0, orig.length))
+    const origArray = Array.from(orig)
+    expect(resultPrefix).toEqual(origArray)
+
+    // 2. The result must re-parse cleanly — this is the regression guard.
+    //    Pre-fix: PDFDocument.load throws "Invalid Root reference" for object-stream originals.
+    //    Post-fix: Catalog is re-emitted as a standalone object → load succeeds.
+    const reloaded = await PDFDocument.load(result)
+    expect(reloaded.getPageCount()).toBe(1)
   })
 })
