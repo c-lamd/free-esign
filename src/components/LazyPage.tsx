@@ -260,7 +260,7 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
   )
 
   // Estimate A4/Letter page aspect ratio (1.414) for placeholder height
-  const estimatedHeight = containerWidth ? containerWidth * 1.414 : 800
+  const estimatedHeight = containerWidth ? containerWidth * zoom * 1.414 : 800
 
   return (
     <div
@@ -275,7 +275,14 @@ export function LazyPage({ pageNumber, containerWidth }: LazyPageProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: containerWidth ?? '100%',
+        // Wrapper width MUST equal the page width (containerWidth * zoom), NOT the
+        // zoom-independent fit-to-width baseline. Otherwise the <Page> is centered
+        // INSIDE a fixed-width wrapper at zoom≠1 while the inset:0 field overlay +
+        // click origin stay pinned to the wrapper's left edge — placed fields then
+        // drift horizontally as you zoom (PAR-03 violation). Sizing the wrapper to
+        // the page makes the overlay coincide with the page at every zoom; the
+        // parent container's align-items:center keeps the document visually centered.
+        width: containerWidth ? containerWidth * zoom : '100%',
       }}
     >
       {/* EDT-04: Registration/crop marks at page corners — absolute sibling, pointer-events:none.
