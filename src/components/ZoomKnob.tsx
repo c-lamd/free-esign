@@ -17,7 +17,8 @@ import { useDocumentStore, ZOOM_STEPS, type ZoomStep } from '../store/documentSt
  * - Visual state (pointer angle, arc) derived from documentStore.zoom (the snapped value)
  * - Does NOT apply any CSS transform to the document (LazyPage handles zoom via width prop)
  *
- * Position: same zone as the removed ZoomControl (right: calc(50% + 85px); bottom: 24px)
+ * Position: inline in the TopBar loaded-view right group, between the LCD readout and the OPEN key.
+ * The knob is visually scaled to ~40×40px via a CSS transform wrapper; internal geometry is unchanged.
  */
 
 // Mutable array copy for indexOf / nearest search
@@ -93,22 +94,33 @@ export function ZoomKnob() {
 
   // ── Styles (inline, using CSS var tokens) ─────────────────────────────────────
 
-  // Outer fixed wrapper — same position zone as the removed ZoomControl
+  // Outer inline-row wrapper — flows inside the TopBar right group (no fixed positioning)
   const wrapperStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: '24px',
-    right: 'calc(50% + 85px)',
-    zIndex: 50,
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'inline-flex',
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: '8px',
+    gap: '6px',
     userSelect: 'none',
   }
 
-  // 80×80px hit area for the knob ring + face
-  const knobHitAreaStyle: React.CSSProperties = {
+  // 40×40px sizing box that visually contains the 80px hit area via scale(0.5)
+  const sizingBoxStyle: React.CSSProperties = {
+    width: '40px',
+    height: '40px',
     position: 'relative',
+    flexShrink: 0,
+  }
+
+  // 80×80px hit area for the knob ring + face.
+  // Positioned at top-left of the 40px sizing box and scaled to 0.5 so it visually
+  // occupies 40×40px. CSS transform does NOT affect clientY screen coordinates —
+  // drag sensitivity (0.007) is unchanged (PAR-03).
+  const knobHitAreaStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    transform: 'scale(0.5)',
+    transformOrigin: 'top left',
     width: '80px',
     height: '80px',
     cursor: 'ns-resize',
@@ -191,7 +203,7 @@ export function ZoomKnob() {
     zIndex: 3,
   }
 
-  // % readout below the knob
+  // % readout inline to the right of the knob
   const readoutStyle: React.CSSProperties = {
     fontFamily: 'var(--font-mono)',
     fontSize: '11px',
@@ -203,42 +215,45 @@ export function ZoomKnob() {
 
   return (
     <div style={wrapperStyle}>
-      {/* Knob hit area: handles drag + keyboard events + ARIA */}
-      <div
-        role="slider"
-        aria-valuenow={Math.round(zoom * 100)}
-        aria-valuemin={50}
-        aria-valuemax={200}
-        aria-label="Document zoom — drag up to zoom in, drag down to zoom out"
-        tabIndex={0}
-        style={knobHitAreaStyle}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onLostPointerCapture={handlePointerUp}
-        onKeyDown={handleKeyDown}
-        onFocus={(e) => {
-          e.currentTarget.style.outline = '2px solid var(--color-accent)'
-          e.currentTarget.style.outlineOffset = '3px'
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.outline = 'none'
-        }}
-      >
-        {/* Layer 1: Tick ring (bottom) */}
-        <div aria-hidden="true" style={ringStyle} />
+      {/* 40×40 sizing box: contains the 80px hit area visually scaled to 40px */}
+      <div style={sizingBoxStyle}>
+        {/* Knob hit area: handles drag + keyboard events + ARIA */}
+        <div
+          role="slider"
+          aria-valuenow={Math.round(zoom * 100)}
+          aria-valuemin={50}
+          aria-valuemax={200}
+          aria-label="Document zoom — drag up to zoom in, drag down to zoom out"
+          tabIndex={0}
+          style={knobHitAreaStyle}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
+          onKeyDown={handleKeyDown}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--color-accent)'
+            e.currentTarget.style.outlineOffset = '3px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          {/* Layer 1: Tick ring (bottom) */}
+          <div aria-hidden="true" style={ringStyle} />
 
-        {/* Layer 2: Progress arc (above ring) */}
-        <div aria-hidden="true" style={arcStyle} />
+          {/* Layer 2: Progress arc (above ring) */}
+          <div aria-hidden="true" style={arcStyle} />
 
-        {/* Layer 3: Knob face (above arc) */}
-        <div aria-hidden="true" style={faceStyle}>
-          {/* Layer 4: Accent pointer (rotates within face) */}
-          <div style={pointerStyle} />
+          {/* Layer 3: Knob face (above arc) */}
+          <div aria-hidden="true" style={faceStyle}>
+            {/* Layer 4: Accent pointer (rotates within face) */}
+            <div style={pointerStyle} />
+          </div>
         </div>
       </div>
 
-      {/* Live % readout below knob */}
+      {/* Live % readout inline to the right of the knob */}
       <span
         aria-live="polite"
         aria-atomic="true"

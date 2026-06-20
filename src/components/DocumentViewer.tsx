@@ -13,7 +13,6 @@ import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { LazyPage } from './LazyPage'
 import { PageNavigation } from './PageNavigation'
-import { ZoomKnob } from './ZoomKnob'
 import { LoadingSpinner } from './LoadingSpinner'
 import { PlacementModeOverlay } from './PlacementModeOverlay'
 
@@ -26,7 +25,8 @@ import { PlacementModeOverlay } from './PlacementModeOverlay'
  * - Pages fit-to-width via ResizeObserver on the inner container (RESEARCH Pattern 2)
  * - Off-screen pages lazy-rendered via LazyPage (IntersectionObserver, RESEARCH Pattern 3)
  * - ResizeObserver pitfall avoided: container uses width:100% inside a max-width parent (Pitfall 5)
- * - PageNavigation pill fixed at bottom-center
+ * - PageNavigation pill fixed at bottom-center (the only floating overlay control)
+ * - ZoomKnob has been relocated to the TopBar right group (EDT-05); it is no longer rendered here
  *
  * Scroll tracking:
  * - An IntersectionObserver over all LazyPage wrappers tracks the most-visible page
@@ -254,9 +254,6 @@ export function DocumentViewer() {
         {numPages !== null && numPages > 0 && (
           <PageNavigation scrollContainerRef={scrollContainerRef} />
         )}
-
-        {/* ZoomKnob: rotary zoom control, fixed bottom — replaces ZoomControl pill (EDT-05) */}
-        <ZoomKnob />
       </div>
     </>
   )

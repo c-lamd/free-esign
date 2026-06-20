@@ -6,6 +6,7 @@ import { UndoRedoControls } from './UndoRedoControls'
 import { Wordmark } from './Wordmark'
 import { HardwareKey } from './ui/HardwareKey'
 import { LcdReadout } from './LcdReadout'
+import { ZoomKnob } from './ZoomKnob'
 
 export function TopBar() {
   const view = useDocumentStore((s) => s.view)
@@ -138,7 +139,22 @@ export function TopBar() {
           {/* LCD readout — shows live session status; renders only when numPages > 0 */}
           <LcdReadout />
 
-          {/* Visual separator between LCD and action keys */}
+          {/* Visual separator between LCD and zoom knob */}
+          <div
+            aria-hidden="true"
+            style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: 'var(--color-line-strong)',
+              margin: '0 4px',
+              flexShrink: 0,
+            }}
+          />
+
+          {/* ZoomKnob — inline rotary zoom control (EDT-05); self-gates on numPages > 0 */}
+          <ZoomKnob />
+
+          {/* Visual separator between zoom knob and OPEN key */}
           <div
             aria-hidden="true"
             style={{
