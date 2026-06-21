@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useFieldStore } from './store/fieldStore'
 import { liveTools } from './tools/registry'
+import { ToolsHub } from './components/ToolsHub'
 
 /**
  * AppRoutes — the registry-driven route table (SUITE-01 / SUITE-03).
@@ -13,8 +14,8 @@ import { liveTools } from './tools/registry'
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Hub + listing placeholders — replaced by the real ToolsHub / ToolsListing in 10-02. */}
-      <Route path="/" element={<HubStub />} />
+      {/* Tools-hub homepage (10-02). The /tools listing stub is replaced in Task 3. */}
+      <Route path="/" element={<ToolsHub />} />
       <Route path="/tools" element={<ToolsListingStub />} />
 
       {/* Tool routes generated from the registry (SUITE-03). */}
@@ -34,7 +35,7 @@ export function AppRoutes() {
  * Replaces the old top-level Zustand `view` switch between <LandingPage> and the
  * signing tool. Top-level navigation now lives in react-router-dom routes:
  *
- *   /        → tools-hub homepage (inline stub here; real ToolsHub in 10-02)
+ *   /        → tools-hub homepage (ToolsHub, 10-02)
  *   /tools   → tools-listing      (inline stub here; real ToolsListing in 10-02)
  *   /sign    → the signing tool   (SignRoute, via the registry)
  *   *        → catch-all redirect to / (SUITE-01)
@@ -67,19 +68,6 @@ function App() {
         <AppRoutes />
       </BrowserRouter>
     </div>
-  )
-}
-
-/**
- * HubStub — temporary `/` placeholder (10-02 replaces it with the real
- * instrument-panel tools-hub homepage + vestaboard hero). Kept intentionally
- * minimal so the router is complete now.
- */
-function HubStub() {
-  return (
-    <main data-testid="hub-stub" style={{ padding: '48px 16px' }}>
-      <h1>FreeESign tools</h1>
-    </main>
   )
 }
 
