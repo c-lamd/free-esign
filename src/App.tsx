@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useFieldStore } from './store/fieldStore'
 import { liveTools } from './tools/registry'
 import { ToolsHub } from './components/ToolsHub'
+import { ToolsListing } from './components/ToolsListing'
 
 /**
  * AppRoutes — the registry-driven route table (SUITE-01 / SUITE-03).
@@ -14,9 +15,9 @@ import { ToolsHub } from './components/ToolsHub'
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Tools-hub homepage (10-02). The /tools listing stub is replaced in Task 3. */}
+      {/* Tools-hub homepage + tools-listing — both registry-driven (10-02). */}
       <Route path="/" element={<ToolsHub />} />
-      <Route path="/tools" element={<ToolsListingStub />} />
+      <Route path="/tools" element={<ToolsListing />} />
 
       {/* Tool routes generated from the registry (SUITE-03). */}
       {liveTools().map((t) => (
@@ -36,7 +37,7 @@ export function AppRoutes() {
  * signing tool. Top-level navigation now lives in react-router-dom routes:
  *
  *   /        → tools-hub homepage (ToolsHub, 10-02)
- *   /tools   → tools-listing      (inline stub here; real ToolsListing in 10-02)
+ *   /tools   → tools-listing      (ToolsListing, 10-02)
  *   /sign    → the signing tool   (SignRoute, via the registry)
  *   *        → catch-all redirect to / (SUITE-01)
  *
@@ -68,18 +69,6 @@ function App() {
         <AppRoutes />
       </BrowserRouter>
     </div>
-  )
-}
-
-/**
- * ToolsListingStub — temporary `/tools` placeholder (10-02 replaces it with the
- * real tools-listing view derived from the registry).
- */
-function ToolsListingStub() {
-  return (
-    <main data-testid="tools-listing-stub" style={{ padding: '48px 16px' }}>
-      <h1>All tools</h1>
-    </main>
   )
 }
 
