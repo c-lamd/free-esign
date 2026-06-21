@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
-import { wrapImageAsPdf } from '../lib/imageWrapper'
+import { PDFDocument } from 'pdf-lib-incremental-save'
+import { wrapImageAsPdf, imagesToPdf } from '../lib/imageWrapper'
 
 /**
  * jsdom does not implement URL.createObjectURL. Stub it in this test file
@@ -98,5 +99,51 @@ describe('wrapImageAsPdf — error handling', () => {
     const corrupt = new Uint8Array([0x00, 0x01, 0x02, 0x03]) // not a valid image
     const file = new File([corrupt], 'bad.png', { type: 'image/png' })
     await expect(wrapImageAsPdf(file)).rejects.toThrow()
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// imagesToPdf — multi-image → ONE multi-page PDF (CNV-02)
+// ───────────────────────────────────────────────────────────────────────────
+
+function pngFile(name = 'image.png'): File {
+  return new File([MINIMAL_1x1_PNG], name, { type: 'image/png' })
+}
+
+function jpgFile(name = 'photo.jpg'): File {
+  return new File([MINIMAL_1x1_JPEG], name, { type: 'image/jpeg' })
+}
+
+describe('imagesToPdf — multi-image → one multi-page PDF', () => {
+  it('wraps a single PNG into a one-page PDF (bytes start with %PDF-)', async () => {
+    const bytes = await imagesToPdf([pngFile()])
+    expect(bytes).toBeInstanceOf(Uint8Array)
+    // %PDF- header = 0x25 0x50 0x44 0x46 0x2d
+    expect(Array.from(bytes.slice(0, 5))).toEqual([0x25, 0x50, 0x44, 0x46, 0x2d])
+    const doc = await PDFDocument.load(bytes)
+    expect(doc.getPageCount()).toBe(1)
+  })
+
+  it('wraps a PNG + a JPG into a two-page PDF (one page per image)', async () => {
+    const bytes = await imagesToPdf([pngFile('a.png'), jpgFile('b.jpg')])
+    const doc = await PDFDocument.load(bytes)
+    expect(doc.getPageCount()).toBe(2)
+  })
+
+  it('produces one page PER input image, in input order (3 images → 3 pages)', async () => {
+    const bytes = await imagesToPdf([pngFile('1.png'), jpgFile('2.jpg'), pngFile('3.png')])
+    const doc = await PDFDocument.load(bytes)
+    expect(doc.getPageCount()).toBe(3)
+  })
+
+  it('rejects with a tagged Error when an image is corrupt (never leaks raw pdf-lib message)', async () => {
+    const corrupt = new File([new Uint8Array([0x00, 0x01, 0x02, 0x03])], 'bad.png', {
+      type: 'image/png',
+    })
+    await expect(imagesToPdf([corrupt])).rejects.toThrow(/could not be embedded in PDF/i)
+  })
+
+  it('rejects when given an empty image list', async () => {
+    await expect(imagesToPdf([])).rejects.toThrow(/no images to convert/i)
   })
 })

@@ -28,11 +28,28 @@ import { PDFDocument } from 'pdf-lib-incremental-save'
  */
 async function buildWrappedPdf(file: File, arrayBuffer: ArrayBuffer): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create()
+  await appendImagePage(pdfDoc, file.type, arrayBuffer)
+  return pdfDoc.save()
+}
 
-  // embedPng for PNG; embedJpg for everything else (JPEG/JPG).
-  // Original bytes are embedded directly — no lossy re-encoding (document integrity).
+/**
+ * Embeds one image's original bytes into `pdfDoc` and appends a single page sized
+ * to that image, drawn full-bleed at the page origin.
+ *
+ * embedPng for PNG; embedJpg for everything else (JPEG/JPG). Original bytes are
+ * embedded directly — no canvas rasterization, no lossy re-encode (document
+ * integrity / CLAUDE.md constraint). Identical embed branch to buildWrappedPdf,
+ * shared so the single-image and multi-image paths stay byte-for-byte consistent.
+ *
+ * @internal
+ */
+async function appendImagePage(
+  pdfDoc: PDFDocument,
+  mimeType: string,
+  arrayBuffer: ArrayBuffer,
+): Promise<void> {
   const image =
-    file.type === 'image/png'
+    mimeType === 'image/png'
       ? await pdfDoc.embedPng(arrayBuffer)
       : await pdfDoc.embedJpg(arrayBuffer)
 
@@ -46,8 +63,6 @@ async function buildWrappedPdf(file: File, arrayBuffer: ArrayBuffer): Promise<Ui
     width: image.width,
     height: image.height,
   })
-
-  return pdfDoc.save()
 }
 
 /**
@@ -122,4 +137,57 @@ export async function wrapImageAsPdfWithBytes(
         (cause instanceof Error ? cause.message : String(cause)),
     )
   }
+}
+
+/**
+ * Wraps one or more JPG/PNG Files into a SINGLE multi-page PDF — one page per
+ * image, in the input-array order. This is the Image → PDF tool's lossless core
+ * (CNV-02): each image's original bytes are embedded via embedPng/embedJpg (no
+ * canvas rasterization, no re-encode), exactly like the single-image wrap path.
+ *
+ * Distinct from wrapImageAsPdf / wrapImageAsPdfWithBytes (which the signing image
+ * path depends on and which must stay one-page) — this builds ONE PDFDocument and
+ * appends a page per file.
+ *
+ * Threat model: T-12-06 — a corrupt/unsupported image is caught and re-thrown as
+ * a tagged Error ("Image could not be embedded in PDF: ...") so the route can map
+ * it to friendly inline copy and never download. T-12-05 — purely in-browser; no
+ * fetch, no bytes leave the device (PAR-05).
+ *
+ * @param files - One or more Files with type 'image/jpeg' or 'image/png', in page order.
+ * @returns A Promise resolving to the combined PDF bytes (Uint8Array).
+ * @throws A tagged Error if `files` is empty, a file's bytes cannot be read, or an
+ *         image cannot be embedded.
+ */
+export async function imagesToPdf(files: File[]): Promise<Uint8Array> {
+  if (files.length === 0) {
+    throw new Error('There are no images to convert.')
+  }
+
+  const pdfDoc = await PDFDocument.create()
+
+  for (const file of files) {
+    let arrayBuffer: ArrayBuffer
+    try {
+      arrayBuffer = await file.arrayBuffer()
+    } catch (cause) {
+      throw new Error(
+        'Could not read image file bytes: ' +
+          (cause instanceof Error ? cause.message : String(cause)),
+      )
+    }
+
+    try {
+      await appendImagePage(pdfDoc, file.type, arrayBuffer)
+    } catch (cause) {
+      // Re-throw as a tagged Error so callers can display the corrupt-file copy
+      // without leaking internal pdf-lib error messages to the UI.
+      throw new Error(
+        'Image could not be embedded in PDF: ' +
+          (cause instanceof Error ? cause.message : String(cause)),
+      )
+    }
+  }
+
+  return pdfDoc.save()
 }
