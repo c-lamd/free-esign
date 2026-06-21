@@ -20,6 +20,7 @@
  */
 
 import { zipSync } from 'fflate'
+import { recordExport } from './counter'
 
 /** One entry to place inside a zip: a filename and its raw bytes. */
 export interface ZipEntry {
@@ -71,4 +72,10 @@ export function triggerBlobDownload(bytes: Uint8Array, filename: string, mime: s
   document.body.removeChild(a)
   // Revoke after a brief delay so the download has time to start.
   setTimeout(() => URL.revokeObjectURL(url), 100)
+  // CNT-03: exactly one counter increment per successful export. Every Phase 11
+  // tool (merge / split — both range and each-page-zip branches / organize /
+  // pdf-to-image — single image AND multi-image-zip / image-to-pdf) funnels one
+  // export action through this single call-site, so this is the one increment.
+  // Fire-and-forget; never throws or blocks the download (CNT-04).
+  recordExport()
 }

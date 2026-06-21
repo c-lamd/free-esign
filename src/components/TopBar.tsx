@@ -1,6 +1,7 @@
 import { useDocumentStore } from '../store/documentStore'
 import { useFieldStore } from '../store/fieldStore'
 import { exportSignedPdf, triggerDownload, signedFilename } from '../lib/exportPdf'
+import { recordExport } from '../lib/counter'
 import { FieldPalette } from './FieldPalette'
 import { UndoRedoControls } from './UndoRedoControls'
 import { Wordmark } from './Wordmark'
@@ -43,6 +44,11 @@ export function TopBar() {
     try {
       const out = await exportSignedPdf(originalPdfBytes, fields)
       triggerDownload(out, signedFilename(fileName ?? 'document.pdf'))
+      // CNT-03: count the signing export exactly once, only on the genuine success
+      // path (after export resolves AND the download fires). The increment lives
+      // ONLY here — NOT inside exportPdf.ts / coordinateMapper.ts, which stay
+      // byte-identity-protected and untouched. Fire-and-forget; never blocks.
+      recordExport()
     } catch {
       // T-02-02: surface export failure in the inline banner
       setExportError('Could not export the signed PDF. Try downloading again.')
