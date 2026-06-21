@@ -30,13 +30,44 @@
   --color-accent-line:      #FF4D00;  /* accent-colored borders, outlines */
   --color-lcd-bg:           #15120E;  /* LCD readout display background (07-RESEARCH "New token to add") */
 
-  /* === Typography — system stacks, no @font-face, no external request (FND-02 / PAR-02) === */
+  /* === Typography ===
+     --font-mono (chrome) stays a system stack — no @font-face, no external request (FND-02 / PAR-02).
+     --font-sans (body/dense) is now Space Grotesk, self-hosted via the @font-face blocks below
+     (same-origin /fonts/*.ttf, no external request — TYPE-01), with the old system stack as fallback. */
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
+  --font-sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
 
   /* === Shape === */
   --radius:     3px;  /* tight hardware radius for panels, chips */
   --radius-key: 5px;  /* hardware key border radius */
+}
+
+/* Space Grotesk — self-hosted base dense/body face (TYPE-01).
+   Same-origin /fonts/ TTFs (no Google Fonts CDN); font-display: swap is correct for
+   reading copy (avoids a flash of invisible text). The three script signature faces
+   below keep font-display: block on purpose — leave them unchanged. */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
