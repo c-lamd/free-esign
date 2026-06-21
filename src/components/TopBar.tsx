@@ -9,7 +9,7 @@ import { HardwareKey } from './ui/HardwareKey'
 import { LcdReadout } from './LcdReadout'
 import { ZoomKnob } from './ZoomKnob'
 
-export function TopBar() {
+export function TopBar({ onHome }: { onHome?: () => void } = {}) {
   const view = useDocumentStore((s) => s.view)
   const reset = useDocumentStore((s) => s.reset)
   const goToLanding = useDocumentStore((s) => s.goToLanding)
@@ -78,7 +78,11 @@ export function TopBar() {
           // Reset placed fields before navigating away so they never leak
           // onto a subsequently loaded document (WR-01 field-leak fix).
           useFieldStore.getState().resetFields()
-          goToLanding()
+          // onHome (supplied by the router-aware SignRoute) navigates to the
+          // tools hub; bare renders (unit tests) fall back to the in-store
+          // landing reset so TopBar needs no Router context on its own.
+          if (onHome) onHome()
+          else goToLanding()
         }}
         aria-label="free·esign — return to home"
         style={{

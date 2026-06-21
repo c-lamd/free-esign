@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDocumentStore } from '../store/documentStore'
 import { ToolFrame } from '../components/ToolFrame'
 import { TopBar } from '../components/TopBar'
@@ -33,12 +34,13 @@ import { InitialsDrawModal } from '../components/InitialsDrawModal'
  *      uploader/session, never the old full-page landing. (The HeroSection CTA's
  *      startSigning() wiring still works — it's a no-op once already 'empty'.)
  *
- *  (b) The signing chrome is wrapped in <ToolFrame> (SUITE-05) so the suite has a
- *      shared back-to-hub header. The existing signing <TopBar> (Wordmark reset +
- *      OPEN/EXPORT/zoom/undo action keys) renders as the tool's own header inside
- *      the frame, preserving EVERY aria-label and handler verbatim (PAR-04 /
- *      PAR-01). ToolFrame's slim bar carries only the back-to-tools Link; the two
- *      bars read as a single stacked instrument panel, not two competing brands.
+ *  (b) The signing tool supplies its OWN full header (<TopBar>: Wordmark +
+ *      OPEN/EXPORT/zoom/undo keys), so it mounts <ToolFrame chrome={false}> — the
+ *      frame's wrapper/<main> WITHOUT its back-to-hub bar. Rendering both stacked
+ *      two sticky headers at top:0, and the controls bar hid behind the frame bar
+ *      on scroll/zoom. The brand routes home via TopBar's onHome (reset +
+ *      navigate('/')); EVERY signing aria-label/handler stays verbatim (PAR-04 /
+ *      PAR-01).
  *
  * ExportErrorBanner / SignatureDrawModal / InitialsDrawModal mount unconditionally
  * and self-gate on their store flags (verbatim from old App.tsx).
@@ -49,6 +51,8 @@ import { InitialsDrawModal } from '../components/InitialsDrawModal'
 export function SignRoute() {
   const view = useDocumentStore((s) => s.view)
   const startSigning = useDocumentStore((s) => s.startSigning)
+  const reset = useDocumentStore((s) => s.reset)
+  const navigate = useNavigate()
 
   // (a) Entering /sign IS the landing → empty transition. One-time on mount:
   // if the store is still in its construction-time 'landing' default, move it to
@@ -60,16 +64,30 @@ export function SignRoute() {
   }, [startSigning])
 
   return (
-    <ToolFrame>
-      {/* Signing tool header — Wordmark reset + OPEN/EXPORT/zoom/undo keys (verbatim) */}
-      <TopBar />
+    // chrome={false}: the signing tool renders its own full <TopBar> header, so
+    // ToolFrame must NOT also render its back-to-hub bar (two stacked sticky bars
+    // fought for top:0 and the controls bar hid on scroll/zoom).
+    <ToolFrame chrome={false}>
+      {/* Signing tool header — Wordmark + OPEN/EXPORT/zoom/undo keys (verbatim).
+          onHome routes the brand to the tools hub (and clears the session) now
+          that ToolFrame's back link is no longer rendered. */}
+      <TopBar
+        onHome={() => {
+          reset()
+          navigate('/')
+        }}
+      />
       {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
       <ExportErrorBanner />
       {view === 'empty' && (
         <>
           {/* Founder-voice signing hero — reachable under /sign (SUITE-04) */}
           <HeroSection />
-          <UploadZone />
+          {/* Scroll target for the hero's "Start signing" CTA. scrollMarginTop
+              clears the 56px sticky TopBar so the uploader isn't tucked under it. */}
+          <div id="sign-upload" style={{ scrollMarginTop: '64px' }}>
+            <UploadZone />
+          </div>
         </>
       )}
       {view === 'loading' && <LoadingSpinner />}

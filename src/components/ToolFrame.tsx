@@ -21,9 +21,17 @@ import { Wordmark } from './Wordmark'
 export function ToolFrame({
   children,
   actions,
+  chrome = true,
 }: {
   children: ReactNode
   actions?: ReactNode
+  /**
+   * Render the shared back-to-hub header bar (default). Tools that supply their
+   * own full header — e.g. the signing tool's <TopBar> — pass `chrome={false}`
+   * to avoid stacking two bars (which fight for `top:0` and hide each other on
+   * scroll). The wrapper + <main> are always rendered.
+   */
+  chrome?: boolean
 }) {
   return (
     <div
@@ -32,39 +40,41 @@ export function ToolFrame({
         backgroundColor: 'var(--color-surface)',
       }}
     >
-      <div
-        style={{
-          height: '56px',
-          backgroundColor: 'var(--color-surface-elevated)',
-          borderBottom: '1px solid var(--color-line-strong)',
-          padding: '0 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 11,
-        }}
-      >
-        <Link
-          to="/"
-          aria-label="free·esign — back to tools"
+      {chrome && (
+        <div
           style={{
-            display: 'inline-flex',
+            height: '56px',
+            backgroundColor: 'var(--color-surface-elevated)',
+            borderBottom: '1px solid var(--color-line-strong)',
+            padding: '0 16px',
+            display: 'flex',
             alignItems: 'center',
-            textDecoration: 'none',
-            outline: 'none',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: 0,
+            zIndex: 11,
           }}
         >
-          <Wordmark />
-        </Link>
+          <Link
+            to="/"
+            aria-label="free·esign — back to tools"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+              outline: 'none',
+            }}
+          >
+            <Wordmark />
+          </Link>
 
-        {actions != null && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {actions}
-          </div>
-        )}
-      </div>
+          {actions != null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {actions}
+            </div>
+          )}
+        </div>
+      )}
 
       <main>{children}</main>
     </div>
