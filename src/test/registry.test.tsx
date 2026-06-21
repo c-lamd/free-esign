@@ -4,8 +4,8 @@
  * The registry is the single source of truth: the route table (this plan) and
  * the hub grid + tools-listing (10-02) all derive from it. These tests pin the
  * invariants every consumer relies on:
- *   - Sign, Merge, and Split are live tools at /sign, /merge, /split.
- *   - The two remaining coming-soon placeholders (Organize/Convert) exist.
+ *   - Sign, Merge, Split, and Organize are live tools at /sign, /merge, /split, /organize.
+ *   - The single remaining coming-soon placeholder (Convert) exists.
  *   - liveTools() returns only live entries, each with a non-null element and a
  *     unique route (so the generated <Route> table is well-formed).
  */
@@ -51,8 +51,18 @@ describe('SUITE-03: tool registry is the single source of truth', () => {
     expect(split?.element).not.toBeNull()
   })
 
-  it('registers the two remaining coming-soon placeholders', () => {
-    const expected = ['organize', 'convert']
+  it('contains a live Organize tool at /organize (ORG-01)', () => {
+    const organize = TOOL_REGISTRY.find((t) => t.id === 'organize')
+    expect(organize).toBeDefined()
+    expect(organize?.route).toBe('/organize')
+    expect(organize?.status).toBe('live')
+    expect(organize?.element).not.toBeNull()
+  })
+
+  it('registers the single remaining coming-soon placeholder', () => {
+    const expected = ['convert']
+    const comingSoon = TOOL_REGISTRY.filter((t) => t.status === 'coming-soon').map((t) => t.id)
+    expect(comingSoon).toEqual(expected)
     for (const id of expected) {
       const tool = TOOL_REGISTRY.find((t) => t.id === id)
       expect(tool, `registry must contain a "${id}" entry`).toBeDefined()
