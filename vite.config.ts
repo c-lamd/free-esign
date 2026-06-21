@@ -23,5 +23,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Heavy integration tests (full-app router render + pdf.js work, e.g.
+    // routing.test.tsx, uploadFlow.test.tsx) pass in ~1s in isolation but can
+    // exceed the default 5s testTimeout under the full ~40-file parallel run on
+    // a loaded machine — a CPU-contention flake, not a real hang. Give ample
+    // headroom so the suite is deterministically green without masking true hangs.
+    testTimeout: 20000,
+    hookTimeout: 20000,
   },
 })
