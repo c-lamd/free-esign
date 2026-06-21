@@ -3,6 +3,7 @@ import { SignRoute } from '../routes/SignRoute'
 import { MergeRoute } from '../routes/MergeRoute'
 import { SplitRoute } from '../routes/SplitRoute'
 import { OrganizeRoute } from '../routes/OrganizeRoute'
+import { PdfToImageRoute } from '../routes/PdfToImageRoute'
 
 /**
  * Tool registry — the SINGLE SOURCE OF TRUTH for the FreeESign tool suite (SUITE-03).
@@ -36,9 +37,11 @@ export interface ToolDescriptor {
 /**
  * The canonical tool list.
  *
- * Sign, Merge, Split, and Organize are live. Convert remains a coming-soon
- * placeholder so the hub (10-02) renders a complete-looking roadmap; it mounts
- * no route until its phase (P12 for Convert).
+ * Sign, Merge, Split, Organize, and PDF → Image are live. The Convert area has TWO
+ * tools (Phase 12): pdf-to-image lands here (12-01), resolving the registry's last
+ * coming-soon placeholder; image-to-pdf is added in 12-02 (a separate registry flip
+ * in a separate wave to avoid a file conflict). After 12-02 there are NO coming-soon
+ * entries left.
  */
 export const TOOL_REGISTRY: ToolDescriptor[] = [
   {
@@ -74,13 +77,14 @@ export const TOOL_REGISTRY: ToolDescriptor[] = [
     element: <OrganizeRoute />,
   },
   {
-    id: 'convert',
-    name: 'Convert',
-    blurb: 'Convert images and documents to PDF — coming soon.',
-    route: '/convert',
-    status: 'coming-soon',
-    element: null,
+    id: 'pdf-to-image',
+    name: 'PDF → Image',
+    blurb: 'Turn each PDF page into a JPG or PNG — in your browser.',
+    route: '/pdf-to-image',
+    status: 'live',
+    element: <PdfToImageRoute />,
   },
+  // The second convert tool (image-to-pdf) is added in 12-02's registry flip.
 ]
 
 /**

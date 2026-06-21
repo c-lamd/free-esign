@@ -66,10 +66,12 @@ describe('SUITE-02: tools-hub homepage', () => {
     expect(link!.getAttribute('href')).toBe('/sign')
   })
 
-  it('coming-soon cards are marked COMING SOON and are not navigation links', () => {
+  it('every coming-soon card (if any) is marked COMING SOON and is not a navigation link', () => {
+    // As of 12-01 the registry has no coming-soon entries (pdf-to-image resolved the
+    // last one); this loop is a no-op when the set is empty and still pins the
+    // marked + inert contract for any future coming-soon tool.
     const { container } = renderHub()
     const comingSoon = TOOL_REGISTRY.filter((t) => t.status === 'coming-soon')
-    expect(comingSoon.length).toBeGreaterThan(0)
     for (const tool of comingSoon) {
       const card = container.querySelector(`[data-tool-card="${tool.id}"]`)
       expect(card, `card for ${tool.id}`).not.toBeNull()

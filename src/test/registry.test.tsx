@@ -59,15 +59,22 @@ describe('SUITE-03: tool registry is the single source of truth', () => {
     expect(organize?.element).not.toBeNull()
   })
 
-  it('registers the single remaining coming-soon placeholder', () => {
-    const expected = ['convert']
+  it('contains a live PDF → Image tool at /pdf-to-image (CNV-01)', () => {
+    const pdf2img = TOOL_REGISTRY.find((t) => t.id === 'pdf-to-image')
+    expect(pdf2img).toBeDefined()
+    expect(pdf2img?.route).toBe('/pdf-to-image')
+    expect(pdf2img?.status).toBe('live')
+    expect(pdf2img?.element).not.toBeNull()
+    expect(pdf2img?.blurb ?? '').not.toMatch(/coming soon/i)
+  })
+
+  it('has zero coming-soon placeholders — pdf-to-image resolved the last one (12-01)', () => {
+    // The registry's final coming-soon ('convert') is resolved by introducing the
+    // live pdf-to-image tool; image-to-pdf simply lands as the second live convert
+    // tool in 12-02. So no coming-soon entries remain after this plan.
+    const expected: string[] = []
     const comingSoon = TOOL_REGISTRY.filter((t) => t.status === 'coming-soon').map((t) => t.id)
     expect(comingSoon).toEqual(expected)
-    for (const id of expected) {
-      const tool = TOOL_REGISTRY.find((t) => t.id === id)
-      expect(tool, `registry must contain a "${id}" entry`).toBeDefined()
-      expect(tool?.status).toBe('coming-soon')
-    }
   })
 
   it('every coming-soon entry has a null element (mounts no route)', () => {
