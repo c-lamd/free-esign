@@ -16,9 +16,8 @@
  * real DOM download anchor.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, fireEvent, act, cleanup } from '@testing-library/react'
+import { render, fireEvent, act, cleanup, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import React from 'react'
 
 // ── Mock the foundation libs (11-01) so the UI wiring is asserted in isolation ──
 const mockMergePdfs = vi.fn()
@@ -125,5 +124,172 @@ describe('MultiFileUploadZone — multi-select PDF picker', () => {
 
     expect(onFilesAdded).not.toHaveBeenCalled()
     expect(queryByRole('alert')).not.toBeNull()
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// Task 2: MergeRoute — UI + reorder + merge/download wiring
+// ───────────────────────────────────────────────────────────────────────────
+
+/** Renders MergeRoute inside a router, returns RTL utils. */
+async function renderMergeRoute() {
+  const { MergeRoute } = await import('../routes/MergeRoute')
+  return render(
+    <MemoryRouter>
+      <MergeRoute />
+    </MemoryRouter>,
+  )
+}
+
+/** Find the MERGE → DOWNLOAD HardwareKey by aria-label. */
+function getMergeButton(container: Element): HTMLButtonElement {
+  const btn = Array.from(container.querySelectorAll('button')).find((b) =>
+    b.getAttribute('aria-label')?.toLowerCase().includes('merge'),
+  )
+  if (!btn) throw new Error('MERGE button not found')
+  return btn as HTMLButtonElement
+}
+
+/** Add files to the route by firing a change on its file input. */
+function addFilesToRoute(container: Element, files: File[]) {
+  const input = container.querySelector('input[type="file"]') as HTMLInputElement
+  act(() => {
+    selectFiles(input, files)
+  })
+}
+
+describe('MergeRoute — empty/disabled state', () => {
+  it('renders MultiFileUploadZone and a disabled MERGE with < 2 files', async () => {
+    const { container } = await renderMergeRoute()
+
+    // Picker present.
+    expect(container.querySelector('input[type="file"]')).not.toBeNull()
+
+    // MERGE disabled with 0 files.
+    let merge = getMergeButton(container)
+    expect(merge.getAttribute('aria-disabled')).toBe('true')
+
+    // Still disabled with exactly 1 file.
+    addFilesToRoute(container, [makePdf('one.pdf')])
+    merge = getMergeButton(container)
+    expect(merge.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('enables MERGE once ≥ 2 valid PDFs are added', async () => {
+    const { container } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('a.pdf'), makePdf('b.pdf')])
+    const merge = getMergeButton(container)
+    expect(merge.getAttribute('aria-disabled')).toBeNull()
+  })
+})
+
+describe('MergeRoute — reorder + remove', () => {
+  it('lists added filenames in selection order', async () => {
+    const { container, getAllByTestId } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('first.pdf'), makePdf('second.pdf')])
+    const rows = getAllByTestId('merge-file-row')
+    expect(rows.map((r) => r.getAttribute('data-filename'))).toEqual([
+      'first.pdf',
+      'second.pdf',
+    ])
+  })
+
+  it('move-down on the first item swaps items 0 and 1', async () => {
+    const { container, getAllByTestId } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('first.pdf'), makePdf('second.pdf')])
+
+    const firstRow = getAllByTestId('merge-file-row')[0]
+    // The first row's move-down control.
+    const moveDownBtn = within(firstRow).getByLabelText(/move .*down/i)
+    act(() => {
+      fireEvent.click(moveDownBtn)
+    })
+
+    const rows = getAllByTestId('merge-file-row')
+    expect(rows.map((r) => r.getAttribute('data-filename'))).toEqual([
+      'second.pdf',
+      'first.pdf',
+    ])
+  })
+
+  it('remove drops the item; falling below 2 re-disables MERGE', async () => {
+    const { container, getAllByTestId } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('a.pdf'), makePdf('b.pdf')])
+    expect(getMergeButton(container).getAttribute('aria-disabled')).toBeNull()
+
+    const firstRow = getAllByTestId('merge-file-row')[0]
+    const removeBtn = within(firstRow).getByLabelText(/remove/i)
+    act(() => {
+      fireEvent.click(removeBtn)
+    })
+
+    const rows = getAllByTestId('merge-file-row')
+    expect(rows).toHaveLength(1)
+    expect(getMergeButton(container).getAttribute('aria-disabled')).toBe('true')
+  })
+})
+
+describe('MergeRoute — merge + download wiring', () => {
+  const MERGED = new Uint8Array([0x25, 0x50, 0x44, 0x46])
+
+  beforeEach(() => {
+    mockMergePdfs.mockResolvedValue(MERGED)
+  })
+
+  it('clicking MERGE calls mergePdfs with files in displayed order then downloads once', async () => {
+    const { container, getAllByTestId } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('a.pdf'), makePdf('b.pdf')])
+
+    // Reorder: move first down so displayed order is b, a.
+    const firstRow = getAllByTestId('merge-file-row')[0]
+    act(() => {
+      fireEvent.click(within(firstRow).getByLabelText(/move .*down/i))
+    })
+
+    await act(async () => {
+      fireEvent.click(getMergeButton(container))
+    })
+
+    expect(mockMergePdfs).toHaveBeenCalledTimes(1)
+    const orderedFiles = mockMergePdfs.mock.calls[0][0] as { name: string }[]
+    expect(orderedFiles.map((f) => f.name)).toEqual(['b.pdf', 'a.pdf'])
+
+    expect(mockTriggerBlobDownload).toHaveBeenCalledTimes(1)
+    const [bytes, filename, mime] = mockTriggerBlobDownload.mock.calls[0]
+    expect(bytes).toBe(MERGED)
+    expect(filename).toBe('merged.pdf')
+    expect(mime).toBe('application/pdf')
+  })
+
+  it('a mergePdfs rejection surfaces an inline error and does NOT download', async () => {
+    mockMergePdfs.mockRejectedValue(new Error('Could not merge the PDFs: boom'))
+    const { container, queryByRole } = await renderMergeRoute()
+    addFilesToRoute(container, [makePdf('a.pdf'), makePdf('b.pdf')])
+
+    await act(async () => {
+      fireEvent.click(getMergeButton(container))
+    })
+
+    expect(mockTriggerBlobDownload).not.toHaveBeenCalled()
+    const alert = queryByRole('alert')
+    expect(alert).not.toBeNull()
+    expect(alert?.textContent ?? '').toMatch(/could not merge/i)
+  })
+
+  it('PAR-05: the merge flow makes ZERO network requests', async () => {
+    const fetchSpy = vi.fn(() => Promise.reject(new Error('network blocked in test')))
+    const origFetch = globalThis.fetch
+    globalThis.fetch = fetchSpy as unknown as typeof fetch
+    try {
+      const { container } = await renderMergeRoute()
+      addFilesToRoute(container, [makePdf('a.pdf'), makePdf('b.pdf')])
+      await act(async () => {
+        fireEvent.click(getMergeButton(container))
+      })
+      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(mockTriggerBlobDownload).toHaveBeenCalledTimes(1)
+    } finally {
+      globalThis.fetch = origFetch
+    }
   })
 })
