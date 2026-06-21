@@ -42,7 +42,7 @@ export function HowItWorksSection() {
             color: 'var(--color-text-primary)',
             textAlign: 'center',
             margin: '0 0 32px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontFamily: 'var(--font-sans)',
           }}
         >
           How it works
@@ -97,7 +97,7 @@ export function HowItWorksSection() {
                     color: 'var(--color-text-primary)',
                     marginBottom: '4px',
                     margin: '0 0 4px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                    fontFamily: 'var(--font-sans)',
                   }}
                 >
                   {step.title}

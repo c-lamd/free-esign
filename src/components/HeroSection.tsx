@@ -52,7 +52,7 @@ export function HeroSection() {
               lineHeight: 1.15,
               color: 'var(--color-text-primary)',
               margin: '0 0 24px',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              fontFamily: 'var(--font-sans)',
             }}
           >
             I built this because I couldn&apos;t find a PDF signer that was actually free.

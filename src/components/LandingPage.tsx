@@ -10,7 +10,7 @@ export function LandingPage() {
       style={{
         backgroundColor: 'var(--color-surface)',
         minHeight: '100dvh',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontFamily: 'var(--font-sans)',
       }}
     >
       <LandingHeader />

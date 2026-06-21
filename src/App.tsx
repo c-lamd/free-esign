@@ -46,8 +46,8 @@ export function AppRoutes() {
  *
  * BrowserRouter gives clean URLs; the existing vercel.json SPA rewrite
  * (`/(.*) → /index.html`) makes deep links (e.g. /sign) resolve in prod with no
- * server (PAR-07). The font wrapper stays the inline -apple-system stack for now
- * (10-03 owns the --font-sans / Space Grotesk token).
+ * server (PAR-07). The body font wrapper uses var(--font-sans), which 10-03
+ * points at self-hosted Space Grotesk (TYPE-01).
  */
 function App() {
   const loadSavedItems = useFieldStore((s) => s.loadSavedItems)
@@ -60,7 +60,7 @@ function App() {
   return (
     <div
       style={{
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontFamily: 'var(--font-sans)',
         minHeight: '100dvh',
         backgroundColor: 'var(--color-surface)',
       }}

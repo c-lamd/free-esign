@@ -303,7 +303,7 @@ export function InitialsDrawModal() {
     lineHeight: 1.2,
     color: 'var(--color-text-primary)',
     margin: '0 0 16px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily: 'var(--font-sans)',
   }
 
   const canvasContainerStyle: React.CSSProperties = {
