@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { SignRoute } from '../routes/SignRoute'
+import { MergeRoute } from '../routes/MergeRoute'
 
 /**
  * Tool registry — the SINGLE SOURCE OF TRUTH for the FreeESign tool suite (SUITE-03).
@@ -33,9 +34,9 @@ export interface ToolDescriptor {
 /**
  * The canonical tool list.
  *
- * Sign is the one live tool this phase. Merge/Split/Organize/Convert are
- * coming-soon placeholders so the hub (10-02) renders a complete-looking
- * roadmap; they mount no route until their phase (P11/P12).
+ * Sign and Merge are live. Split/Organize/Convert remain coming-soon
+ * placeholders so the hub (10-02) renders a complete-looking roadmap; they
+ * mount no route until their phase (11-03/11-04 for Split/Organize, P12 for Convert).
  */
 export const TOOL_REGISTRY: ToolDescriptor[] = [
   {
@@ -49,10 +50,10 @@ export const TOOL_REGISTRY: ToolDescriptor[] = [
   {
     id: 'merge',
     name: 'Merge',
-    blurb: 'Combine several PDFs into one — coming soon.',
+    blurb: 'Combine several PDFs into one — in your browser.',
     route: '/merge',
-    status: 'coming-soon',
-    element: null,
+    status: 'live',
+    element: <MergeRoute />,
   },
   {
     id: 'split',

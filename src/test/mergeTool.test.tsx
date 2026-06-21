@@ -30,6 +30,20 @@ vi.mock('../lib/toolDownload', () => ({
   triggerBlobDownload: (...args: unknown[]) => mockTriggerBlobDownload(...args),
 }))
 
+// The tool registry's Sign element transitively imports react-pdf's pdfWorker,
+// which touches DOMMatrix at import time — absent in jsdom. Mock it (and the
+// worker shim) exactly as registry.test.tsx does so importing the registry here
+// (for the Task 3 live-merge assertions) does not throw.
+vi.mock('react-pdf', () => ({
+  Document: () => null,
+  Page: () => null,
+  pdfjs: { GlobalWorkerOptions: { workerSrc: '' }, version: '0' },
+}))
+vi.mock('../lib/pdfWorker', () => ({
+  default: undefined,
+  pdfOptions: { cMapUrl: '/cmaps/', cMapPacked: true, standardFontDataUrl: '/standard_fonts/' },
+}))
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Build a File with a given name + MIME type and small dummy bytes. */
@@ -291,5 +305,26 @@ describe('MergeRoute — merge + download wiring', () => {
     } finally {
       globalThis.fetch = origFetch
     }
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// Task 3: registry — merge flipped coming-soon → live
+// ───────────────────────────────────────────────────────────────────────────
+
+describe('MRG-01: merge registry entry is live', () => {
+  it('TOOL_REGISTRY merge is live with a non-null element', async () => {
+    const { TOOL_REGISTRY } = await import('../tools/registry')
+    const merge = TOOL_REGISTRY.find((t) => t.id === 'merge')
+    expect(merge).toBeDefined()
+    expect(merge?.route).toBe('/merge')
+    expect(merge?.status).toBe('live')
+    expect(merge?.element).not.toBeNull()
+    expect(merge?.blurb ?? '').not.toMatch(/coming soon/i)
+  })
+
+  it('liveTools() now contains merge', async () => {
+    const { liveTools } = await import('../tools/registry')
+    expect(liveTools().some((t) => t.id === 'merge')).toBe(true)
   })
 })
