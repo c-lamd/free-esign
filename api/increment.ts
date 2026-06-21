@@ -15,7 +15,7 @@
  *    error detail in the body and nothing logged that contains the token or url
  *    (no secret leak, T-13-01).
  */
-import { getRedis, COUNT_KEY } from './_redis'
+import { getRedis, COUNT_KEY } from './_redis.js'
 
 // Minimal Vercel Node response shape — avoids a @vercel/node dependency.
 interface VercelRes {

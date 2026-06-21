@@ -16,7 +16,7 @@
  * Only an integer ever crosses the wire. The browser fetches this same-origin
  * endpoint; it never contacts Upstash directly.
  */
-import { getRedis, readCount } from './_redis'
+import { getRedis, readCount } from './_redis.js'
 
 // Minimal Vercel Node response shape — avoids a @vercel/node dependency. The
 // real runtime object is an enhanced ServerResponse exposing status()/json().
