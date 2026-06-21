@@ -134,3 +134,94 @@ describe('LND-04: vercel.json integrity', () => {
     ).toBe(false)
   })
 })
+
+/**
+ * PAR-06: same-origin /api permitted — but ONLY as a relative path.
+ *
+ * Phase 13 introduces the app's first legitimate client fetches:
+ * `/api/count` (GET on hub mount) and `/api/increment` (POST on each export).
+ * These are RELATIVE same-origin paths — no protocol, no host — so they do NOT
+ * match the `fetch external` ASSET_LOADING_PATTERN (`fetch("https?://...`) and
+ * already pass the PRV-03 scan above unchanged.
+ *
+ * This block makes the allowance EXPLICIT and TIGHT (T-13-09):
+ *   - The only newly-permitted construct is a leading-slash relative `/api/...`.
+ *   - A protocol+host before `/api` (e.g. fetch("https://evil.com/api")) is STILL
+ *     a violation — caught by the unchanged `fetch external` pattern, re-asserted
+ *     here for PAR-06 traceability. No existing rule is weakened.
+ *   - The expected relative endpoints must actually appear in client source, so
+ *     the same-origin contract is real, not theoretical.
+ */
+describe('PAR-06: same-origin /api permitted (relative-only)', () => {
+  const srcFiles = collectFiles(join(ROOT, 'src'), ['.ts', '.tsx'])
+
+  // Absolute API URL: a protocol+host immediately preceding /api. This is the
+  // construct the allow-rule must NEVER permit. It is a strict subset of the
+  // existing `fetch external` pattern, named separately here for PAR-06.
+  const ABSOLUTE_API_URL = /fetch\s*\(\s*["'`]https?:\/\/[^"'`]*\/api/i
+
+  for (const file of srcFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const relPath = file.replace(ROOT + '/', '')
+
+    it(`${relPath}: any /api fetch is RELATIVE (no protocol+host before /api)`, () => {
+      expect(
+        ABSOLUTE_API_URL.test(content),
+        `Found an ABSOLUTE /api fetch URL in ${relPath} — only relative "/api/..." is permitted (PAR-06)`,
+      ).toBe(false)
+    })
+  }
+
+  it('src/lib/counter.ts references the relative endpoints "/api/count" and "/api/increment"', () => {
+    const counter = readFileSync(join(ROOT, 'src', 'lib', 'counter.ts'), 'utf-8')
+    expect(
+      counter.includes("'/api/count'") || counter.includes('"/api/count"') || counter.includes('`/api/count`'),
+      "src/lib/counter.ts must reference the relative endpoint '/api/count' (PAR-06)",
+    ).toBe(true)
+    expect(
+      counter.includes("'/api/increment'") ||
+        counter.includes('"/api/increment"') ||
+        counter.includes('`/api/increment`'),
+      "src/lib/counter.ts must reference the relative endpoint '/api/increment' (PAR-06)",
+    ).toBe(true)
+  })
+})
+
+/**
+ * PAR-06 (T-13-10): @upstash/redis is SERVER-SIDE ONLY.
+ *
+ * The store client (and its REST token/SDK) lives exclusively under api/*.ts. It
+ * must NEVER be imported anywhere under src/ — if it were, the credentials/SDK
+ * could be bundled into the browser, defeating the privacy guarantee. This block
+ * scans every client source file and asserts none of them IMPORT the package.
+ *
+ * It matches the actual import/require constructs — `import ... from '@upstash/redis'`,
+ * `require('@upstash/redis')`, and dynamic `import('@upstash/redis')` — rather than
+ * a bare substring of the package name. That deliberately ignores the harmless
+ * comment in src/lib/counter.ts that mentions "@upstash/redis" in prose ("This file
+ * MUST NOT import @upstash/redis") — a comment is not an import and must not fail
+ * the build. The needle below is the only legitimate occurrence of the literal
+ * specifier under src/, and it is a test asserting absence in OTHER files.
+ */
+describe('PAR-06: @upstash/redis is server-side only', () => {
+  const srcFiles = collectFiles(join(ROOT, 'src'), ['.ts', '.tsx'])
+
+  // An IMPORT/REQUIRE of the package — not a bare mention. Covers:
+  //   import x from '@upstash/redis'   /  import '@upstash/redis'
+  //   from '@upstash/redis'  (named/default/namespace import tails)
+  //   require('@upstash/redis')  /  import('@upstash/redis')  (dynamic)
+  const UPSTASH_IMPORT =
+    /(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*|\bimport\s+)["'`]@upstash\/redis["'`]/
+
+  for (const file of srcFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const relPath = file.replace(ROOT + '/', '')
+
+    it(`${relPath}: does not import @upstash/redis`, () => {
+      expect(
+        UPSTASH_IMPORT.test(content),
+        `${relPath} imports @upstash/redis — the store client is SERVER-ONLY and must live only under api/ (PAR-06, T-13-10). It must never be bundled to the browser.`,
+      ).toBe(false)
+    })
+  }
+})
