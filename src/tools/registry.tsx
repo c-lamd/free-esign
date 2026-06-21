@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { SignRoute } from '../routes/SignRoute'
 import { MergeRoute } from '../routes/MergeRoute'
+import { SplitRoute } from '../routes/SplitRoute'
 
 /**
  * Tool registry — the SINGLE SOURCE OF TRUTH for the FreeESign tool suite (SUITE-03).
@@ -34,9 +35,9 @@ export interface ToolDescriptor {
 /**
  * The canonical tool list.
  *
- * Sign and Merge are live. Split/Organize/Convert remain coming-soon
+ * Sign, Merge, and Split are live. Organize/Convert remain coming-soon
  * placeholders so the hub (10-02) renders a complete-looking roadmap; they
- * mount no route until their phase (11-03/11-04 for Split/Organize, P12 for Convert).
+ * mount no route until their phase (11-04 for Organize, P12 for Convert).
  */
 export const TOOL_REGISTRY: ToolDescriptor[] = [
   {
@@ -58,10 +59,10 @@ export const TOOL_REGISTRY: ToolDescriptor[] = [
   {
     id: 'split',
     name: 'Split',
-    blurb: 'Pull pages out of a PDF into separate files — coming soon.',
+    blurb: 'Pull pages out of a PDF or split each page into its own file.',
     route: '/split',
-    status: 'coming-soon',
-    element: null,
+    status: 'live',
+    element: <SplitRoute />,
   },
   {
     id: 'organize',

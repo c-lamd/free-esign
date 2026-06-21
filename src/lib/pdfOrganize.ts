@@ -102,6 +102,28 @@ export function parsePageRange(spec: string, totalPages: number): number[] {
 }
 
 /**
+ * Reads the page count of a PDF without producing any output document.
+ *
+ * Used by the Split tool UI to show "PAGES — N" once after upload (and to bound
+ * the range input) without re-implementing pdf-lib loading in the route. Throws a
+ * tagged Error ("Could not read this PDF ...") on load failure so the UI can show
+ * friendly corrupt-file copy.
+ *
+ * @param bytes - The source PDF bytes.
+ * @returns The page count (≥ 1 for a valid PDF).
+ * @throws Tagged Error on load failure (T-11-09 — corrupt/encrypted input).
+ */
+export async function getPageCount(bytes: ArrayBuffer | Uint8Array): Promise<number> {
+  try {
+    const doc = await PDFDocument.load(toBytes(bytes))
+    return doc.getPageCount()
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause)
+    throw new Error(`Could not read this PDF: ${message}`)
+  }
+}
+
+/**
  * Merges multiple PDFs into one, preserving input-array order then page order
  * within each file. Page content is embedded losslessly via copyPages.
  *
