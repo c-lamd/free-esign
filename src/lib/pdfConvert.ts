@@ -110,7 +110,7 @@ export async function pdfToImages(
       const canvasContext = canvas.getContext('2d')
       if (!canvasContext) throw new Error('could not get a 2D canvas context')
 
-      await page.render({ canvasContext, viewport }).promise
+      await page.render({ canvas, canvasContext, viewport }).promise
       const blob = await canvasToBlob(canvas, mime, quality)
       const pageBytes = new Uint8Array(await blob.arrayBuffer())
 

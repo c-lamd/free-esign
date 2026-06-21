@@ -28,7 +28,7 @@ interface RenderEvent {
 }
 let events: RenderEvent[]
 let releasedCanvases: number // count of canvases whose width/height were zeroed
-let getDocumentMock: ReturnType<typeof vi.fn>
+let getDocumentMock: ReturnType<typeof vi.fn<(...args: unknown[]) => unknown>>
 
 // Build a mocked pdfjs document with `numPages` pages. Each page's render+toBlob
 // records ordering so we can assert sequential processing.
@@ -71,7 +71,7 @@ beforeEach(() => {
   events = []
   releasedCanvases = 0
   currentPageForBlob = 0
-  getDocumentMock = vi.fn()
+  getDocumentMock = vi.fn<(...args: unknown[]) => unknown>()
 
   // Each created canvas tracks the page it belongs to via insertion order.
   vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
