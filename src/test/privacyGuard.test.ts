@@ -108,16 +108,24 @@ describe('LND-04: vercel.json integrity', () => {
     expect(vercelConfig['outputDirectory']).toBe('dist')
   })
 
-  it('vercel.json has catch-all SPA rewrite to /index.html', () => {
+  it('vercel.json has SPA rewrite to /index.html that excludes /api (LND-04 + PAR-06)', () => {
     const rewrites = vercelConfig['rewrites'] as Array<{ source: string; destination: string }>
     expect(Array.isArray(rewrites)).toBe(true)
-    const catchAll = rewrites.find(
-      (r) => r.source === '/(.*)'  && r.destination === '/index.html',
-    )
+    // The SPA fallback must send client routes to index.html, but it MUST NOT
+    // swallow /api/* (the serverless counter endpoints) — hardened to the
+    // negative-lookahead source so /api functions always resolve to functions,
+    // never index.html. Both the legacy "/(.*)" and the hardened
+    // "/((?!api/).*)" point to /index.html; only the hardened form is accepted
+    // now so the /api exclusion can never regress.
+    const spaFallback = rewrites.find((r) => r.destination === '/index.html')
     expect(
-      catchAll,
-      'Expected a catch-all rewrite { source: "/(.*)", destination: "/index.html" } in vercel.json',
+      spaFallback,
+      'Expected an SPA rewrite to /index.html in vercel.json',
     ).toBeDefined()
+    expect(
+      spaFallback!.source,
+      'SPA rewrite must exclude /api so serverless functions are never rewritten to index.html',
+    ).toBe('/((?!api/).*)')
   })
 
   it('vercel.json has no "analytics" key (PRV-03)', () => {
