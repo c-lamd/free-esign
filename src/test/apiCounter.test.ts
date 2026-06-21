@@ -56,7 +56,7 @@ beforeEach(() => {
 
 describe('GET /api/count (CNT-01)', () => {
   it('returns 200 { count: N } when the store is configured', async () => {
-    mockedGetRedis.mockReturnValue({} as never)
+    mockedGetRedis.mockResolvedValue({} as never)
     mockedReadCount.mockResolvedValue(7)
 
     const res = mockRes()
@@ -66,7 +66,7 @@ describe('GET /api/count (CNT-01)', () => {
   })
 
   it('returns 200 { count: null } when no env vars are present (CNT-04)', async () => {
-    mockedGetRedis.mockReturnValue(null)
+    mockedGetRedis.mockResolvedValue(null)
 
     const res = mockRes()
     await countHandler({}, res)
@@ -75,7 +75,7 @@ describe('GET /api/count (CNT-01)', () => {
   })
 
   it('returns 200 { count: null } with NO token leak when the Redis read throws (CNT-04)', async () => {
-    mockedGetRedis.mockReturnValue({} as never)
+    mockedGetRedis.mockResolvedValue({} as never)
     mockedReadCount.mockRejectedValue(new Error(`connect failed with ${FAKE_TOKEN}`))
 
     const res = mockRes()
@@ -89,7 +89,7 @@ describe('GET /api/count (CNT-01)', () => {
 describe('POST /api/increment (CNT-01)', () => {
   it('performs an atomic INCR once on COUNT_KEY and returns 200 { count: N+1 }', async () => {
     const incr = vi.fn().mockResolvedValue(8)
-    mockedGetRedis.mockReturnValue({ incr } as never)
+    mockedGetRedis.mockResolvedValue({ incr } as never)
 
     const res = mockRes()
     await incrementHandler({}, res)
@@ -101,7 +101,7 @@ describe('POST /api/increment (CNT-01)', () => {
 
   it('coerces a numeric-string INCR result to a number', async () => {
     const incr = vi.fn().mockResolvedValue('8')
-    mockedGetRedis.mockReturnValue({ incr } as never)
+    mockedGetRedis.mockResolvedValue({ incr } as never)
 
     const res = mockRes()
     await incrementHandler({}, res)
@@ -109,7 +109,7 @@ describe('POST /api/increment (CNT-01)', () => {
   })
 
   it('returns 200 { count: null } when no env vars are present (CNT-04)', async () => {
-    mockedGetRedis.mockReturnValue(null)
+    mockedGetRedis.mockResolvedValue(null)
 
     const res = mockRes()
     await incrementHandler({}, res)
@@ -119,7 +119,7 @@ describe('POST /api/increment (CNT-01)', () => {
 
   it('returns 200 { count: null } with NO token leak when INCR throws (CNT-04)', async () => {
     const incr = vi.fn().mockRejectedValue(new Error(`unauthorized ${FAKE_TOKEN}`))
-    mockedGetRedis.mockReturnValue({ incr } as never)
+    mockedGetRedis.mockResolvedValue({ incr } as never)
 
     const res = mockRes()
     await incrementHandler({}, res)

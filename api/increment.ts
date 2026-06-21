@@ -24,7 +24,7 @@ interface VercelRes {
 }
 
 export default async function handler(_req: unknown, res: VercelRes): Promise<void> {
-  const redis = getRedis()
+  const redis = await getRedis()
   if (redis === null) {
     // Store not provisioned — graceful "unknown" sentinel (CNT-04).
     res.status(200).json({ count: null })
