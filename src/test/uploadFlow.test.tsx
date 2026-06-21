@@ -15,6 +15,7 @@
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest'
 import { render, act, cleanup } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import React from 'react'
 
 // react-pdf <Document> mock: captures onLoadSuccess and renders a probe node.
@@ -97,16 +98,27 @@ afterEach(() => {
 describe('upload flow (core signing loop)', () => {
   it('loadDocument mounts the document viewer instead of hanging on a spinner', async () => {
     const { useDocumentStore } = await import('../store/documentStore')
-    const App = (await import('../App')).default
+    // Top-level nav moved from the view store to routes per SUITE-01: the signing
+    // tool now mounts under the /sign route (SignRoute), not via view==='empty' at
+    // the app root. Drive the REAL route table at /sign so SignRoute's own view
+    // machine runs — the deadlock assertion below is unchanged.
+    const { AppRoutes } = await import('../App')
 
-    // User has clicked into the signing tool (not the landing page).
+    // User has entered the signing tool (not the hub). SignRoute's mount effect
+    // transitions landing → empty; set empty explicitly so the uploader is live.
     act(() => {
       useDocumentStore.setState({ view: 'empty', docUrl: null, numPages: null, errorMessage: null })
     })
 
     let container!: HTMLElement
     await act(async () => {
-      container = render(React.createElement(App)).container
+      container = render(
+        React.createElement(
+          MemoryRouter,
+          { initialEntries: ['/sign'] },
+          React.createElement(AppRoutes),
+        ),
+      ).container
     })
 
     // Simulate UploadZone ingesting a valid PDF.
