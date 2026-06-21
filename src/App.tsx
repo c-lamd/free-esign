@@ -1,45 +1,56 @@
 import { useEffect } from 'react'
-import { useDocumentStore } from './store/documentStore'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useFieldStore } from './store/fieldStore'
-import { LandingPage } from './components/LandingPage'
-import { TopBar } from './components/TopBar'
-import { LoadingSpinner } from './components/LoadingSpinner'
-import { DocumentViewer } from './components/DocumentViewer'
-import { UploadZone } from './components/UploadZone'
-import { ErrorBanner } from './components/ErrorBanner'
-import { ExportErrorBanner } from './components/ExportErrorBanner'
-import { SignatureDrawModal } from './components/SignatureDrawModal'
-import { InitialsDrawModal } from './components/InitialsDrawModal'
+import { liveTools } from './tools/registry'
 
 /**
- * App — view-router wired to the Zustand state machine.
+ * AppRoutes — the registry-driven route table (SUITE-01 / SUITE-03).
  *
- * State machine: view ∈ { landing | empty | loading | error | loaded }
+ * Exported separately from <App> so tests can mount it under a <MemoryRouter>
+ * with deterministic `initialEntries` (deep-link + catch-all proofs) without a
+ * server. In production it renders inside <App>'s <BrowserRouter>.
+ */
+export function AppRoutes() {
+  return (
+    <Routes>
+      {/* Hub + listing placeholders — replaced by the real ToolsHub / ToolsListing in 10-02. */}
+      <Route path="/" element={<HubStub />} />
+      <Route path="/tools" element={<ToolsListingStub />} />
+
+      {/* Tool routes generated from the registry (SUITE-03). */}
+      {liveTools().map((t) => (
+        <Route key={t.id} path={t.route} element={t.element} />
+      ))}
+
+      {/* Catch-all → / (SUITE-01). */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+/**
+ * App — the router shell (SUITE-01).
  *
- * landing → <LandingPage>   — initial view; candid hero + how-it-works + privacy + footer
- * empty   → <UploadZone>    — drag-drop + Browse; validates + loads document
- * loading → <LoadingSpinner> — while pdf.js is parsing the document
- * error   → <ErrorBanner>   — friendly inline error + "Try another file" retry
- * loaded  → <DocumentViewer> — react-pdf canvas; TopBar shows "Open another"
+ * Replaces the old top-level Zustand `view` switch between <LandingPage> and the
+ * signing tool. Top-level navigation now lives in react-router-dom routes:
  *
- * The TopBar "Open another" control (visible only in loaded state) is handled
- * inside TopBar.tsx — it revokes the Blob URL and calls reset().
+ *   /        → tools-hub homepage (inline stub here; real ToolsHub in 10-02)
+ *   /tools   → tools-listing      (inline stub here; real ToolsListing in 10-02)
+ *   /sign    → the signing tool   (SignRoute, via the registry)
+ *   *        → catch-all redirect to / (SUITE-01)
  *
- * onLoadError: DocumentViewer handles load errors internally via the store's
- * setError action (T-01-08), so a corrupt PDF that passes type/size validation
- * still lands in the friendly ErrorBanner state rather than a blank canvas.
+ * The route table is generated from the tool registry (SUITE-03): every `live`
+ * tool becomes a <Route>. Adding a tool = adding one registry entry.
  *
- * ExportErrorBanner mounts unconditionally (inside the tool gate) — self-gates
- * on exportError being set. It renders as a sticky banner below the TopBar when
- * an export failure occurs (T-02-02).
- *
- * Both modals are tool-only and mount only when view !== 'landing' (Pitfall 7).
+ * BrowserRouter gives clean URLs; the existing vercel.json SPA rewrite
+ * (`/(.*) → /index.html`) makes deep links (e.g. /sign) resolve in prod with no
+ * server (PAR-07). The font wrapper stays the inline -apple-system stack for now
+ * (10-03 owns the --font-sans / Space Grotesk token).
  */
 function App() {
-  const view = useDocumentStore((s) => s.view)
   const loadSavedItems = useFieldStore((s) => s.loadSavedItems)
 
-  // SIG-04: hydrate saved items from IndexedDB once on mount
+  // SIG-04: hydrate saved items from IndexedDB once on mount (unchanged).
   useEffect(() => {
     loadSavedItems()
   }, [loadSavedItems])
@@ -52,23 +63,35 @@ function App() {
         backgroundColor: 'var(--color-surface)',
       }}
     >
-      {view === 'landing' && <LandingPage />}
-      {view !== 'landing' && (
-        <>
-          <TopBar />
-          {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
-          <ExportErrorBanner />
-          {view === 'empty' && <UploadZone />}
-          {view === 'loading' && <LoadingSpinner />}
-          {view === 'error' && <ErrorBanner />}
-          {view === 'loaded' && <DocumentViewer />}
-          {/* SignatureDrawModal mounts unconditionally — self-gates on modalOpen */}
-          <SignatureDrawModal />
-          {/* InitialsDrawModal mounts unconditionally — self-gates on initialsModalOpen */}
-          <InitialsDrawModal />
-        </>
-      )}
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </div>
+  )
+}
+
+/**
+ * HubStub — temporary `/` placeholder (10-02 replaces it with the real
+ * instrument-panel tools-hub homepage + vestaboard hero). Kept intentionally
+ * minimal so the router is complete now.
+ */
+function HubStub() {
+  return (
+    <main data-testid="hub-stub" style={{ padding: '48px 16px' }}>
+      <h1>FreeESign tools</h1>
+    </main>
+  )
+}
+
+/**
+ * ToolsListingStub — temporary `/tools` placeholder (10-02 replaces it with the
+ * real tools-listing view derived from the registry).
+ */
+function ToolsListingStub() {
+  return (
+    <main data-testid="tools-listing-stub" style={{ padding: '48px 16px' }}>
+      <h1>All tools</h1>
+    </main>
   )
 }
 
