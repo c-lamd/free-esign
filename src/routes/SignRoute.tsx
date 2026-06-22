@@ -6,7 +6,6 @@ import { TopBar } from '../components/TopBar'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { DocumentViewer } from '../components/DocumentViewer'
 import { UploadZone } from '../components/UploadZone'
-import { HeroSection } from '../components/HeroSection'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { ExportErrorBanner } from '../components/ExportErrorBanner'
 import { SignatureDrawModal } from '../components/SignatureDrawModal'
@@ -19,8 +18,8 @@ import { InitialsDrawModal } from '../components/InitialsDrawModal'
  * (SUITE-04 / PAR-04). The Zustand `view` state machine and ALL signing
  * components are unchanged:
  *
- *   empty   → founder-voice <HeroSection> + <UploadZone> — the `/sign` landing
- *             content + drag-drop/Browse uploader
+ *   empty   → <UploadZone> — drag-drop/Browse uploader (the founder-voice hero
+ *             now lives on the hub homepage, not the sign tool)
  *   loading → <LoadingSpinner> — async image-wrap gap before docUrl exists
  *   error   → <ErrorBanner>   — friendly inline error + retry
  *   loaded  → <DocumentViewer> — react-pdf canvas; TopBar shows OPEN/EXPORT keys
@@ -31,8 +30,7 @@ import { InitialsDrawModal } from '../components/InitialsDrawModal'
  *      LandingPage CTAs called startSigning() to move `view` from 'landing' to
  *      'empty'. Now a one-time mount effect does it: if view === 'landing',
  *      call startSigning() so the route always lands on the signing
- *      uploader/session, never the old full-page landing. (The HeroSection CTA's
- *      startSigning() wiring still works — it's a no-op once already 'empty'.)
+ *      uploader/session, never the old full-page landing.
  *
  *  (b) The signing tool supplies its OWN full header (<TopBar>: Wordmark +
  *      OPEN/EXPORT/zoom/undo keys), so it mounts <ToolFrame chrome={false}> — the
@@ -79,17 +77,7 @@ export function SignRoute() {
       />
       {/* ExportErrorBanner self-gates on exportError — mounts unconditionally */}
       <ExportErrorBanner />
-      {view === 'empty' && (
-        <>
-          {/* Founder-voice signing hero — reachable under /sign (SUITE-04) */}
-          <HeroSection />
-          {/* Scroll target for the hero's "Start signing" CTA. scrollMarginTop
-              clears the 56px sticky TopBar so the uploader isn't tucked under it. */}
-          <div id="sign-upload" style={{ scrollMarginTop: '64px' }}>
-            <UploadZone />
-          </div>
-        </>
-      )}
+      {view === 'empty' && <UploadZone />}
       {view === 'loading' && <LoadingSpinner />}
       {view === 'error' && <ErrorBanner />}
       {view === 'loaded' && <DocumentViewer />}

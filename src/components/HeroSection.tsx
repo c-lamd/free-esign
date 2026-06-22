@@ -1,9 +1,9 @@
-import { useDocumentStore } from '../store/documentStore'
+import { useNavigate } from 'react-router-dom'
 import { Wordmark } from './Wordmark'
 import { HardwareKey } from './ui/HardwareKey'
 
 export function HeroSection() {
-  const startSigning = useDocumentStore((s) => s.startSigning)
+  const navigate = useNavigate()
 
   return (
     <section
@@ -88,16 +88,7 @@ export function HeroSection() {
           {/* Hero CTA — HardwareKey at hero scale, armed = accent filled */}
           <HardwareKey
             armed
-            onClick={() => {
-              // Keep view === 'empty' (heroSection.test asserts this), then
-              // smooth-scroll down to the uploader. The typeof guard keeps the
-              // bare-render jsdom test (no #sign-upload in the DOM) from throwing.
-              startSigning()
-              const el = document.getElementById('sign-upload')
-              if (el && typeof el.scrollIntoView === 'function') {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-            }}
+            onClick={() => navigate('/sign')}
             aria-label="Start signing — opens the document uploader"
             style={{ fontSize: '14px', padding: '10px 20px', minHeight: '44px', minWidth: '160px' }}
           >

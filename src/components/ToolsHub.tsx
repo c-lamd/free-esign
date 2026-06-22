@@ -21,6 +21,7 @@ import { Vestaboard } from './Vestaboard'
 import { ToolCard } from './ToolCard'
 import { Wordmark } from './Wordmark'
 import { LandingFooter } from './LandingFooter'
+import { HeroSection } from './HeroSection'
 
 export function ToolsHub() {
   return (
@@ -77,8 +78,8 @@ export function ToolsHub() {
           <p
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              fontWeight: 600,
+              fontSize: '14px',
+              fontWeight: 700,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: 'var(--color-ink-muted)',
@@ -121,6 +122,10 @@ export function ToolsHub() {
             <ToolCard key={tool.id} tool={tool} />
           ))}
         </section>
+
+        {/* Founder note — the "why I built this" hero, relocated from /sign to
+            live on the landing page below the tool grid, above the footer. */}
+        <HeroSection />
       </main>
 
       <LandingFooter />

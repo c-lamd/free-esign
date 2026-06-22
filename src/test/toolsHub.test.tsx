@@ -86,4 +86,11 @@ describe('SUITE-02: tools-hub homepage', () => {
     const { container } = renderHub()
     expect(container.querySelector('[data-testid="hub-stub"]')).not.toBeNull()
   })
+
+  it('renders the founder note (relocated from /sign) below the grid', () => {
+    const { getByText } = renderHub()
+    expect(
+      getByText(/I built this because I couldn't find a PDF signer that was actually free/),
+    ).toBeTruthy()
+  })
 })

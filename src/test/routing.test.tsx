@@ -94,12 +94,11 @@ describe('SUITE-01: routing', () => {
     expect(container.querySelector('[data-testid="hub-stub"]')).toBeNull()
   })
 
-  it('deep-link to /sign renders the founder-voice hero (reachable under /sign)', async () => {
+  it('deep-link to /sign renders the uploader (founder hero now lives on the hub)', async () => {
     const container = await renderAt('/sign')
-    // HeroSection's h1 founder-voice copy is the /sign empty-state landing content.
-    expect(container.textContent).toContain(
-      "I built this because I couldn't find a PDF signer that was actually free.",
-    )
+    // The /sign empty state is now just the uploader; the founder-voice hero was
+    // relocated to the hub homepage (quick 260622-frp).
+    expect(container.textContent).toContain('INSERT DOCUMENT')
   })
 
   it('unknown path redirects to / (catch-all → hub stub, not the signing tool)', async () => {
