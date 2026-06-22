@@ -75,24 +75,49 @@ describe('fetchCount', () => {
 
 describe('recordExport', () => {
   beforeEach(() => {
-    fetchSpy = vi.fn()
+    fetchSpy = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchSpy)
   })
 
-  it('POSTs the exact relative path "/api/increment" with method POST', () => {
-    fetchSpy.mockResolvedValue({ ok: true })
+  it('prefers navigator.sendBeacon to POST "/api/increment" (survives mobile page teardown)', () => {
+    const beacon = vi.fn().mockReturnValue(true)
+    vi.stubGlobal('navigator', { sendBeacon: beacon })
+    recordExport()
+    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(beacon.mock.calls[0][0]).toBe('/api/increment')
+    // sendBeacon queued it → no fallback fetch.
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('calls sendBeacon with the URL only — no body (T-13-05)', () => {
+    const beacon = vi.fn().mockReturnValue(true)
+    vi.stubGlobal('navigator', { sendBeacon: beacon })
+    recordExport()
+    expect(beacon.mock.calls[0]).toHaveLength(1)
+  })
+
+  it('falls back to a keepalive POST fetch when sendBeacon is unavailable', () => {
+    vi.stubGlobal('navigator', {})
     recordExport()
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(fetchSpy.mock.calls[0][0]).toBe('/api/increment')
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ method: 'POST', keepalive: true })
+  })
+
+  it('falls back to fetch when sendBeacon returns false (could not queue)', () => {
+    vi.stubGlobal('navigator', { sendBeacon: vi.fn().mockReturnValue(false) })
+    recordExport()
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(fetchSpy.mock.calls[0][1]).toMatchObject({ method: 'POST' })
   })
 
   it('returns undefined synchronously (does not await the promise)', () => {
-    fetchSpy.mockResolvedValue({ ok: true })
+    vi.stubGlobal('navigator', {})
     expect(recordExport()).toBeUndefined()
   })
 
-  it('never throws when fetch rejects, and produces no unhandled rejection (CNT-04)', async () => {
+  it('never throws / no unhandled rejection when the fallback fetch rejects (CNT-04)', async () => {
+    vi.stubGlobal('navigator', {})
     fetchSpy.mockRejectedValue(new Error('api down'))
     const onUnhandled = vi.fn()
     process.on('unhandledRejection', onUnhandled)
@@ -104,13 +129,14 @@ describe('recordExport', () => {
     expect(onUnhandled).not.toHaveBeenCalled()
   })
 
-  it('never throws even if fetch itself is undefined in the environment', () => {
+  it('never throws even when both sendBeacon and fetch are unavailable', () => {
+    vi.stubGlobal('navigator', {})
     vi.stubGlobal('fetch', undefined as unknown as typeof fetch)
     expect(() => recordExport()).not.toThrow()
   })
 
-  it('sends NO request body (T-13-05 — no filename/bytes/identity leaves the client)', () => {
-    fetchSpy.mockResolvedValue({ ok: true })
+  it('sends NO request body on the fetch fallback (T-13-05)', () => {
+    vi.stubGlobal('navigator', {})
     recordExport()
     const init = fetchSpy.mock.calls[0][1] as RequestInit
     expect(init.body).toBeUndefined()

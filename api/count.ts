@@ -23,6 +23,7 @@ import { getRedis, readCount } from './_redis.js'
 interface VercelRes {
   status(code: number): VercelRes
   json(body: unknown): void
+  setHeader?(name: string, value: string): void
 }
 
 export default async function handler(req: { method?: string }, res: VercelRes): Promise<void> {
@@ -32,6 +33,11 @@ export default async function handler(req: { method?: string }, res: VercelRes):
     res.status(405).json({ count: null })
     return
   }
+
+  // The count is a live value — prevent a browser/CDN from serving a stale cached
+  // read that would mask a fresh increment. Optional-chained so the unit-test res
+  // mock (status/json only) is unaffected.
+  res.setHeader?.('Cache-Control', 'no-store')
 
   const redis = await getRedis()
   if (redis === null) {

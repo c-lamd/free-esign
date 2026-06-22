@@ -39,18 +39,32 @@ export async function fetchCount(): Promise<number | null> {
 }
 
 /**
- * Fire-and-forget POST to same-origin '/api/increment' recording one successful
- * export. Sends NO body (T-13-05). Returns `void` synchronously — it does NOT
- * await the request — and swallows every error so it can never throw or block the
- * caller (CNT-04). A download must complete even if /api is down.
+ * Records one successful export against same-origin '/api/increment' (POST, no
+ * body — T-13-05). Returns `void` synchronously and swallows every error so it
+ * can never throw or block the caller (CNT-04).
+ *
+ * Uses `navigator.sendBeacon` FIRST: on mobile, triggering the file download
+ * backgrounds/tears down the page before a plain fire-and-forget `fetch()` can
+ * flush, so the POST never leaves the device (desktop is unaffected — which is
+ * why a laptop export increments the counter but a phone export did not).
+ * sendBeacon queues the request in the browser and delivers it even as the page
+ * unloads. Falls back to a `keepalive` fetch (same teardown-survival property)
+ * when sendBeacon is unavailable or declines to queue.
  */
 export function recordExport(): void {
   try {
-    // Do NOT await; attach a no-op catch so a rejected promise never surfaces as
-    // an unhandled rejection. Bare POST — no body, no headers, no payload.
-    void fetch(INCREMENT_PATH, { method: 'POST' }).catch(() => {})
+    // Primary path — survives the mobile download/page-teardown. sendBeacon is
+    // always POST (matches the /api/increment method guard) and we pass no body,
+    // so nothing about the document leaves the client (T-13-05). A truthy return
+    // means the user agent queued it; only fall through if it could not.
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      if (navigator.sendBeacon(INCREMENT_PATH)) return
+    }
+    // Fallback: keepalive lets the request outlive the page on browsers without
+    // sendBeacon; the no-op catch keeps a rejected promise from ever surfacing.
+    void fetch(INCREMENT_PATH, { method: 'POST', keepalive: true }).catch(() => {})
   } catch {
-    // Defensive: if fetch is undefined/throws synchronously in some env, never
-    // propagate to the caller — the export already succeeded.
+    // Defensive: if sendBeacon/fetch is undefined or throws synchronously in some
+    // environment, never propagate to the caller — the export already succeeded.
   }
 }
