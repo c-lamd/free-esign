@@ -4,6 +4,7 @@ import { useFieldStore } from './store/fieldStore'
 import { liveTools } from './tools/registry'
 import { ToolsHub } from './components/ToolsHub'
 import { ToolsListing } from './components/ToolsListing'
+import { RouteSeo } from './components/Seo'
 
 /**
  * AppRoutes — the registry-driven route table (SUITE-01 / SUITE-03).
@@ -66,6 +67,9 @@ function App() {
       }}
     >
       <BrowserRouter>
+        {/* Per-route <title>/description/canonical/og for SEO (SEO-01). Renders
+            null; only syncs the document head to the active route. */}
+        <RouteSeo />
         <AppRoutes />
       </BrowserRouter>
     </div>

@@ -101,8 +101,9 @@ export function ToolsHub() {
               margin: 0,
             }}
           >
-            Sign, merge, and organize your documents right in your browser. Nothing
-            is ever uploaded — your files never leave your device.
+            Sign, merge, split, organize, and convert PDFs right in your browser —
+            free, with no sign-up and no watermarks. Nothing is ever uploaded; your
+            files never leave your device.
           </p>
         </section>
 

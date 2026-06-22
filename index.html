@@ -4,8 +4,67 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FreeESign — Sign documents privately in your browser</title>
-    <meta name="description" content="Sign PDFs and images in your browser. No uploads, no accounts, no tracking. Free for everyone." />
+    <meta name="theme-color" content="#F5F2EA" />
+
+    <!-- Primary (homepage defaults; <Seo> overrides title/description per route) -->
+    <title>FreeESign — Free, private PDF tools (sign, merge, split, convert)</title>
+    <meta
+      name="description"
+      content="Sign, merge, split, organize, and convert PDFs free in your browser. No uploads, no sign-up, no watermarks — your files never leave your device."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="FreeESign" />
+    <meta name="application-name" content="FreeESign" />
+
+    <!-- Open Graph (read by non-JS social scrapers; homepage card for every route) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FreeESign" />
+    <meta property="og:title" content="FreeESign — Free, private PDF tools" />
+    <meta
+      property="og:description"
+      content="Sign, merge, split, organize, and convert PDFs free in your browser. No uploads, no sign-up, no watermarks — your files never leave your device."
+    />
+    <meta property="og:url" content="https://www.free-esign.com/" />
+    <meta property="og:image" content="https://www.free-esign.com/og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="FreeESign — free, private PDF tools" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FreeESign — Free, private PDF tools" />
+    <meta
+      name="twitter:description"
+      content="Sign, merge, split, organize, and convert PDFs free in your browser. No uploads, no sign-up, no watermarks."
+    />
+    <meta name="twitter:image" content="https://www.free-esign.com/og-image.svg" />
+
+    <!-- Structured data: a free, browser-based PDF tool suite. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "FreeESign",
+        "url": "https://www.free-esign.com/",
+        "description": "Free, private, browser-based PDF tools: sign, merge, split, organize, and convert PDFs. No uploads, no sign-up — your files never leave your device.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (modern web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Sign a PDF in your browser",
+          "Merge multiple PDFs into one",
+          "Split a PDF or extract pages",
+          "Reorder, rotate and delete PDF pages",
+          "Convert PDF pages to JPG or PNG",
+          "Convert JPG or PNG images to PDF"
+        ],
+        "publisher": { "@type": "Organization", "name": "FreeESign", "url": "https://www.free-esign.com/" }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

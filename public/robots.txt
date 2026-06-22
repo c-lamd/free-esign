@@ -1,0 +1,7 @@
+# FreeESign — free, private, in-browser PDF tools. Crawlers welcome.
+# Nothing here is private or user-specific: the app is fully client-side and no
+# document ever reaches the server, so every route is safe to index.
+User-agent: *
+Allow: /
+
+Sitemap: https://www.free-esign.com/sitemap.xml
