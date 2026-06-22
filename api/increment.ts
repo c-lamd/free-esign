@@ -23,7 +23,17 @@ interface VercelRes {
   json(body: unknown): void
 }
 
-export default async function handler(_req: unknown, res: VercelRes): Promise<void> {
+export default async function handler(req: { method?: string }, res: VercelRes): Promise<void> {
+  // Reject non-POST verbs: a drive-by GET (no preflight, trivially scriptable in
+  // a loop) must not trigger a write — that is the counter-inflation / Upstash
+  // quota-burn vector. A missing method only occurs in synthetic unit calls
+  // (real HTTP always carries one), so undefined is treated as allowed to keep
+  // the handler unit-testable.
+  if (req.method && req.method !== 'POST') {
+    res.status(405).json({ count: null })
+    return
+  }
+
   const redis = await getRedis()
   if (redis === null) {
     // Store not provisioned — graceful "unknown" sentinel (CNT-04).

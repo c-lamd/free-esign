@@ -25,7 +25,14 @@ interface VercelRes {
   json(body: unknown): void
 }
 
-export default async function handler(_req: unknown, res: VercelRes): Promise<void> {
+export default async function handler(req: { method?: string }, res: VercelRes): Promise<void> {
+  // Read-only endpoint: only GET is meaningful. Reject other verbs for hygiene
+  // (undefined method = synthetic unit call, treated as allowed).
+  if (req.method && req.method !== 'GET') {
+    res.status(405).json({ count: null })
+    return
+  }
+
   const redis = await getRedis()
   if (redis === null) {
     // Store not provisioned — graceful "unknown" sentinel (CNT-04).

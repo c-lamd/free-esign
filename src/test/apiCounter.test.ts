@@ -128,3 +128,38 @@ describe('POST /api/increment (CNT-01)', () => {
     expect(res.body).toEqual({ count: null })
   })
 })
+
+describe('HTTP method guards (drive-by abuse hardening)', () => {
+  it('count: a non-GET method is rejected with 405 (read-only endpoint)', async () => {
+    mockedGetRedis.mockResolvedValue({} as never)
+    mockedReadCount.mockResolvedValue(7)
+
+    const res = mockRes()
+    await countHandler({ method: 'POST' }, res)
+    expect(res.statusCode).toBe(405)
+    expect(res.body).toEqual({ count: null })
+  })
+
+  it('increment: a drive-by GET is rejected with 405 and triggers NO write', async () => {
+    const incr = vi.fn().mockResolvedValue(8)
+    mockedGetRedis.mockResolvedValue({ incr } as never)
+
+    const res = mockRes()
+    await incrementHandler({ method: 'GET' }, res)
+    expect(res.statusCode).toBe(405)
+    expect(res.body).toEqual({ count: null })
+    // The guard must short-circuit BEFORE any Redis INCR.
+    expect(incr).not.toHaveBeenCalled()
+  })
+
+  it('increment: a real POST still performs the INCR (guard allows POST)', async () => {
+    const incr = vi.fn().mockResolvedValue(9)
+    mockedGetRedis.mockResolvedValue({ incr } as never)
+
+    const res = mockRes()
+    await incrementHandler({ method: 'POST' }, res)
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toEqual({ count: 9 })
+    expect(incr).toHaveBeenCalledTimes(1)
+  })
+})
