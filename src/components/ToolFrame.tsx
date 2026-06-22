@@ -43,13 +43,18 @@ export function ToolFrame({
       {chrome && (
         <div
           style={{
-            height: '56px',
+            // minHeight + flexWrap so a tool's `actions` wrap on mobile instead of
+            // overflowing the screen horizontally (mirrors TopBar). Desktop stays
+            // a single row.
+            minHeight: '56px',
             backgroundColor: 'var(--color-surface-elevated)',
             borderBottom: '1px solid var(--color-line-strong)',
-            padding: '0 16px',
+            padding: '6px 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: '8px',
+            flexWrap: 'wrap',
             position: 'sticky',
             top: 0,
             zIndex: 11,
@@ -69,7 +74,7 @@ export function ToolFrame({
           </Link>
 
           {actions != null && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', rowGap: '6px' }}>
               {actions}
             </div>
           )}

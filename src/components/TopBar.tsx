@@ -60,13 +60,19 @@ export function TopBar({ onHome }: { onHome?: () => void } = {}) {
   return (
     <header
       style={{
-        height: '56px',
+        // minHeight (not fixed height) + flexWrap so the control group wraps onto
+        // additional rows on narrow/mobile viewports instead of overflowing the
+        // screen horizontally (which scrolled the document out of view). Desktop is
+        // unchanged — wrapping only engages when the row can't fit on one line.
+        minHeight: '56px',
         backgroundColor: 'var(--color-surface-elevated)',
         borderBottom: '1px solid var(--color-line-strong)',
-        padding: '0 16px',
+        padding: '6px 12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '8px',
+        flexWrap: 'wrap',
         position: 'sticky',
         top: 0,
         zIndex: 10,
@@ -115,7 +121,16 @@ export function TopBar({ onHome }: { onHome?: () => void } = {}) {
       </button>
 
       {view === 'loaded' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+            rowGap: '6px',
+            justifyContent: 'flex-end',
+          }}
+        >
           {/* UndoRedoControls — leftmost in the loaded group per UI-SPEC order */}
           <UndoRedoControls />
 

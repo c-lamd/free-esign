@@ -243,7 +243,7 @@ export function SplitRoute() {
               </p>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <HardwareKey
                 armed={canSplit}
                 disabled={!canSplit}
